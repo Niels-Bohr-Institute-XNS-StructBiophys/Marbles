@@ -1,0 +1,107 @@
+.card-file: 
+/Users/nsg/Dropbox/p450_3a4/analysis/analysis/3a4nd2.card 
+
+.fil-files: 
+3a4nd2.fil 
+
+.rad-files: 
+3a4nd2.rad 
+
+Final chisq  = 1.09547 
+
+Lower limit on q = 0 
+Upper limit on q = 1 
+
+Parameters: 
+Name:             Value:            Standard error: 
+AxisRatio         1.470000          FIXED 
+CorrectionToHightOfLipids   5.518100          FIXED 
+HeightBelt        24.000000         FIXED 
+NumberOfLipids    130.000000        FIXED 
+Dummy             0.000000          FIXED 
+WaterAtHeads      0.000000          FIXED 
+WaterAtBelt       0.000000          FIXED 
+Dummy             0.000000          FIXED 
+XRoughness        5.014163          0.0697259       
+CVBelt            0.916664          FIXED 
+CVLipids          1.037640          FIXED 
+CVMP              1.020410          FIXED 
+Back1             -0.000953         FIXED 
+Scale1            1.000000          FIXED 
+Back2             0.000000          FIXED 
+Scale2            1.000000          FIXED 
+Back3             -0.000078         4.91397e-06     
+Scale3            1.000000          FIXED 
+NRoughness        5.868500          FIXED 
+CVWater           1.000000          FIXED 
+ScaleConc         0.387081          FIXED 
+VerticalAxisOfEndcaps   0.001000          FIXED 
+ScaleFactorOfEndcaps   1.500000          FIXED 
+Dummy             0.000000          FIXED 
+TranslateX        40.265200         FIXED 
+TranslateY        -0.681398         FIXED 
+TranslateZ        9.106500          FIXED 
+RotateX           0.944433          FIXED 
+RotateY           0.000000          FIXED 
+RotateZ           0.000000          FIXED 
+Shift             0.000000          FIXED 
+Rg_Tag            5.000000          FIXED 
+
+Location of inital .pdb-file: /Users/nsg/Dropbox/p450_3a4/3a4_50ns_nobiliayer_h_w.pdb 
+
+For contrast 1: 
+Scattering length density of headgroups = 1.39574e+11 
+Scattering length density of core       = 7.90151e+10 
+Scattering length density of methyl     = 4.50803e+10 
+Scattering length density of belt       = 1.3212e+11 
+
+For contrast 2: 
+Scattering length density of headgroups = 5.72762e+194 
+Scattering length density of core       = 4.24409e-314 
+Scattering length density of methyl     = 4.58187e-310 
+Scattering length density of belt       = 0 
+
+For contrast 3: 
+Scattering length density of headgroups = 2.42748e-312 
+Scattering length density of core       = 0 
+Scattering length density of methyl     = 0 
+Scattering length density of belt       = 0 
+
+Global parameteres: 
+Height of bilayer             = 39.6763 
+Height of hydrophobic bilayer = 29.5181 
+Height of methyl layer        = 3.45823 
+Concentration                 = 6.02e+15 
+Mol. volume of dry lipid head = 331.007 
+Mol. volume of lipid tail     = 849.205 
+Mol. volume of methyl         = 112.688 
+Mol. volume of belt           = 50560.1 
+
+Number density       = 6.02e+15 
+Major semiaxis       = 44.5212 
+Minor semiaxis       = 30.2865 
+Volume of core       = 110397 
+Volume of headgroups = 43030.9 
+Width of belt        = 8.08925 
+Volume of methyl     = 14649.4
+
+The X-ray scattering lengths
+!b_X_H2O  2.82E-12    ,  X-ray scattering length of a H2O molecule
+!b_X_D2O  2.82E-12	,  X-ray scattering length of a D2O molecule
+!b_X_head 4.64E-11	, X-ray scattering length of the PC head group
+!b_X_tail 6.71E-11	, X-ray scattering length of the lipid tails minus methyl groups NB: electrons moved from tail to methyl group in this calculation
+!b_X_meth 5.08E-12	, X-ray scattering length of the two methyl groups NB: electrons moved from tail to methyl group in this calculation
+!b_X_belt 3.34E-9	    , X-ray scattering length of the belt minus tag
+!b_X_tag  3.78E-10	,  X-ray scattering length of the tag 
+!b_X_mp   4.045E-9	,   X-ray scattering length of the membrane protein
+
+The molecular volumes
+!nu_water  30.0		, molecular volume of H2O  in Å^3
+!nu_water  30.0		, molecular volume of D2O  in Å^3
+!nu_head   319.0		, molecular volume of PC-head in Å^3
+!nu_tail   818.8		, molecular volume of lipid tail minus methyl groups in Å^3
+!nu_methyl 108.6		, molecular volume of the two methyl groups in Å^3
+!nu_belt   27587.8		, molecular volume of belt in Å^3
+!nu_tag    3194.4		, molecular volume of tag in Å^3 
+!nu_mp     34932.0		, molecular volume of membrane protein in Å^3
+ 

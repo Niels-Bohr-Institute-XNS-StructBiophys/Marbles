@@ -1,0 +1,10 @@
+Datafile: 3a4nd2.rad
+Fit: startp450/3a4nd2_bf.dat
+NResidues: 0
+Mass: 34
+NPasses: 80
+LoopsPerPass: 490
+OutDir: p450/
+LambdaPro1: 100
+LambdaPro2: 2000
+ConnectPro: 30000
