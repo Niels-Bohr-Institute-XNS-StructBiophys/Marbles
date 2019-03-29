@@ -16,6 +16,24 @@ string Input::parse_line( ifstream& file, string delimiter ) {
 
   return str; //return substring, without delimeter and without parameter name
 }
+
+string Input::parse_double_delimiter( ifstream& file, string delimiter1, string delimiter2 ) {
+
+  string str;
+
+  getline( file, str ); //read line
+
+  //first
+  string token = str.substr(0, str.find(delimiter1)); //get the first substring before the delimeter
+  str.erase(0, str.find(delimiter1) + delimiter1.length()); //delete it
+
+  //second
+  token = str.substr(0, str.find(delimiter2));
+
+  return token; //return substring, without delimeter and without parameter name
+
+
+}
 //------------------------------------------------------------------------------
 
 void Input::skip_lines( ifstream& file, int num ) {
@@ -54,7 +72,7 @@ vector<vector<float> > Input::load_matrix( const string& filename, int ncols ) {
     }
 
   } else {
-    cerr << "Cannot open " << filename << endl;
+    cerr << "Cannot open '" << filename << "'" << endl;
     exit(-1);
   }
 

@@ -53,6 +53,7 @@ void BeadModeling::load_input() {
       nresidues    = (int)( mass/AV_RESIDUE_MASS ); //number of residues computed from the molecular mass
 
       cout << "# NOTE! You specified Residues: 0. The number of beads will be deduced from the molecular mass." << endl;
+      cout << "# Using " << nresidues << " beads" << endl;
     } else {
       cout << "# NOTE! You explicitely passed the number of residues: Mass parameter will be ignored." << endl;
     }

@@ -4,6 +4,8 @@
 class Nanodisc : public Input {
 
   private:
+    bool volume_tests;
+    
     float hbelt;    /* height of the protein belt */
     float hlipid; /* height of the lipid bilayer */
     float hcore;    /* height of the hydrophobic bilayer */
@@ -14,11 +16,11 @@ class Nanodisc : public Input {
     float width_belt;   /* width of the protein belt */
 
     float nlipids;
-    float watheads;
+    float wathead;
     float xrough ;
     float cvbelt;
-    float cvlipids;
-    float cvmp;
+    float cvlipid;
+    float cvprotein;
     float cvwater;
 
     float vertical_axis_endcaps;
@@ -32,9 +34,20 @@ class Nanodisc : public Input {
     float rho_belt;
     float rho_protein;
 
+    float vh2o;
+    float vd2o;
+    float vhead;
+    float valkyl;
+    float vmethyl;
+    float vbelt;
+    float vprotein;
+
+    float vertical_axis_ellipsoid;
+
   public:
     Nanodisc();
     ~Nanodisc();
 
     void load_input( const std::string& );
+
 };
