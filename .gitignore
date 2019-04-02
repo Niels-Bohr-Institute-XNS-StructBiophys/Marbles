@@ -1,0 +1,12 @@
+# Ignore the build and lib dirs
+build
+lib/*
+
+# Ignore any executables
+runner
+
+# Ignore Mac specific files
+.DS_Store
+
+# Ignore generated files
+*.xyz out_check dictionary* *.txt
