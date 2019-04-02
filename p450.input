@@ -1,7 +1,7 @@
 Datafile: 3a4nd2.rad
 Fit: 3a4nd2_bf.dat
-NResidues: 0
-Mass: 34
+Sequence: 3a4h.FASTA.txt
+Dmax: 60
 NPasses: 80
 LoopsPerPass: 490
 OutDir: p450/

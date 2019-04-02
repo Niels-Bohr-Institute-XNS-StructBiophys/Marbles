@@ -6,7 +6,28 @@
 
 using namespace std;
 
+Input::Input() {
+}
+//------------------------------------------------------------------------------
+
 string Input::parse_line( ifstream& file, string delimiter ) {
+
+  /**
+   * parses a numeric value from file line with single delimiter.
+   *
+   * Example
+   * -------
+   * from file_line = "CVLipid 50", the function parses 50 using " " as a delimiter
+   *
+   * Inputs
+   * ------
+   * ifstream& file:   address of a file stream
+   * string delimiter: delimiter
+   *
+   * Returns
+   * -------
+   * string str: parsed output
+   **/
 
   string str;
 
@@ -16,8 +37,27 @@ string Input::parse_line( ifstream& file, string delimiter ) {
 
   return str; //return substring, without delimeter and without parameter name
 }
+//------------------------------------------------------------------------------
 
 string Input::parse_double_delimiter( ifstream& file, string delimiter1, string delimiter2 ) {
+
+  /**
+   * parses a numeric value from file line with double delimiter.
+   *
+   * Example
+   * -------
+   * from file_line = "!nu_X_h20 50 , comment", the function parses 50 using " " and "," as a delimiters
+   *
+   * Inputs
+   * ------
+   * ifstream& file:    address of a file stream
+   * string delimiter1: first delimiter
+   * string delimiter2: second delimiter
+   *
+   * Returns
+   * -------
+   * string token: parsed output
+   **/
 
   string str;
 
@@ -38,6 +78,15 @@ string Input::parse_double_delimiter( ifstream& file, string delimiter1, string 
 
 void Input::skip_lines( ifstream& file, int num ) {
 
+  /**
+   * skips a given number of lines while parsing a file
+   *
+   * Inputs
+   * ------
+   * ifstream& file: address of a file stream
+   * int num:        number of lines to skip
+   **/
+
   string str;
   for( int i = 0; i < num; i++ ) {
     getline( file, str );
@@ -47,6 +96,19 @@ void Input::skip_lines( ifstream& file, int num ) {
 //------------------------------------------------------------------------------
 
 vector<vector<float> > Input::load_matrix( const string& filename, int ncols ) {
+
+  /**
+   * loads a matrix from file. The number of lines is not needed.
+   *
+   * Inputs
+   * ------
+   * ifstream& file: address of a file stream
+   * int ncols:      number of columns of the matrix
+   *
+   * Returns
+   * -------
+   * vector<vector<float> > vec: the loaded matrix
+   **/
 
   ifstream file( filename );
   string line;
@@ -79,10 +141,6 @@ vector<vector<float> > Input::load_matrix( const string& filename, int ncols ) {
   file.close();
 
   return vec;
-}
-//------------------------------------------------------------------------------
-
-Input::Input() {
 }
 //------------------------------------------------------------------------------
 
