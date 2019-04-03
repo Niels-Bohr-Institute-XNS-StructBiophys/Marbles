@@ -1,5 +1,9 @@
 #include "Nanodisc.h"
-#include <math.h>
+#include <cmath>
+#include <boost/math/special_functions/sinc.hpp>
+#include <boost/math/special_functions/bessel.hpp>
+#include<gsl/gsl_sf_legendre.h>
+#define pi 3.141593
 
 using namespace std;
 
@@ -14,10 +18,11 @@ Nanodisc::~Nanodisc() {
 void Nanodisc::load_input( const string& best_fit ) {
 
   volume_tests = true;
+
   ifstream file( best_fit );
   string line;
   string d = "=", d_ = " ", d__ = ",";
-  float tmp;
+  double tmp;
 
   if( file.is_open() ) {
 
@@ -89,7 +94,7 @@ void Nanodisc::load_input( const string& best_fit ) {
 
     if( volume_tests ) {
 
-      float vh1, vh2, va1, va2, vm1, vm2;
+      double vh1, vh2, va1, va2, vm1, vm2;
 
       vh1 = ( vhead * cvlipid + wathead * vh2o ) * nlipids;
       vh2 = ( hlipid - hcore ) * radius_minor * radius_major * M_PI;
@@ -140,4 +145,237 @@ void Nanodisc::load_input( const string& best_fit ) {
   }
 
   file.close();
+}
+
+void Nanodisc::flat_disc_form_factor( double a, double b, double L, double rho, double q, int index ) {
+
+  double sinc, sin_t, theta, phi, a_phi, b_phi, qr;
+  vector<double> r( nphi );
+
+  double theta_step = M_PI / ntheta;
+  double phi_step = 2 * M_PI / nphi;
+  double v_rho = rho * a * b * M_PI * L;
+
+  //precompute values for phi to avoid over-computation
+  for( unsigned int p = 0; p < nphi; p++ ) {
+    phi    = ( p + 0.5 ) * phi_step;
+    a_phi  = a * cos(phi);
+    b_phi  = b * sin(phi);
+    r[p]   = sqrt( a_phi * a_phi + b_phi * b_phi );
+  }
+
+  for( unsigned int t = 0; t < ntheta; t++ ) {
+
+    theta = ( t + 0.5 ) * theta_step;
+    sinc  = boost::math::sinc_pi( L/2. * q * cos(theta) );
+    sin_t = sin(theta);
+
+    for( unsigned int p = 0; p < nphi; p++ ) {
+      qr = q * r[p] * sin_t;
+
+      if( qr == 0 ) {
+        F.add( index, t, p, v_rho * sinc );
+      } else {
+        F.add( index, t, p, 2. * v_rho * boost::math::cyl_bessel_j( 1, qr ) / qr * sinc );
+      }
+
+    }
+  }
+}
+
+double Nanodisc::PsiEllipticCylinderWithEndcaps(double q, double Alpha, double Beta, double MajorRadius,
+  double MinorRadius, double Height, double ScaleFactorOfEndcaps, double VerticalAxisOfEndcaps)
+{
+    /// Declarations
+    // Dummies
+    int i;
+    int j;
+    int k;
+
+    double Dummy1;
+    double Dummy2;
+    double Dummy3;
+
+    double EquivalentRadiusInCylinder;
+    double EquivalentRadiusInEndcaps;
+
+    const int TSteps = 50;
+    double TMin;
+    double TMax;
+    double TStepSize;
+    double T;
+
+    double ReturnValue;
+    double SumOverT = 0.0f;
+
+    // Assign values to arguments
+    //ScaleFactorOfEndcaps = 1.5f;
+    double MajorRadiusOfCurvatureOfEndcaps = MajorRadius * ScaleFactorOfEndcaps;
+    double MinorRadiusOfCurvatureOfEndcaps = MinorRadius * ScaleFactorOfEndcaps;
+    double ShiftOfEndcaps;
+
+    //printf("%g %g\n", VerticalAxisOfEndcaps, ScaleFactorOfEndcaps);
+
+
+    // Caps center inside cylidner
+    ShiftOfEndcaps = - VerticalAxisOfEndcaps / MinorRadiusOfCurvatureOfEndcaps * sqrt(pow(MinorRadiusOfCurvatureOfEndcaps, 2) - pow(MinorRadius, 2));
+
+    EquivalentRadiusInCylinder = sqrt(pow(MajorRadius * cos(Beta), 2) + pow(MinorRadius * sin(Beta), 2));
+    EquivalentRadiusInEndcaps  = sqrt(pow(MajorRadiusOfCurvatureOfEndcaps * cos(Beta), 2) + pow(MinorRadiusOfCurvatureOfEndcaps * sin(Beta), 2));
+
+    TMin = - ShiftOfEndcaps / VerticalAxisOfEndcaps;
+    TMax = 1.0f;
+    TStepSize = (TMax - TMin) / TSteps;
+
+    Dummy1 = pi * MajorRadius * MinorRadius * Height *
+        2.0f * sin(q * Height / 2.0f * cos(Alpha)) / (q * Height / 2.0f * cos(Alpha)) *
+        j1(q * EquivalentRadiusInCylinder * sin(Alpha)) / (q * EquivalentRadiusInCylinder * sin(Alpha));
+
+    SumOverT = 0.0f;
+
+    for (k = 0; k < TSteps; ++k) {
+        T = k * TStepSize + TMin;
+
+            Dummy2 = cos(q * cos(Alpha) * (VerticalAxisOfEndcaps * T + ShiftOfEndcaps + Height / 2.0f)) *
+            (1 - pow(T, 2)) * j1(q * EquivalentRadiusInEndcaps * sin(Alpha) * sqrt(1.0f - pow(T, 2))) /
+            (q * EquivalentRadiusInEndcaps * sin(Alpha) * sqrt(1.0f - pow(T, 2)));
+
+            SumOverT += Dummy2 * TStepSize;
+    }
+
+    Dummy3 = 4.0f * pi * MajorRadiusOfCurvatureOfEndcaps * MinorRadiusOfCurvatureOfEndcaps * VerticalAxisOfEndcaps * SumOverT;
+    ReturnValue=Dummy1+Dummy3;
+    if(isnan(SumOverT)){
+        printf("NH2\n");
+    }
+
+    return ReturnValue;
+}
+
+void Nanodisc::disc_w_endcaps_form_factor( double a, double b, double L, double rho, double q, int index ) {
+
+    //This function calculates the form factor F(Q,theta,phi) of a cylinder
+    //with elliptical endcaps. The
+    //cylinder may be dispaced from the origin by a (real space) vector
+    //(r0, theta0, phi0).
+
+    double theta, phi;
+    double theta_step = M_PI / ntheta;
+    double phi_step = 2 * M_PI / nphi;
+
+    for( int t = 0; t < ntheta; t++ ) {
+        theta = ( t + 0.5 ) * theta_step;
+
+        for( int p = 0; p < nphi; p++ ) {
+            phi = ( p + 0.5 ) * phi_step;
+
+            double tmp = rho * PsiEllipticCylinderWithEndcaps(q, theta, phi, a, b, L, scale_endcaps, vertical_axis_ellipsoid);
+            F.add( index, t, p, tmp );
+        }
+    }
+}
+
+complex<double> pol(double r, double phi) {
+
+    if( phi == 0 )
+      return { r, 0. };
+    else
+      return { r * cos(phi), r * sin(phi) };
+}
+
+double Nanodisc::expand_sh( int index ) {
+
+  double theta, phi;
+  double theta_step = M_PI/ ntheta;
+  double phi_step = 2. * M_PI / nphi;
+  vector<complex<double> > fm(ntheta);
+  vector<vector<complex<double> > > phase( harmonics_order + 1, vector<complex<double> >(nphi));// [harmonics_order+1][nphi];
+  int l,m,i,j;
+  double intensity = 0;
+  vector<double> sinth(ntheta), w(ntheta);
+  vector<vector<double> > legendre( ntheta, vector<double>(harmonics_order+1));
+
+  for( int t = 0; t < ntheta; t++ ) {
+      w[t]  = 0.;
+      theta = ( t + 0.5 ) * theta_step;
+
+      for( int l = 0; l < ntheta/2; l++ ) {
+        w[t] += 2./(ntheta/2)*1./(2*l+1)*sin((2*l+1)*theta);
+      }
+  }
+
+  //fine here!!
+
+  for( int m = 0; m < harmonics_order + 1; m += 2 ) {
+    for( int t = 0; t < ntheta; t++ ) {
+      fm[t] = 0;
+
+      for( int p = 0; p < nphi; p++ ) {
+        phi = ( p + 0.5 ) * phi_step;
+
+        if( t == 0 ) {
+          phase[m][p] = pol( phi_step, - m * p );
+        }
+
+        fm[t] += F.at( index, m, p ) * phase[m][p];
+      }
+    }
+
+    for( int l = m; l <= harmonics_order; l += 2 ) {
+      for( int t = 0; t < ntheta; t++ ) {
+        theta = ( t + 0.5 ) * theta_step;
+
+        if( l == m ) {
+          gsl_sf_legendre_sphPlm_array( harmonics_order, m, cos(theta), &legendre[t][l] );
+          sinth[t] = sin(theta);
+        }
+
+        complex<double> tmp = 1/sqrt(4*M_PI) * legendre[t][l] * w[t] * sinth[t] * fm[t];
+        alpha.add( index, l, m, tmp );
+      }
+
+      intensity += ((m>0)+1)*pow( abs( alpha.at(index,l,m) ), 2 );
+    }
+  }
+
+  return intensity;
+}
+
+void Nanodisc::nanodisc_form_factor( vector<double> exp_q ) {
+
+  double q;
+  int dim = exp_q.size();
+
+  F.resize_width( dim );
+  F.initialize(0);
+
+  alpha.resize_width( dim );
+  alpha.initialize(0);
+
+  //clock_t begin = clock();
+  for( int i = 0; i < dim; i++ ) {
+    q = exp_q[i];
+    disc_w_endcaps_form_factor( radius_major, radius_minor, hlipid, rho_head - rho_h2o, q, i);
+    disc_w_endcaps_form_factor( radius_major, radius_minor, hcore, rho_alkyl - rho_head, q, i);
+    flat_disc_form_factor( radius_major, radius_minor, fabs(hmethyl), rho_methyl - rho_alkyl, q, i);
+    flat_disc_form_factor( radius_major, radius_minor, hbelt, rho_h2o - rho_belt, q, i);
+    flat_disc_form_factor( radius_major + width_belt, radius_minor + width_belt, hbelt, rho_belt - rho_h2o, q, i);
+
+    // for( unsigned int t = 0; t < ntheta; t++ ) {
+    //   for( unsigned int p = 0; p < nphi; p++ ) {
+    //     cout << t << " " << p << " " << F.at(i, t, p) << endl;
+    //   }
+    // }
+    double intensity = expand_sh( i );
+    //cout << intensity << endl;
+  }
+  //clock_t end = clock();
+  //double elapsed_secs = (double)(end - begin) / CLOCKS_PER_SEC;
+  //cout << "Average time per execution: " << (1.*elapsed_secs)/dim << endl;
+
+}
+
+
+void intensity() {
+
 }

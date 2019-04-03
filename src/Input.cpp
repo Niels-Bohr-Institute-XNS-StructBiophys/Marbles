@@ -95,7 +95,7 @@ void Input::skip_lines( ifstream& file, int num ) {
 }
 //------------------------------------------------------------------------------
 
-vector<vector<float> > Input::load_matrix( const string& filename, int ncols ) {
+vector<vector<double> > Input::load_matrix( const string& filename, int ncols ) {
 
   /**
    * loads a matrix from file. The number of lines is not needed.
@@ -107,13 +107,13 @@ vector<vector<float> > Input::load_matrix( const string& filename, int ncols ) {
    *
    * Returns
    * -------
-   * vector<vector<float> > vec: the loaded matrix
+   * vector<vector<double> > vec: the loaded matrix
    **/
 
   ifstream file( filename );
   string line;
   int n = 0;
-  vector<vector<float> > vec;
+  vector<vector<double> > vec;
 
   if( file.is_open() ) {
 
@@ -126,7 +126,7 @@ vector<vector<float> > Input::load_matrix( const string& filename, int ncols ) {
     file.seekg(0, ios::beg);
 
     //load vector
-    vec.resize( n, vector<float>(ncols) );
+    vec.resize( n, vector<double>(ncols) );
     for( int i = 0; i < n; i++ ) {
       for( int j = 0; j < ncols; j++ ) {
         file >> vec[i][j];

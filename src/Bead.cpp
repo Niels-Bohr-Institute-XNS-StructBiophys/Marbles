@@ -9,7 +9,7 @@ Bead::Bead() {
 Bead::~Bead() {
 }
 
-void Bead::assign_position( float xx, float yy, float zz ) {
+void Bead::assign_position( double xx, double yy, double zz ) {
   x = xx;
   y = yy;
   z = zz;

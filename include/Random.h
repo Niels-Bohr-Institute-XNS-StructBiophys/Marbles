@@ -15,10 +15,10 @@ class RandomNumbers {
          */
         RandomNumbers(); /** class constructor: allocates specific gsl arrays for the calculation */
         ~RandomNumbers(); /** class destructor: deallocates gsl arrays */
-        float uniform(); /** returns a random number uniformly distributed in [0,1] */
-        float in_range( float, float ); /** return a random number uniformly distributed in [a,b] **/
-        double in_range2( float, float );
-        float gaussian( float ); /** returns a random number gaussian distributed with variance tau */
+        double uniform(); /** returns a random number uniformly distributed in [0,1] */
+        double in_range( double, double ); /** return a random number uniformly distributed in [a,b] **/
+        double in_range2( double, double );
+        double gaussian( double ); /** returns a random number gaussian distributed with variance tau */
 
     private:
         /*

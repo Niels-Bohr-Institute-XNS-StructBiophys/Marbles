@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include <ctime>
 #define AV_RESIDUE_MASS 0.1 //average mass of a residue in kDa
 
 using namespace std;
@@ -15,7 +16,6 @@ BeadModeling::BeadModeling( const string& filename ) {
   sphere_generated = false;
   clash_distance = 1.8; //hardcoded because experimented
   sequence = "";
-  //dmax = 60.;
   shift = 50.;
 
   if( !sanity_check ) {
@@ -134,16 +134,16 @@ void BeadModeling::load_FASTA() {
 }
 //------------------------------------------------------------------------------
 
-float BeadModeling::distance( unsigned const int i, unsigned const int j ) {
+double BeadModeling::distance( unsigned const int i, unsigned const int j ) {
 
-  float x = beads[i].x - beads[j].x;
-  float x2 = x * x;
+  double x = beads[i].x - beads[j].x;
+  double x2 = x * x;
 
-  float y = beads[i].y - beads[j].y;
-  float y2 = y * y;
+  double y = beads[i].y - beads[j].y;
+  double y2 = y * y;
 
-  float z = beads[i].z - beads[j].z;
-  float z2 = z * z;
+  double z = beads[i].z - beads[j].z;
+  double z2 = z * z;
 
   return sqrt( x2 + y2 + z2 );
 }
@@ -169,7 +169,7 @@ void BeadModeling::initial_configuration() {
 
   if( !sphere_generated ) {
 
-    float x, y, z, r, r2;
+    double x, y, z, r, r2;
     bool clash;
 
     r = 2. * dmax / 3.; /** radius of the sphere **/
@@ -204,6 +204,20 @@ void BeadModeling::initial_configuration() {
   } else {
     cout << "# NOTE! Skipping initial configuration because the the system is already set up.";
   }
+
+}
+
+void BeadModeling::test_flat() {
+
+  int dim = rad.size();
+
+
+  vector<double> exp_q( dim );
+  for( int i = 0; i < dim; i++ ) {
+    exp_q[i] = rad[i][0];
+  }
+
+  nd.nanodisc_form_factor( exp_q );
 
 }
 
