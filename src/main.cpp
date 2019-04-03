@@ -18,6 +18,7 @@ int main() {
   cout << "# Initial configuration set." << endl;
 
   BD.write_xyz();
+  BD.test_flat();
 
   //BD.parse_FASTA();
   //BD.WritePDB();

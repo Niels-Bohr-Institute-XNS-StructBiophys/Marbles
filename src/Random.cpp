@@ -30,16 +30,16 @@ RandomNumbers::~RandomNumbers() {
 }
 //------------------------------------------------------------------------------
 
-float RandomNumbers::in_range( float min, float max ) {
+double RandomNumbers::in_range( double min, double max ) {
   return min + ( max - min ) * uniform();
 }
 
-float RandomNumbers::uniform() {
+double RandomNumbers::uniform() {
   return gsl_rng_uniform_pos(r); /** calls gsl function for uniform random numbers in [0,1] */
 }
 //------------------------------------------------------------------------------
 
-double RandomNumbers::in_range2( float min, float max ) {
+double RandomNumbers::in_range2( double min, double max ) {
   double R; /*Random number from uniform distribution in the open interval: (min, max)*/
   do{
   R=(double) rand()/RAND_MAX ;
@@ -48,7 +48,7 @@ double RandomNumbers::in_range2( float min, float max ) {
   return R;
 }
 
-float RandomNumbers::gaussian( float tau ) {
+double RandomNumbers::gaussian( double tau ) {
 
   /** compute two uniforms */
   double r = uniform();

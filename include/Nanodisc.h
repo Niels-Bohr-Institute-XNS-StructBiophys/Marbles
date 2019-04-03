@@ -1,53 +1,72 @@
 #include <iostream>
+#include <complex>
 #include "Input.h"
+#include "Tools.h"
+
+#define NH 17 //Order of harmonics
+#define NTHETA ((NH+1)*2)
+#define NPHI ((NH+1)*2)
 
 class Nanodisc : public Input {
 
   private:
     bool volume_tests;
-    
-    float hbelt;    /* height of the protein belt */
-    float hlipid; /* height of the lipid bilayer */
-    float hcore;    /* height of the hydrophobic bilayer */
-    float hmethyl;  /* height of the methyl layer */
 
-    float radius_major; /* major disc semiaxis */
-    float radius_minor; /* minor disc semiaxis */
-    float width_belt;   /* width of the protein belt */
+    double hbelt;    /* height of the protein belt */
+    double hlipid; /* height of the lipid bilayer */
+    double hcore;    /* height of the hydrophobic bilayer */
+    double hmethyl;  /* height of the methyl layer */
 
-    float nlipids;
-    float wathead;
-    float xrough ;
-    float cvbelt;
-    float cvlipid;
-    float cvprotein;
-    float cvwater;
+    double radius_major; /* major disc semiaxis */
+    double radius_minor; /* minor disc semiaxis */
+    double width_belt;   /* width of the protein belt */
 
-    float vertical_axis_endcaps;
-    float scale_endcaps;
+    double nlipids;
+    double wathead;
+    double xrough ;
+    double cvbelt;
+    double cvlipid;
+    double cvprotein;
+    double cvwater;
 
-    float rho_h2o;
-    float rho_d2o;
-    float rho_head;
-    float rho_alkyl;
-    float rho_methyl;
-    float rho_belt;
-    float rho_protein;
+    double vertical_axis_endcaps;
+    double scale_endcaps;
 
-    float vh2o;
-    float vd2o;
-    float vhead;
-    float valkyl;
-    float vmethyl;
-    float vbelt;
-    float vprotein;
+    double rho_h2o;
+    double rho_d2o;
+    double rho_head;
+    double rho_alkyl;
+    double rho_methyl;
+    double rho_belt;
+    double rho_protein;
 
-    float vertical_axis_ellipsoid;
+    double vh2o;
+    double vd2o;
+    double vhead;
+    double valkyl;
+    double vmethyl;
+    double vbelt;
+    double vprotein;
+
+    double vertical_axis_ellipsoid;
+
+    const unsigned int harmonics_order = 17;
+    const unsigned int ntheta = (harmonics_order + 1) * 2;
+    const unsigned int nphi   = (harmonics_order + 1) * 2;
+
+    Array3D<double, 0, NTHETA, NPHI> F;
+    Array3D<std::complex<double>, 0, NH+1, NH+1> alpha;
+
+    void flat_disc_form_factor( double, double, double, double, double, int );
+    double PsiEllipticCylinderWithEndcaps(double, double, double, double, double, double, double, double);
+    void disc_w_endcaps_form_factor( double, double, double, double, double, int );
+    double expand_sh( int );
 
   public:
     Nanodisc();
     ~Nanodisc();
 
     void load_input( const std::string& );
+    void nanodisc_form_factor( std::vector<double> );
 
 };
