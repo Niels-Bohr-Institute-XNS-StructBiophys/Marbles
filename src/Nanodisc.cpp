@@ -59,15 +59,15 @@ void Nanodisc::load_input( const string& best_fit ) {
     width_belt            = stof( parse_line( file, d ) );
 
     skip_lines( file, 3 );
-    rho_h2o               = stof( parse_double_delimiter( file, d_, d__ ) );
-    rho_d2o               = stof( parse_double_delimiter( file, d_, d__ ) );
-    rho_head              = stof( parse_double_delimiter( file, d_, d__ ) );
-    rho_alkyl             = stof( parse_double_delimiter( file, d_, d__ ) );
-    rho_methyl            = stof( parse_double_delimiter( file, d_, d__ ) );
-    rho_belt              = stof( parse_double_delimiter( file, d_, d__ ) );
+    rho_h2o               = stof( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
+    rho_d2o               = stof( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
+    rho_head              = stof( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
+    rho_alkyl             = stof( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
+    rho_methyl            = stof( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
+    rho_belt              = stof( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
 
     skip_lines( file, 1 );
-    rho_protein           = stof( parse_double_delimiter( file, d_, d__ ) );
+    rho_protein           = stof( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
 
     skip_lines( file, 2 );
     vh2o                  = stof( parse_double_delimiter( file, d_, d__ ) );
@@ -153,7 +153,7 @@ void Nanodisc::flat_disc_form_factor( double a, double b, double L, double rho, 
   vector<double> r( nphi );
 
   double theta_step = M_PI / ntheta;
-  double phi_step = 2 * M_PI / nphi;
+  double phi_step = 2. * M_PI / nphi;
   double v_rho = rho * a * b * M_PI * L;
 
   //precompute values for phi to avoid over-computation
@@ -162,6 +162,7 @@ void Nanodisc::flat_disc_form_factor( double a, double b, double L, double rho, 
     a_phi  = a * cos(phi);
     b_phi  = b * sin(phi);
     r[p]   = sqrt( a_phi * a_phi + b_phi * b_phi );
+    //cout << r[p] << endl;
   }
 
   for( unsigned int t = 0; t < ntheta; t++ ) {
@@ -178,7 +179,7 @@ void Nanodisc::flat_disc_form_factor( double a, double b, double L, double rho, 
       } else {
         F.add( index, t, p, 2. * v_rho * boost::math::cyl_bessel_j( 1, qr ) / qr * sinc );
       }
-
+      //cout << F.at( index, t, p) << endl;
     }
   }
 }
@@ -188,8 +189,8 @@ double Nanodisc::PsiEllipticCylinderWithEndcaps(double q, double Alpha, double B
 {
     /// Declarations
     // Dummies
-    int i;
-    int j;
+    //int i;
+    //int j;
     int k;
 
     double Dummy1;
@@ -259,17 +260,17 @@ void Nanodisc::disc_w_endcaps_form_factor( double a, double b, double L, double 
     //cylinder may be dispaced from the origin by a (real space) vector
     //(r0, theta0, phi0).
 
-    double theta, phi;
+    double theta, phi, tmp;
     double theta_step = M_PI / ntheta;
     double phi_step = 2 * M_PI / nphi;
 
-    for( int t = 0; t < ntheta; t++ ) {
+    for( unsigned int t = 0; t < ntheta; t++ ) {
         theta = ( t + 0.5 ) * theta_step;
 
-        for( int p = 0; p < nphi; p++ ) {
+        for( unsigned int p = 0; p < nphi; p++ ) {
             phi = ( p + 0.5 ) * phi_step;
 
-            double tmp = rho * PsiEllipticCylinderWithEndcaps(q, theta, phi, a, b, L, scale_endcaps, vertical_axis_ellipsoid);
+            tmp = rho * PsiEllipticCylinderWithEndcaps(q, theta, phi, a, b, L, scale_endcaps, vertical_axis_ellipsoid);
             F.add( index, t, p, tmp );
         }
     }
@@ -283,55 +284,127 @@ complex<double> pol(double r, double phi) {
       return { r * cos(phi), r * sin(phi) };
 }
 
-double Nanodisc::expand_sh( int index ) {
+// double Nanodisc::expand_sh( int index ) {
+//
+//   double theta, phi;
+//   double theta_step = M_PI/ ntheta;
+//   double phi_step = 2. * M_PI / nphi;
+//   vector<complex<double> > fm(ntheta);
+//   vector<vector<complex<double> > > phase( harmonics_order + 1, vector<complex<double> >(nphi));// [harmonics_order+1][nphi];
+//   int l,m,i,j;
+//   double intensity = 0;
+//   vector<double> sinth(ntheta), w(ntheta);
+//   vector<vector<double> > legendre( ntheta, vector<double>(harmonics_order+1));
+//
+//   for( int t = 0; t < ntheta; t++ ) {
+//       w[t]  = 0.;
+//       theta = ( t + 0.5 ) * theta_step;
+//
+//       for( int l = 0; l < ntheta/2; l++ ) {
+//         w[t] += 2./(ntheta/2)*1./(2*l+1)*sin((2*l+1)*theta);
+//       }
+//
+//       //cout << w[t] << endl;
+//   }
+//   //fine here!!
+//
+//   for( int m = 0; m < harmonics_order + 1; m += 2 ) {
+//
+//     for( int t = 0; t < ntheta; t++ ) {
+//       fm[t] = 0;
+//
+//       for( int p = 0; p < nphi; p++ ) {
+//         phi = ( p + 0.5 ) * phi_step;
+//
+//         if( t == 0 ) {
+//           phase[m][p] = pol( phi_step, - m * phi );
+//         }
+//
+//         fm[t] += F.at( index, t, p ) * phase[m][p];
+//       }
+//     }
+//
+//     for( int l = m; l <= harmonics_order; l += 2 ) {
+//       for( int t = 0; t < ntheta; t++ ) {
+//         theta = ( t + 0.5 ) * theta_step;
+//
+//         if( l == m ) {
+//           gsl_sf_legendre_sphPlm_array( harmonics_order, m, cos(theta), &legendre[t][l] );
+//           sinth[t] = sin(theta);
+//         }
+//
+//         complex<double> tmp = 1/sqrt(4*M_PI) * legendre[t][l] * w[t] * sinth[t] * fm[t];
+//         //cout << legendre[t][l] << " " << sinth[t] << endl;
+//         alpha.add( index, l, m, tmp );
+//         //cout << real(alpha.at( index, l, m )) << " " << imag(alpha.at( index, l, m )) << endl;
+//       }
+//
+//       intensity += ((m>0)+1)*pow( abs( alpha.at(index,l,m) ), 2 );
+//     }
+//   }
+//   //
+//   // for( int m = 0; m < harmonics_order + 1; m += 2 ) {
+//   //   for( int l = m; l <= harmonics_order; l += 2 ) {
+//   //     cout << real(alpha.at( index, l, m )) << " " << imag(alpha.at( index, l, m )) << endl;
+//   //   }
+//   // }
+//
+//
+//   return intensity;
+// }
+
+double Nanodisc::expand_sh2( int index ) {
 
   double theta, phi;
   double theta_step = M_PI/ ntheta;
   double phi_step = 2. * M_PI / nphi;
+  double intensity = 0.;
+  double sqrt_4pi_1 = 1. / sqrt( 4. * M_PI );
+  complex<double> tmp;
   vector<complex<double> > fm(ntheta);
-  vector<vector<complex<double> > > phase( harmonics_order + 1, vector<complex<double> >(nphi));// [harmonics_order+1][nphi];
-  int l,m,i,j;
-  double intensity = 0;
-  vector<double> sinth(ntheta), w(ntheta);
+  vector<vector<complex<double> > > phase( harmonics_order + 1, vector<complex<double> >(nphi));
+  vector<double> sin_t(ntheta), cos_t(ntheta), w(ntheta);
   vector<vector<double> > legendre( ntheta, vector<double>(harmonics_order+1));
 
-  for( int t = 0; t < ntheta; t++ ) {
+
+  for( unsigned int t = 0; t < ntheta; t++ ) {
       w[t]  = 0.;
       theta = ( t + 0.5 ) * theta_step;
+      sin_t[t] = sin(theta);
+      cos_t[t] = cos(theta);
 
       for( int l = 0; l < ntheta/2; l++ ) {
-        w[t] += 2./(ntheta/2)*1./(2*l+1)*sin((2*l+1)*theta);
+        w[t] += 2. / (ntheta / 2) * 1. / (2 * l + 1) * sin( (2 * l + 1) * theta );
       }
   }
 
-  //fine here!!
-
   for( int m = 0; m < harmonics_order + 1; m += 2 ) {
+
     for( int t = 0; t < ntheta; t++ ) {
-      fm[t] = 0;
+      fm[t] = {0., 0.};
 
       for( int p = 0; p < nphi; p++ ) {
         phi = ( p + 0.5 ) * phi_step;
 
         if( t == 0 ) {
-          phase[m][p] = pol( phi_step, - m * p );
+          phase[m][p] = pol( phi_step, - m * phi );
         }
 
-        fm[t] += F.at( index, m, p ) * phase[m][p];
+        fm[t] += F.at( index, t, p ) * phase[m][p];
       }
     }
 
     for( int l = m; l <= harmonics_order; l += 2 ) {
       for( int t = 0; t < ntheta; t++ ) {
-        theta = ( t + 0.5 ) * theta_step;
 
-        if( l == m ) {
-          gsl_sf_legendre_sphPlm_array( harmonics_order, m, cos(theta), &legendre[t][l] );
-          sinth[t] = sin(theta);
-        }
+        //if( l == m ) gsl_sf_legendre_array( norm, harmonics_order, m, cos_t[t], &legendre[t][l] );
 
-        complex<double> tmp = 1/sqrt(4*M_PI) * legendre[t][l] * w[t] * sinth[t] * fm[t];
+        if( l == m ) gsl_sf_legendre_sphPlm_array( harmonics_order, m, cos_t[t], &legendre[t][l] );
+
+         tmp = sqrt_4pi_1 * legendre[t][l] * w[t] * sin_t[t] * fm[t];
+        //cout << legendre[t][l] << " " << sinth[t] << endl;
         alpha.add( index, l, m, tmp );
+        //cout << real(alpha.at( index, l, m )) << " " << imag(alpha.at( index, l, m )) << endl;
       }
 
       intensity += ((m>0)+1)*pow( abs( alpha.at(index,l,m) ), 2 );
@@ -341,19 +414,23 @@ double Nanodisc::expand_sh( int index ) {
   return intensity;
 }
 
+//compatible with previous version within 5e-4 relative error.
 void Nanodisc::nanodisc_form_factor( vector<double> exp_q ) {
 
   double q;
   int dim = exp_q.size();
 
   F.resize_width( dim );
-  F.initialize(0);
+  //F.initialize(0);
 
   alpha.resize_width( dim );
   alpha.initialize(0);
 
   //clock_t begin = clock();
   for( int i = 0; i < dim; i++ ) {
+
+    F.initialize(0);
+
     q = exp_q[i];
     disc_w_endcaps_form_factor( radius_major, radius_minor, hlipid, rho_head - rho_h2o, q, i);
     disc_w_endcaps_form_factor( radius_major, radius_minor, hcore, rho_alkyl - rho_head, q, i);
@@ -363,11 +440,11 @@ void Nanodisc::nanodisc_form_factor( vector<double> exp_q ) {
 
     // for( unsigned int t = 0; t < ntheta; t++ ) {
     //   for( unsigned int p = 0; p < nphi; p++ ) {
-    //     cout << t << " " << p << " " << F.at(i, t, p) << endl;
-    //   }
-    // }
-    double intensity = expand_sh( i );
-    //cout << intensity << endl;
+    //     cout << q << " " << t << " " << p << " " << F.at(i, t, p) << endl;
+    //  }
+    //}
+    double intensity = expand_sh2( i );
+    cout << intensity << endl;
   }
   //clock_t end = clock();
   //double elapsed_secs = (double)(end - begin) / CLOCKS_PER_SEC;
