@@ -12,6 +12,8 @@ class Nanodisc : public Input {
   private:
     bool volume_tests;
 
+    double e_scatt_len = 2.82e-13; /* scattering length of an electron in cm */
+
     double hbelt;    /* height of the protein belt */
     double hlipid; /* height of the lipid bilayer */
     double hcore;    /* height of the hydrophobic bilayer */
@@ -61,6 +63,7 @@ class Nanodisc : public Input {
     double PsiEllipticCylinderWithEndcaps(double, double, double, double, double, double, double, double);
     void disc_w_endcaps_form_factor( double, double, double, double, double, int );
     double expand_sh( int );
+    double expand_sh2( int );
 
   public:
     Nanodisc();

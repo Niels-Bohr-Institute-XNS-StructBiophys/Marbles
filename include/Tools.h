@@ -15,6 +15,10 @@ class Array2D {
       buffer[y*width + x] = val;
     }
 
+    void initialize( T value ) {
+      fill( buffer.begin(), buffer.end(), value );
+    }
+
   private:
     std::vector<T> buffer;
 };
