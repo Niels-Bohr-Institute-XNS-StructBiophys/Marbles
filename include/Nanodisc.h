@@ -62,7 +62,7 @@ class Nanodisc : public Input {
     void flat_disc_form_factor( double, double, double, double, double, int );
     double PsiEllipticCylinderWithEndcaps(double, double, double, double, double, double, double, double);
     void disc_w_endcaps_form_factor( double, double, double, double, double, int );
-    double expand_sh( int );
+    //double expand_sh( int );
     double expand_sh2( int );
 
   public:
@@ -71,5 +71,19 @@ class Nanodisc : public Input {
 
     void load_input( const std::string& );
     void nanodisc_form_factor( std::vector<double> );
+
+    //get functions
+    double get_radius_major();
+    double get_radius_minor();
+    double get_scale_endcaps();
+    double get_vertical_axis_ellipsoid();
+    double get_rho_solvent();
+    double get_hcore();
+    double get_hlipid();
+    double get_hmethyl();
+    double get_rho_methyl();
+    double get_rho_alkyl();
+    double get_rho_head();
+    double get_cvprotein();
 
 };

@@ -54,6 +54,7 @@ class BeadModeling : public Input {
       void initial_configuration();
       void write_xyz();
       void test_flat();
+      void update_rho();
 
       //void WritePDB();
 };

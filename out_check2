@@ -1,0 +1,20 @@
+
+#########################
+# BEAD MODELING ROUTINE #
+#########################
+
+# File 'p450.input' loaded
+# File '3a4h.FASTA.txt' loaded
+# File '3a4nd2.rad' loaded 
+# Statistics loaded
+
+# SUMMARY OF PARAMETERS
+# ---------------------
+# Number of beads: 489
+# Radius of initial sphere: 40
+# Number of passes: 80
+# Loops per pass: 490
+# Storing results in: 'p450/'
+# Initial configuration set.
+# Average time per execution: 0.00501161
+

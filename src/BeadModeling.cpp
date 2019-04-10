@@ -218,6 +218,7 @@ void BeadModeling::test_flat() {
   }
 
   nd.nanodisc_form_factor( exp_q );
+  update_rho();
 
 }
 
@@ -244,6 +245,72 @@ void BeadModeling::write_xyz() {
     for( unsigned int i = 0; i < nresidues; i++ ) {
       pdb << "CA " << beads[i].x << " " << beads[i].y << " " << beads[i].z << endl;
     }
+
+  }
+}
+
+void BeadModeling::update_rho() {
+
+  double radius_major            = nd.get_radius_major();
+  double radius_minor            = nd.get_radius_minor();
+  double scale_endcaps           = nd.get_scale_endcaps();
+  double vertical_axis_ellipsoid = nd.get_vertical_axis_ellipsoid();
+  double rho_solvent             = nd.get_rho_solvent();
+  double hlipid                  = nd.get_hlipid();
+  double hmethyl                 = nd.get_hmethyl();
+  double hcore                   = nd.get_hcore();
+  double rho_alkyl               = nd.get_rho_alkyl();
+  double rho_methyl              = nd.get_rho_methyl();
+  double rho_head                = nd.get_rho_head();
+  double cvprotein               = nd.get_cvprotein();
+
+  double a_endcaps               = radius_major * scale_endcaps;
+  double a_endcaps_1             = 1. / a_endcaps;
+  double b_endcaps               = radius_minor * scale_endcaps;
+  double b_endcaps_1             = 1. / b_endcaps;
+  double shift_endcaps           = - vertical_axis_ellipsoid / a_endcaps * sqrt( a_endcaps * a_endcaps - radius_major * radius_major );
+  double c_endcaps_1             = 1. / vertical_axis_ellipsoid;
+  double shift_z_core            = ( hcore / 2. + shift_endcaps ) * c_endcaps_1;
+  double shift_z_lipid           = ( hlipid / 2. + shift_endcaps ) * c_endcaps_1;
+
+  double x, y, z, fz, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp12;
+  bool cnd1, cnd2, cnd3, cnd4;
+
+  for( unsigned int i = 0; i < nresidues; i++ ) {
+
+    x = beads[i].x;
+    y = beads[i].y;
+    z = beads[i].z;
+    fz = fabs(z);
+
+    tmp1 = x * a_endcaps_1 * x * a_endcaps_1;
+    tmp2 = y * b_endcaps_1 * y * b_endcaps_1;
+    tmp3 = ( z * c_endcaps_1 - shift_z_core ) * ( z * c_endcaps_1 - shift_z_core );
+    tmp4 = ( z * c_endcaps_1 + shift_z_core ) * ( z * c_endcaps_1 + shift_z_core );
+    tmp5 = ( z * c_endcaps_1 - shift_z_lipid ) * ( z * c_endcaps_1 - shift_z_lipid );
+    tmp6 = ( z * c_endcaps_1 + shift_z_lipid ) * ( z * c_endcaps_1 + shift_z_lipid );
+    tmp12 = tmp1 + tmp2;
+
+    cnd1 = ( z > 0 && (tmp12 + tmp3 < 1) );
+    cnd2 = ( z < 0 && (tmp12 + tmp4 < 1) );
+    cnd3 = ( z > 0 && (tmp12 + tmp5 < 1) );
+    cnd4 = ( z < 0 && (tmp12 + tmp6 < 1) );
+
+    if( fz < hmethyl * .5 ) {
+      beads[i].type = 3;
+      beads[i].rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_methyl;
+    } else if( cnd1 || cnd2 || fz < hcore * .5 ) {
+      beads[i].type = 2;
+      beads[i].rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_alkyl;
+    } else if( cnd3 || cnd4 || fz < hlipid * .5 ) {
+      beads[i].type = 1;
+      beads[i].rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_head;
+    } else {
+      beads[i].type = 0;
+      beads[i].rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_solvent;
+    }
+
+    cout << beads[i].rho_modified << endl;
 
   }
 }

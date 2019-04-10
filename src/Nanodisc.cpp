@@ -444,7 +444,7 @@ void Nanodisc::nanodisc_form_factor( vector<double> exp_q ) {
     //  }
     //}
     double intensity = expand_sh2( i );
-    cout << intensity << endl;
+    //cout << intensity << endl;
   }
   //clock_t end = clock();
   //double elapsed_secs = (double)(end - begin) / CLOCKS_PER_SEC;
@@ -452,7 +452,50 @@ void Nanodisc::nanodisc_form_factor( vector<double> exp_q ) {
 
 }
 
+double Nanodisc::get_radius_major() {
+  return radius_major;
+}
 
-void intensity() {
+double Nanodisc::get_radius_minor() {
+  return radius_minor;
+}
 
+double Nanodisc::get_scale_endcaps() {
+  return scale_endcaps;
+}
+
+double Nanodisc::get_vertical_axis_ellipsoid() {
+  return vertical_axis_ellipsoid;
+}
+
+double Nanodisc::get_rho_solvent() {
+  return rho_h2o;
+}
+
+double Nanodisc::get_hlipid() {
+  return hlipid;
+}
+
+double Nanodisc::get_hmethyl() {
+  return hmethyl;
+}
+
+double Nanodisc::get_hcore() {
+  return hcore;
+}
+
+double Nanodisc::get_rho_methyl() {
+  return rho_methyl;
+}
+
+double Nanodisc::get_rho_alkyl() {
+  return rho_alkyl;
+}
+
+double Nanodisc::get_rho_head() {
+  return rho_head;
+}
+
+double Nanodisc::get_cvprotein() {
+  return cvprotein;
 }

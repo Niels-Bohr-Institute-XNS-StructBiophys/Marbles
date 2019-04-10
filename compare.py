@@ -8,7 +8,7 @@ mine = np.loadtxt("out_check")
 ref  = np.loadtxt("../bead_modeling_flat/out_check")
 thresh = 1e-12
 
-if( col == 0 ):
+if( col == -1 ):
     mine_f = mine#[:,0]
     ref_f = ref#[:,0]
 else:
@@ -30,7 +30,9 @@ count = 0
 count2 = 0
 tr = thresh * ref_f.max()
 tm = thresh * mine_f.max()
+
 for i in range( dim ):
+
     if( ref_f[i] == 0 and mine_f[i] == 0 ):
         rel_err = 0
     elif( ref_f[i] < tr and mine_f[i] < tm ):
