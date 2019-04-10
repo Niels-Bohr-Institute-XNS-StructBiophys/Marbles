@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string>
 #include <ctime>
+#include <gsl/gsl_sf_bessel.h>
+#include <gsl/gsl_sf_legendre.h>
 #define AV_RESIDUE_MASS 0.1 //average mass of a residue in kDa
 
 using namespace std;
@@ -211,14 +213,19 @@ void BeadModeling::test_flat() {
 
   int dim = rad.size();
 
-
   vector<double> exp_q( dim );
   for( int i = 0; i < dim; i++ ) {
     exp_q[i] = rad[i][0];
   }
 
-  nd.nanodisc_form_factor( exp_q );
   update_rho();
+  nd.nanodisc_form_factor( exp_q );
+
+  for( int i = 0; i < dim; i++ ) {
+    expand_sh( exp_q[i], 1 );
+    exit(-1);
+  }
+
 
 }
 
@@ -296,6 +303,18 @@ void BeadModeling::update_rho() {
     cnd3 = ( z > 0 && (tmp12 + tmp5 < 1) );
     cnd4 = ( z < 0 && (tmp12 + tmp6 < 1) );
 
+    //FOR DEBUGGING ONLY!!!
+    //#####################
+    if( i == 0 ) {
+      beads[i].v = 165.18;
+      beads[i].rho = 71;
+    } else if( i == nresidues - 1 ) {
+      beads[i].v = 147.14;
+      beads[i].rho = 65;
+    }
+    //#####################
+    // FOR DEBUGGING ONLY!!
+
     if( fz < hmethyl * .5 ) {
       beads[i].type = 3;
       beads[i].rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_methyl;
@@ -310,9 +329,69 @@ void BeadModeling::update_rho() {
       beads[i].rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_solvent;
     }
 
-    cout << beads[i].rho_modified << endl;
+    //cout << beads[i].v << " " << beads[i].rho << endl;
 
   }
+}
+
+// complex<double> pol2(double r, double angle)
+// {
+//     if(angle==0) {
+//       complex<double> a(r, 0.);
+//         return a;
+//     } else {
+//       complex<double> a( r * cos(angle), r * sin(angle) );
+//       return a;
+//     }
+// }
+
+void BeadModeling::expand_sh( double q, int sign ) {
+
+  double x, y, z, r, theta, phi;
+  double sqrt_4pi = sqrt( 4. * M_PI );
+  int status;
+  double bessel[ harmonics_order + 1 ];
+  vector<double> legendre( harmonics_order + 1 );
+  complex<double> j(0,1), tmp, p;
+
+  for( unsigned int i = 0; i < nresidues; i++ ) {
+
+    x     = beads[i].x;
+    y     = beads[i].y;
+    z     = beads[i].z;
+    r     = sqrt( x*x + y*y + z*z );
+    theta = acos( z / r );
+    phi   = acos( x / ( r * sin(theta) ) ) * sgn( y );
+
+    //cout << phi << endl;
+
+    status = gsl_sf_bessel_jl_array( harmonics_order, q * r, bessel ); // Calculate spherical bessel functions for l=0,..,Nh
+
+    for( int m = 0; m <= harmonics_order; m++ ) {
+      status = gsl_sf_legendre_sphPlm_array( harmonics_order, m, cos(theta), &legendre[m] ); //Calculate legendre polynomials P_l(cos(theta)) of degree l=m,..., up to Nh
+      //Store the values in legendre[m],legendre[m+1],...,legendre[Nh]
+
+      //for( int b = 0; b <= harmonics_order; b++ ) {
+      //  cout << legendre[b] << endl;
+      //}
+      p = pol( 1., -m * phi);
+      //cout << real(p) << " " << imag(p) << endl; // " " << m << " " << phi << " " << cos(phi) << " " << sin(phi) << endl;
+
+      for( unsigned int l = m; l <= harmonics_order; l++ ) {
+        tmp = sqrt_4pi * pow(j, l) * beads[i].rho_modified * bessel[l] * legendre[l] * p;
+
+        if( sign >= 0 ) {
+          beta.add( l, m, tmp );
+        } else {
+          beta.add( l, m, -tmp );
+        }
+
+        cout << real(beta.at( l, m )) << " " << imag(beta.at( l, m )) << endl;
+
+      }
+    }
+  }
+
 }
 
 BeadModeling::~BeadModeling() {

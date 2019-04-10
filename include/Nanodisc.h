@@ -85,5 +85,6 @@ class Nanodisc : public Input {
     double get_rho_alkyl();
     double get_rho_head();
     double get_cvprotein();
+    int get_harmonics_order();
 
 };

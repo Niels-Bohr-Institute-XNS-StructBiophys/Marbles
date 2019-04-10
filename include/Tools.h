@@ -19,6 +19,10 @@ class Array2D {
       fill( buffer.begin(), buffer.end(), value );
     }
 
+    void add( unsigned int x, unsigned int y, T val ) {
+      buffer[y*width + x] += val;
+    }
+
   private:
     std::vector<T> buffer;
 };
@@ -57,3 +61,15 @@ class Array3D {
   private:
     std::vector<T> buffer;
 };
+
+template <typename T> int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+}
+
+template <typename T> std::complex<double> pol(T r, T phi) {
+
+    if( phi == 0 )
+      return { r, 0. };
+    else
+      return { r * cos(phi), r * sin(phi) };
+}
