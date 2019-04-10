@@ -3,6 +3,7 @@
 class Bead {
 
   private:
+    double e_scatt_len = 2.82e-13;
 
   public:
     Bead();

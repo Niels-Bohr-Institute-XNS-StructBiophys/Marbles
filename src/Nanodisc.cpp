@@ -276,14 +276,6 @@ void Nanodisc::disc_w_endcaps_form_factor( double a, double b, double L, double 
     }
 }
 
-complex<double> pol(double r, double phi) {
-
-    if( phi == 0 )
-      return { r, 0. };
-    else
-      return { r * cos(phi), r * sin(phi) };
-}
-
 // double Nanodisc::expand_sh( int index ) {
 //
 //   double theta, phi;

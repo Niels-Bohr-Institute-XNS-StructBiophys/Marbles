@@ -3,6 +3,10 @@
 #include "Bead.h"
 #include "Random.h"
 
+#define NH 17 //Order of harmonics
+#define NTHETA ((NH+1)*2)
+#define NPHI ((NH+1)*2)
+
 class BeadModeling : public Input {
 
     private:
@@ -33,17 +37,22 @@ class BeadModeling : public Input {
       double shift; /* z shift of the initial sphere with respect to the nanodisc */
       double clash_distance; /** distance below which a bead clash is called */
 
+      const unsigned int harmonics_order = 17;
+      const unsigned int ntheta = (harmonics_order + 1) * 2;
+      const unsigned int nphi   = (harmonics_order + 1) * 2;
+
       std::vector<std::vector<double> > rad;   /* experimental SAXS value for different values of q */
       std::vector<std::vector<double> > ndist; /* histogram of number distances for selected ensemble */
       std::vector<std::vector<double> > nnum1; /* distribution of number neighbours for R = 5.3A */
       std::vector<std::vector<double> > nnum2; /* distribution of number neighbours for R = 6.8A */
       std::vector<std::vector<double> > nnum3; /* distribution of number neighbours for R = 8.3A */
 
+      Array2D<std::complex<double>, NH+1, NH+1> beta;
+
       void load_rad(); /* loads the .rad experiment file */
       void load_statistics(); /* loads the tabulated statistics files */
       void load_FASTA();
       double distance( unsigned const int, unsigned const int ); /** measures the distance between beads **/
-      double volume_and_scattering_dictionary( const std::string& );
       bool bead_clash( unsigned const int ); /** checks wether the position of a bead clashes with another one **/
 
     public:
@@ -55,6 +64,7 @@ class BeadModeling : public Input {
       void write_xyz();
       void test_flat();
       void update_rho();
+      void expand_sh( double, int );
 
       //void WritePDB();
 };
