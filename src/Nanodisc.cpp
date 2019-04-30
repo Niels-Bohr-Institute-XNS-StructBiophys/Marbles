@@ -491,3 +491,12 @@ double Nanodisc::get_rho_head() {
 double Nanodisc::get_cvprotein() {
   return cvprotein;
 }
+
+double Nanodisc::get_xrough() {
+  return xrough;
+}
+
+complex<double> Nanodisc::get_alpha( int i, int l, int m ) {
+  return alpha.at( i, l, m );
+
+}

@@ -47,13 +47,16 @@ class BeadModeling : public Input {
       std::vector<std::vector<double> > nnum2; /* distribution of number neighbours for R = 6.8A */
       std::vector<std::vector<double> > nnum3; /* distribution of number neighbours for R = 8.3A */
 
-      Array2D<std::complex<double>, NH+1, NH+1> beta;
+      Array3D<std::complex<double>, 0, NH+1, NH+1> beta;
+      std::vector<double> intensity;
 
       void load_rad(); /* loads the .rad experiment file */
       void load_statistics(); /* loads the tabulated statistics files */
       void load_FASTA();
       double distance( unsigned const int, unsigned const int ); /** measures the distance between beads **/
       bool bead_clash( unsigned const int ); /** checks wether the position of a bead clashes with another one **/
+      void expand_sh( double, int, int );
+      void calc_intensity( std::vector<double> );
 
     public:
       BeadModeling( const std::string& );
@@ -64,7 +67,6 @@ class BeadModeling : public Input {
       void write_xyz();
       void test_flat();
       void update_rho();
-      void expand_sh( double, int );
 
       //void WritePDB();
 };

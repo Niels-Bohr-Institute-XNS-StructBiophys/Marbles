@@ -85,6 +85,8 @@ class Nanodisc : public Input {
     double get_rho_alkyl();
     double get_rho_head();
     double get_cvprotein();
+    double get_xrough();
+    std::complex<double> get_alpha( int, int, int );
     int get_harmonics_order();
 
 };

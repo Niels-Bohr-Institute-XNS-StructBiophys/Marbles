@@ -4,10 +4,12 @@ import os
 
 col = int(sys.argv[1])
 
+print("Loading ...")
 mine = np.loadtxt("out_check")
 ref  = np.loadtxt("../bead_modeling_flat/out_check")
 thresh = 1e-12
 
+print("Checking!")
 if( col == -1 ):
     mine_f = mine#[:,0]
     ref_f = ref#[:,0]
