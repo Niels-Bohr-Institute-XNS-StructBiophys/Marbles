@@ -13,15 +13,27 @@ Nanodisc::Nanodisc() {
 }
 
 Nanodisc::~Nanodisc() {
+  //nothing to be done here
 }
 
 void Nanodisc::load_input( const string& best_fit ) {
 
-  volume_tests = true;
+  /**
+   * Reads from the WillItFit output file.
+   * The number of lines to skip is hardcoded and needs to be re-checked everytime the WillItFit version changes.
+   * Excess scattering lengths are in units of the electron scattering length, and are thus adimensional.
+   * Volumes are in A^3.
+   *
+   * Inputs
+   * ------
+   * const strin& best_fit: path to the best fit file output from WillItFit.
+   */
+
+  volume_tests = true; //might want to ask the user about this!
 
   ifstream file( best_fit );
   string line;
-  string d = "=", d_ = " ", d__ = ",";
+  string d = "=", d_ = " ", d__ = ","; //possible delimiters
   double tmp;
 
   if( file.is_open() ) {
@@ -83,7 +95,7 @@ void Nanodisc::load_input( const string& best_fit ) {
     tmp = sqrt( scale_endcaps * scale_endcaps - 1. ) / scale_endcaps;
     vertical_axis_ellipsoid = vertical_axis_endcaps / ( 1. - tmp );
 
-    //compute densities from the fit-corrected volumes
+    //compute excess scattering length densities from the fit-corrected volumes
     rho_head    += wathead * rho_h2o;
     rho_head    /= ( vhead * cvlipid + wathead * vh2o );
     rho_alkyl   /= ( valkyl * cvlipid );
@@ -92,6 +104,7 @@ void Nanodisc::load_input( const string& best_fit ) {
     rho_protein /= ( vprotein * cvprotein );
     rho_h2o     /= ( vh2o * cvwater );
 
+    /** Three checks on volumes are ran to verify the consistency of the quantities loaded from the WillItFit output. */
     if( volume_tests ) {
 
       double vh1, vh2, va1, va2, vm1, vm2;
@@ -101,7 +114,7 @@ void Nanodisc::load_input( const string& best_fit ) {
 
       if( fabs( vh1 - vh2 ) > 0.5 ) {
         cout << "\n# ERROR IN PARSING" << endl;
-        cout << "# Check failed: inconsistent volume of lipid heads." << endl;
+        cout << "# Check 0 failed: inconsistent volume of lipid heads." << endl;
         cout << "# This might indicate that some values have not been parsed correctly." << endl;
         cout << "# Set volume_tests to 'false' to ignore this and proceed anyway." << endl;
       }
@@ -111,7 +124,7 @@ void Nanodisc::load_input( const string& best_fit ) {
 
       if( fabs( va1 - va2 ) > 60 ) {
         cout << "\n# ERROR IN PARSING" << endl;
-        cout << "# Check failed: inconsistent volume of alkyl heads." << endl;
+        cout << "# Check 1 failed: inconsistent volume of alkyl heads." << endl;
         cout << "# This might indicate that some values have not been parsed correctly." << endl;
         cout << "# Set volume_tests to 'false' to ignore this and proceed anyway." << endl;
       }
@@ -121,24 +134,22 @@ void Nanodisc::load_input( const string& best_fit ) {
 
       if( fabs( vm1 - vm2 ) > 0.1 ) {
         cout << "\n# ERROR IN PARSING" << endl;
-        cout << "# Check failed: inconsistent volume of methyl groups." << endl;
+        cout << "# Check 2 failed: inconsistent volume of methyl groups." << endl;
         cout << "# This might indicate that some values have not been parsed correctly." << endl;
         cout << "# Set volume_tests to 'false' to ignore this and proceed anyway." << endl;
       }
-
-
     }
 
-    //cout << hbelt << " " << nlipids << endl;
-    //cout << watheads << endl;
-    //cout << xrough << " " << cvbelt << " " << cvlipids << " " << cvmp << endl;
-    //cout << cvwater << endl;
-    //cout << vertical_axis_endcaps << " " << scale_endcaps << endl;
-    //cout << radius_major << " " << radius_minor << " " << width_belt << endl;
-    //cout << rho_h2o << " " << rho_d2o << " " << rho_head << " " << rho_alkyl << endl;
-    //cout << rho_methyl << " " << rho_belt << " " << rho_protein << endl;
-    //cout << v_h2o << " " << v_d2o << " " << v_head << " " << v_alkyl << endl;
-    //cout << v_methyl << " " << v_belt << " " << v_protein << endl;
+    // cout << hbelt << " " << nlipids << endl;
+    // cout << watheads << endl;
+    // cout << xrough << " " << cvbelt << " " << cvlipids << " " << cvmp << endl;
+    // cout << cvwater << endl;
+    // cout << vertical_axis_endcaps << " " << scale_endcaps << endl;
+    // cout << radius_major << " " << radius_minor << " " << width_belt << endl;
+    // cout << rho_h2o << " " << rho_d2o << " " << rho_head << " " << rho_alkyl << endl;
+    // cout << rho_methyl << " " << rho_belt << " " << rho_protein << endl;
+    // cout << v_h2o << " " << v_d2o << " " << v_head << " " << v_alkyl << endl;
+    // cout << v_methyl << " " << v_belt << " " << v_protein << endl;
 
   } else {
     cout << "Cannot open '" << best_fit << "'" << endl;
@@ -148,6 +159,23 @@ void Nanodisc::load_input( const string& best_fit ) {
 }
 
 void Nanodisc::flat_disc_form_factor( double a, double b, double L, double rho, double q, int index ) {
+
+  /** Computes the orientationally averaged form factor of a disc for different values of the momentum:
+    * psi = 2 * J1( q1 ) / q1 * sinc( q * L * cos(alpha/2) )
+    * where
+    * q1 = q * r * sin(alpha)
+    * r = sqrt( a^2 * sin^2(phi) + b^2 * cos^2(phi) )
+    * Stores the value in F.
+    *
+    * Inputs
+    * ------
+    * double a:   major semiaxis of the disc
+    * double b:   minor semiaxis of the disc
+    * double L:   height of the disc
+    * double rho: excess scattering length density of the disc
+    * double q:   value of the momentum
+    * int index:  index on the momentum mesh
+    */
 
   double sinc, sin_t, theta, phi, a_phi, b_phi, qr;
   vector<double> r( nphi );
@@ -162,7 +190,6 @@ void Nanodisc::flat_disc_form_factor( double a, double b, double L, double rho, 
     a_phi  = a * cos(phi);
     b_phi  = b * sin(phi);
     r[p]   = sqrt( a_phi * a_phi + b_phi * b_phi );
-    //cout << r[p] << endl;
   }
 
   for( unsigned int t = 0; t < ntheta; t++ ) {
@@ -179,7 +206,6 @@ void Nanodisc::flat_disc_form_factor( double a, double b, double L, double rho, 
       } else {
         F.add( index, t, p, 2. * v_rho * boost::math::cyl_bessel_j( 1, qr ) / qr * sinc );
       }
-      //cout << F.at( index, t, p) << endl;
     }
   }
 }
@@ -345,7 +371,7 @@ void Nanodisc::disc_w_endcaps_form_factor( double a, double b, double L, double 
 //   return intensity;
 // }
 
-double Nanodisc::expand_sh2( int index ) {
+double Nanodisc::expand_sh( int index ) {
 
   double theta, phi;
   double theta_step = M_PI/ ntheta;

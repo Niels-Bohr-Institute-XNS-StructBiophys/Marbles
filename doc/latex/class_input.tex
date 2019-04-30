@@ -1,0 +1,95 @@
+\hypertarget{class_input}{}\section{Input Class Reference}
+\label{class_input}\index{Input@{Input}}
+
+
+{\ttfamily \#include $<$Input.\+h$>$}
+
+Inheritance diagram for Input\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{class_input}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+std\+::string \mbox{\hyperlink{class_input_a0dda55e6109c2a9e0cea6b845f537e08}{parse\+\_\+line}} (std\+::ifstream \&, std\+::string)
+\item 
+std\+::string \mbox{\hyperlink{class_input_a8c76cad0ed10a1ab30f81368013e7a49}{parse\+\_\+double\+\_\+delimiter}} (std\+::ifstream \&, std\+::string, std\+::string)
+\item 
+std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \mbox{\hyperlink{class_input_a8fb5a7daf7254f88800d052ba767d9b6}{load\+\_\+matrix}} (const std\+::string \&, int)
+\item 
+void \mbox{\hyperlink{class_input_a1881bd785ffd830245fccb22091a53c0}{skip\+\_\+lines}} (std\+::ifstream \&, int)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Class needed to interpret input files 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{class_input_a8fb5a7daf7254f88800d052ba767d9b6}\label{class_input_a8fb5a7daf7254f88800d052ba767d9b6}} 
+\index{Input@{Input}!load\_matrix@{load\_matrix}}
+\index{load\_matrix@{load\_matrix}!Input@{Input}}
+\subsubsection{\texorpdfstring{load\_matrix()}{load\_matrix()}}
+{\footnotesize\ttfamily vector$<$ vector$<$ double $>$ $>$ Input\+::load\+\_\+matrix (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{,  }\item[{int}]{ }\end{DoxyParamCaption})}
+
+parses input lines with double delimiters loads a matrix from file. Only the number of columns is needed, not the number of lines.
+
+\subsubsection*{Inputs }
+
+ifstream\& file\+: address of a file stream int ncols\+: number of columns of the matrix
+
+\subsubsection*{Returns }
+
+vector$<$vector$<$double$>$ $>$ vec\+: the loaded matrix\mbox{\Hypertarget{class_input_a8c76cad0ed10a1ab30f81368013e7a49}\label{class_input_a8c76cad0ed10a1ab30f81368013e7a49}} 
+\index{Input@{Input}!parse\_double\_delimiter@{parse\_double\_delimiter}}
+\index{parse\_double\_delimiter@{parse\_double\_delimiter}!Input@{Input}}
+\subsubsection{\texorpdfstring{parse\_double\_delimiter()}{parse\_double\_delimiter()}}
+{\footnotesize\ttfamily string Input\+::parse\+\_\+double\+\_\+delimiter (\begin{DoxyParamCaption}\item[{std\+::ifstream \&}]{,  }\item[{std\+::string}]{,  }\item[{std\+::string}]{ }\end{DoxyParamCaption})}
+
+parses input line with single delimiter parses a numeric value from file line with double delimiter.
+
+\subsubsection*{Example }
+
+from file\+\_\+line = \char`\"{}!nu\+\_\+\+X\+\_\+h20 50 , comment\char`\"{}, the function parses 50 using \char`\"{} \char`\"{} and \char`\"{},\char`\"{} as a delimiters
+
+\subsubsection*{Inputs }
+
+ifstream\& file\+: address of a file stream string delimiter1\+: first delimiter string delimiter2\+: second delimiter
+
+\subsubsection*{Returns }
+
+string token\+: parsed output\mbox{\Hypertarget{class_input_a0dda55e6109c2a9e0cea6b845f537e08}\label{class_input_a0dda55e6109c2a9e0cea6b845f537e08}} 
+\index{Input@{Input}!parse\_line@{parse\_line}}
+\index{parse\_line@{parse\_line}!Input@{Input}}
+\subsubsection{\texorpdfstring{parse\_line()}{parse\_line()}}
+{\footnotesize\ttfamily string Input\+::parse\+\_\+line (\begin{DoxyParamCaption}\item[{std\+::ifstream \&}]{,  }\item[{std\+::string}]{ }\end{DoxyParamCaption})}
+
+parses a numeric value from file line with single delimiter.
+
+\subsubsection*{Example }
+
+from file\+\_\+line = \char`\"{}\+C\+V\+Lipid 50\char`\"{}, the function parses 50 using \char`\"{} \char`\"{} as a delimiter
+
+\subsubsection*{Inputs }
+
+ifstream\& file\+: address of a file stream string delimiter\+: delimiter
+
+\subsubsection*{Returns }
+
+string str\+: parsed output\mbox{\Hypertarget{class_input_a1881bd785ffd830245fccb22091a53c0}\label{class_input_a1881bd785ffd830245fccb22091a53c0}} 
+\index{Input@{Input}!skip\_lines@{skip\_lines}}
+\index{skip\_lines@{skip\_lines}!Input@{Input}}
+\subsubsection{\texorpdfstring{skip\_lines()}{skip\_lines()}}
+{\footnotesize\ttfamily void Input\+::skip\+\_\+lines (\begin{DoxyParamCaption}\item[{std\+::ifstream \&}]{,  }\item[{int}]{ }\end{DoxyParamCaption})}
+
+loads a matrix from file skips a given number of lines while parsing a file
+
+\subsubsection*{Inputs }
+
+ifstream\& file\+: address of a file stream int num\+: number of lines to skip
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+include/Input.\+h\item 
+src/Input.\+cpp\end{DoxyCompactItemize}

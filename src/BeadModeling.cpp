@@ -16,7 +16,7 @@ BeadModeling::BeadModeling( const string& filename ) {
   input_file = filename;
   sanity_check = false;
   sphere_generated = false;
-  clash_distance = 1.8; //hardcoded because experimented
+  clash_distance = 1.8; //hardcoded because experimented. Might want to leave the choice open for users though. 
   sequence = "";
   shift = 50.;
 

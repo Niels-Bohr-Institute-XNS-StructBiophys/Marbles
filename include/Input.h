@@ -2,17 +2,33 @@
 #include <vector>
 #include <fstream>
 
+/**
+ * Class needed to interpret input files
+ */
+
 class Input {
 
-  /* Class needed to help interpreting input files */
+  /* CLASSES */
+
+  /* FLAGS */
+
+  /* INPUT FILES */
+
+  /* INFO VARIABLES */
+
+  /* DETAILS OF THE CALCULATION */
+
+  /* PRIVATE FUNCTIONS */
 
   public:
     Input();
     ~Input();
 
-    std::string parse_line( std::ifstream&, std::string );                   /* parses an input line */
-    std::string parse_double_delimiter( std::ifstream&, std::string, std::string );    /* parses input lines with double delimiters */
-    std::vector<std::vector<double> > load_matrix( const std::string&, int ); /* loads a matrix from file */
-    void skip_lines( std::ifstream&, int );                                  /* skips a given number of lines when reading a file */
-    void parse_pdb();
+    /* PUBLIC UTILITIES */
+    std::string parse_line( std::ifstream&, std::string );                          /** parses input line with single delimiter */
+    std::string parse_double_delimiter( std::ifstream&, std::string, std::string ); /** parses input lines with double delimiters */
+    std::vector<std::vector<double> > load_matrix( const std::string&, int );       /** loads a matrix from file */
+    void skip_lines( std::ifstream&, int );                                         /** skips a given number of lines when reading a file */
+
+    /* GET FUNCTIONS */
 };
