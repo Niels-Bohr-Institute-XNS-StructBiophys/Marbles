@@ -96,6 +96,7 @@ class Nanodisc : public Input {
     double get_rho_head();                            /** returns the scattering length of the lipid heads */
     double get_cvprotein();                           /** returns the correction factor for the membrane protein volume */
     double get_xrough();                              /** returns the roughness coefficient */
+    double get_e_scatt_len();                         /** returns electron scattering length in cm */
 
     std::complex<double> get_alpha( int, int, int );  /** returns the value of the expanded form factor at position i,l,m */
 

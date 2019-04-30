@@ -10,4 +10,4 @@ runner
 .DS_Store
 
 # Ignore temps and generated files
-*.xyz out_check* dictionary* *.txt *.dat *.pdb *.rad *test*
+*.xyz out_check* dictionary* *.txt *.dat *.pdb *.rad *test* *.py *.sh

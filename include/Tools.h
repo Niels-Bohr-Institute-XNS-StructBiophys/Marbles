@@ -2,8 +2,8 @@ template <class T, size_t W, size_t H>
 class Array2D {
 
   public:
-    const int width = W; /* width of the matrix */
-    const int height = H; /* height of the matrix */
+    int width = W; /* width of the matrix */
+    int height = H; /* height of the matrix */
 
     Array2D() : buffer( width * height ) {}
 
@@ -21,6 +21,12 @@ class Array2D {
 
     void add( unsigned int x, unsigned int y, T val ) {
       buffer[y*width + x] += val;
+    }
+
+    void resize( unsigned int x, unsigned int y ) {
+      buffer.resize( x * y );
+      width = y;
+      height = x;
     }
 
   private:

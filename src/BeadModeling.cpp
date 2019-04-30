@@ -11,12 +11,17 @@
 
 using namespace std;
 
+/*
+ * TODO:
+ * find better way to do update_statistics(). In particular, I don't like the fact that you have to pre-compute the distance matrix.
+ */
+
 BeadModeling::BeadModeling( const string& filename ) {
 
   input_file = filename;
   sanity_check = false;
   sphere_generated = false;
-  clash_distance = 1.8; //hardcoded because experimented. Might want to leave the choice open for users though. 
+  clash_distance = 1.8; //hardcoded because experimented. Might want to leave the choice open for users though.
   sequence = "";
   shift = 50.;
 
@@ -43,10 +48,15 @@ void BeadModeling::load_statistics() {
   string nnum2_file = "include/statistics/nnum_6.8.dat";
   string nnum3_file = "include/statistics/nnum_8.3.dat";
 
-  ndist = load_matrix( ndist_file, 2 );
-  nnum1 = load_matrix( nnum1_file, 2 );
-  nnum2 = load_matrix( nnum2_file, 2 );
-  nnum3 = load_matrix( nnum3_file, 2 );
+  ndist        = load_matrix( ndist_file, 2 );
+  nnum1        = load_matrix( nnum1_file, 2 );
+  nnum2        = load_matrix( nnum2_file, 2 );
+  nnum3        = load_matrix( nnum3_file, 2 );
+
+  ndist_sample.resize( ndist.size() );
+  nnum1_sample.resize( nnum1.size() );
+  nnum2_sample.resize( nnum2.size() );
+  nnum3_sample.resize( nnum3.size() );
 }
 //------------------------------------------------------------------------------
 
@@ -139,15 +149,10 @@ void BeadModeling::load_FASTA() {
 double BeadModeling::distance( unsigned const int i, unsigned const int j ) {
 
   double x = beads[i].x - beads[j].x;
-  double x2 = x * x;
-
   double y = beads[i].y - beads[j].y;
-  double y2 = y * y;
-
   double z = beads[i].z - beads[j].z;
-  double z2 = z * z;
 
-  return sqrt( x2 + y2 + z2 );
+  return sqrt( x * x + y * y + z * z );
 }
 //------------------------------------------------------------------------------
 
@@ -206,32 +211,6 @@ void BeadModeling::initial_configuration() {
   } else {
     cout << "# NOTE! Skipping initial configuration because the the system is already set up.";
   }
-
-}
-
-void BeadModeling::test_flat() {
-
-  int dim = rad.size();
-
-  vector<double> exp_q( dim );
-  for( int i = 0; i < dim; i++ ) {
-    exp_q[i] = rad[i][0];
-  }
-
-  update_rho();
-  nd.nanodisc_form_factor( exp_q );
-
-  beta.resize_width( dim );
-  beta.initialize(0);
-
-  for( int i = 0; i < dim; i++ ) {
-    //cout << i << " " << endl;
-    expand_sh( exp_q[i], i, 1 );
-    //exit(-1);
-  }
-
-  calc_intensity( exp_q );
-
 
 }
 
@@ -392,7 +371,9 @@ void BeadModeling::expand_sh( double q, int index, int sign ) {
 void BeadModeling::calc_intensity( vector<double> exp_q ) {
 
   double xr = nd.get_xrough();
-  double r, q, tmp, exponent;
+  double r, q, tmp, exponent, e_scattlen;
+  double background = 7.8e-5; //TODO! Load this from WillItFit
+  double correction_factor = 2.409e15; //TODO! Understand how to compute this factor
 
   intensity.resize( rad.size() );
   fill(intensity.begin(),intensity.end(),0);
@@ -410,13 +391,104 @@ void BeadModeling::calc_intensity( vector<double> exp_q ) {
       }
     }
 
-    //intensity[i] *= 2.409e15; //2.5*1e15; //concentration multiplied or divided by a scaling coefficient from the instrument
-                    //probably the coefficient needed to set to absolute scale
-    //intensity[i] += 7.8e-5; //background3 in old WillItFit
+    e_scattlen = nd.get_e_scatt_len();
 
-    cout << intensity[i] << endl;
+    intensity[i] = intensity[i] * e_scattlen * e_scattlen * correction_factor + background;
+    //cout << intensity[i] << endl;
   }
 }
+
+void BeadModeling::distance_matrix() {
+
+  double tmp;
+
+  for( unsigned int i = 0; i < nresidues; i ++ ) {
+    for( unsigned int j = i+1; j < nresidues; j++ ) {
+      tmp = distance( i, j );
+      distances.set( i, j, tmp );
+      distances.set( j, i, tmp );
+    }
+  }
+
+}
+
+void BeadModeling::update_statistics() {
+
+  int count1, count2, count3;
+  int len = nnum1_sample.size();
+  double d;
+
+  for( unsigned int i = 0; i < nresidues; i++ ) {
+
+    count1 = count2 = count3 = 0;
+
+    for( unsigned int j = 0; j < nresidues; j++ ) {
+
+      d = distances.at(i,j);
+      if( d < 12. ) ndist_sample[ (int)(d) ] += 1. / nresidues;
+      if( d < 5.3 ) count1++;
+      if( d < 6.8 ) count2++;
+      if( d < 8.3 ) count3++;
+    }
+
+    if( count1 < len ) nnum1_sample[count1-1] += 1. / nresidues;
+    if( count2 < len ) nnum2_sample[count2-1] += 1. / nresidues;
+    if( count3 < len ) nnum3_sample[count3-1] += 1. / nresidues;
+  }
+
+}
+
+void BeadModeling::test_flat() {
+
+  int dim = rad.size();
+
+  vector<double> exp_q( dim );
+  for( int i = 0; i < dim; i++ ) {
+    exp_q[i] = rad[i][0];
+  }
+
+  cout << endl;
+  cout << "# PRELIMINARIES" << endl;
+  cout << "# -------------" << endl;
+
+  cout << "# Update scattering lengths:";
+  update_rho();
+  cout << " DONE" << endl;
+
+  cout << "# Compute form factor:";
+  nd.nanodisc_form_factor( exp_q );
+
+  beta.resize_width( dim );
+  beta.initialize(0);
+
+  for( int i = 0; i < dim; i++ ) {
+    //cout << i << " " << endl;
+    expand_sh( exp_q[i], i, 1 );
+    //exit(-1);
+  }
+  cout << " DONE" << endl;
+
+  cout << "# Compute intensity:";
+  calc_intensity( exp_q );
+  cout << " DONE" << endl;
+
+  distances.resize( nresidues, nresidues );
+  distances.initialize(0);
+
+  cout << "# Update statistics:";
+  distance_matrix();
+  update_statistics();
+  cout << " DONE" << endl;
+
+  cout << endl;
+  cout << "# SIMULATED ANNEALING" << endl;
+  cout << "# -------------------" << endl;
+  cout << endl;
+
+
+}
+
+
 
 BeadModeling::~BeadModeling() {
 }

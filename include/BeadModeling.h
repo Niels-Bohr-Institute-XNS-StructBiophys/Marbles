@@ -56,11 +56,16 @@ class BeadModeling : public Input {
 
       std::vector<std::vector<double> > rad;   /* experimental SAXS value for different values of q */
       std::vector<std::vector<double> > ndist; /* histogram of number distances for selected ensemble */
+      std::vector<double> ndist_sample;
       std::vector<std::vector<double> > nnum1; /* distribution of number neighbours for R = 5.3A */
+      std::vector<double> nnum1_sample;
       std::vector<std::vector<double> > nnum2; /* distribution of number neighbours for R = 6.8A */
+      std::vector<double> nnum2_sample;
       std::vector<std::vector<double> > nnum3; /* distribution of number neighbours for R = 8.3A */
+      std::vector<double> nnum3_sample;
 
       Array3D<std::complex<double>, 0, NH+1, NH+1> beta;
+      Array2D<double, 1, 1> distances;
 
       std::vector<double> intensity;
 
@@ -70,8 +75,11 @@ class BeadModeling : public Input {
       void load_FASTA();
       void expand_sh( double, int, int );
       void calc_intensity( std::vector<double> );
+      void distance_matrix();
+      void update_statistics();
 
       double distance( unsigned const int, unsigned const int ); /** measures the distance between beads **/
+      double bead_distance( Bead, Bead );
 
       bool bead_clash( unsigned const int ); /** checks wether the position of a bead clashes with another one **/
 
