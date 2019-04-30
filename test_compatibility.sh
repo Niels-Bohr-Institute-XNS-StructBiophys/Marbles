@@ -11,4 +11,4 @@ gcc mainmc.c -o mainMC -lgsl -lgslcblas -L/usr/local/lib/ -I/usr/local/include/
 cd ../c++/
 echo ""
 echo "RESULTS:"
-python compare.py $COLS
+python compare_outputs.py $COLS
