@@ -27,7 +27,7 @@ string Input::parse_line( ifstream& file, string delimiter ) {
    * Returns
    * -------
    * string str: parsed output
-   **/
+   */
 
   string str;
 
@@ -57,17 +57,17 @@ string Input::parse_double_delimiter( ifstream& file, string delimiter1, string 
    * Returns
    * -------
    * string token: parsed output
-   **/
+   */
 
   string str;
 
   getline( file, str ); //read line
 
-  //first
+  //first substring
   string token = str.substr(0, str.find(delimiter1)); //get the first substring before the delimeter
   str.erase(0, str.find(delimiter1) + delimiter1.length()); //delete it
 
-  //second
+  //second substring
   token = str.substr(0, str.find(delimiter2));
 
   return token; //return substring, without delimeter and without parameter name
@@ -85,7 +85,7 @@ void Input::skip_lines( ifstream& file, int num ) {
    * ------
    * ifstream& file: address of a file stream
    * int num:        number of lines to skip
-   **/
+   */
 
   string str;
   for( int i = 0; i < num; i++ ) {
@@ -98,7 +98,7 @@ void Input::skip_lines( ifstream& file, int num ) {
 vector<vector<double> > Input::load_matrix( const string& filename, int ncols ) {
 
   /**
-   * loads a matrix from file. The number of lines is not needed.
+   * loads a matrix from file. Only the number of columns is needed, not the number of lines.
    *
    * Inputs
    * ------
@@ -108,7 +108,7 @@ vector<vector<double> > Input::load_matrix( const string& filename, int ncols ) 
    * Returns
    * -------
    * vector<vector<double> > vec: the loaded matrix
-   **/
+   */
 
   ifstream file( filename );
   string line;
