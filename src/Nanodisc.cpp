@@ -461,7 +461,7 @@ void Nanodisc::nanodisc_form_factor( vector<double> exp_q ) {
     //     cout << q << " " << t << " " << p << " " << F.at(i, t, p) << endl;
     //  }
     //}
-    double intensity = expand_sh2( i );
+    double intensity = expand_sh( i );
     //cout << intensity << endl;
   }
   //clock_t end = clock();
@@ -520,6 +520,10 @@ double Nanodisc::get_cvprotein() {
 
 double Nanodisc::get_xrough() {
   return xrough;
+}
+
+double Nanodisc::get_e_scatt_len() {
+  return e_scatt_len;
 }
 
 complex<double> Nanodisc::get_alpha( int i, int l, int m ) {
