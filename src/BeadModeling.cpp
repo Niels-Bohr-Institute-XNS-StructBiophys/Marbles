@@ -221,10 +221,16 @@ void BeadModeling::test_flat() {
   update_rho();
   nd.nanodisc_form_factor( exp_q );
 
+  beta.resize_width( dim );
+  beta.initialize(0);
+
   for( int i = 0; i < dim; i++ ) {
-    expand_sh( exp_q[i], 1 );
-    exit(-1);
+    //cout << i << " " << endl;
+    expand_sh( exp_q[i], i, 1 );
+    //exit(-1);
   }
+
+  calc_intensity( exp_q );
 
 
 }
@@ -334,18 +340,7 @@ void BeadModeling::update_rho() {
   }
 }
 
-// complex<double> pol2(double r, double angle)
-// {
-//     if(angle==0) {
-//       complex<double> a(r, 0.);
-//         return a;
-//     } else {
-//       complex<double> a( r * cos(angle), r * sin(angle) );
-//       return a;
-//     }
-// }
-
-void BeadModeling::expand_sh( double q, int sign ) {
+void BeadModeling::expand_sh( double q, int index, int sign ) {
 
   double x, y, z, r, theta, phi;
   double sqrt_4pi = sqrt( 4. * M_PI );
@@ -381,17 +376,46 @@ void BeadModeling::expand_sh( double q, int sign ) {
         tmp = sqrt_4pi * pow(j, l) * beads[i].rho_modified * bessel[l] * legendre[l] * p;
 
         if( sign >= 0 ) {
-          beta.add( l, m, tmp );
+          beta.add( index, l, m, tmp );
         } else {
-          beta.add( l, m, -tmp );
+          beta.add( index, l, m, -tmp );
         }
 
-        cout << real(beta.at( l, m )) << " " << imag(beta.at( l, m )) << endl;
+        //cout << real(beta.at( index, l, m )) << " " << imag(beta.at( index, l, m )) << endl;
 
       }
     }
   }
+}
 
+
+void BeadModeling::calc_intensity( vector<double> exp_q ) {
+
+  double xr = nd.get_xrough();
+  double r, q, tmp, exponent;
+
+  intensity.resize( rad.size() );
+  fill(intensity.begin(),intensity.end(),0);
+
+  for( int i = 0; i < rad.size(); i++ ) {
+    q = exp_q[i];
+    exponent = xr * q * xr * q;
+    r = exp( - exponent / 2. );
+
+    for(int l = 0; l <= harmonics_order; l++ ) {
+      for(int m = 0; m <= l; m++ ) {
+        tmp = abs( r * nd.get_alpha( i, l, m ) + beta.at( i, l, m ) );
+        tmp *= tmp;
+        intensity[i] += ( (m > 0) + 1. ) * tmp;
+      }
+    }
+
+    //intensity[i] *= 2.409e15; //2.5*1e15; //concentration multiplied or divided by a scaling coefficient from the instrument
+                    //probably the coefficient needed to set to absolute scale
+    //intensity[i] += 7.8e-5; //background3 in old WillItFit
+
+    cout << intensity[i] << endl;
+  }
 }
 
 BeadModeling::~BeadModeling() {
