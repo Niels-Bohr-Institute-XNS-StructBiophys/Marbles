@@ -26,6 +26,7 @@ class BeadModeling : public Input {
       /* FLAGS */
       bool sanity_check;           /** Flag for sanity checks */
       bool sphere_generated;       /** Flag for avoiding regereating the initial sphere */
+      bool init_type_penalty;      /** True if type_penalty is being called for the first time */
 
       /* INPUT FILES */
       std::string input_file;      /** Input file with run configurations */
@@ -42,13 +43,23 @@ class BeadModeling : public Input {
       unsigned int nresidues;      /** Number of residues in the protein and, correspondigly, beads. */
       unsigned int npasses;        /** Number of Monte Carlo passes to be executed */
       unsigned int loops_per_pass; /** Number of loops per pass to be executed */
+      unsigned int nalkyl;         /** Number of beads in the alkyl region of the nanodisc */
+      unsigned int nmethyl;        /** Number of beads in the methyl region of the nanodisc */
+      unsigned int nhead;          /** Number of beads in the head region of the nanodisc */
+      unsigned int insertion;      /** Number of residues that are required to be inserted in the nanodisc */
 
-      double lambda1;              /** TO BE CLEARED */
-      double lambda2;              /** TO BE CLEARED */
+      double lambda;              /** TO BE CLEARED */
+      //double lambda2;              /** TO BE CLEARED */
       double connect;              /** TO BE CLEARED */
       double dmax;                 /** maximum length detected from P(r) */
       double shift;                /** z shift of the initial sphere with respect to the nanodisc */
       double clash_distance;       /** distance below which a bead clash is called */
+      double X;                    /** chi squared of SAXS intensity */
+      double T;                    /** value of the type penalty */
+      double H;                    /** value of the histogram penalty */
+      double C;                    /** value of the connect penalty */
+      double T_strength;           /** strength of the type penalty */
+      double H_strength;           /** strength of the histogram penalty */
 
       const unsigned int harmonics_order = 17;
       const unsigned int ntheta = (harmonics_order + 1) * 2;
@@ -77,6 +88,13 @@ class BeadModeling : public Input {
       void calc_intensity( std::vector<double> );
       void distance_matrix();
       void update_statistics();
+      void recursive_connect( int, int, int* );
+
+      //penalty functions
+      void chi_squared();
+      void type_penalty();
+      void histogram_penalty();
+      void connect_penalty();
 
       double distance( unsigned const int, unsigned const int ); /** measures the distance between beads **/
       double bead_distance( Bead, Bead );

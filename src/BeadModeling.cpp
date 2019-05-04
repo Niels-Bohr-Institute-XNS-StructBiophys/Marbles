@@ -21,9 +21,15 @@ BeadModeling::BeadModeling( const string& filename ) {
   input_file = filename;
   sanity_check = false;
   sphere_generated = false;
+  init_type_penalty = true;
   clash_distance = 1.8; //hardcoded because experimented. Might want to leave the choice open for users though.
   sequence = "";
-  shift = 50.;
+  shift = 50.; //same here: might want to leave this free for the user to choose
+  X = std::numeric_limits<float>::max();
+  insertion = 14;
+  T_strength = 5;
+  H_strength = 20;
+
 
   if( !sanity_check ) {
       load_input();
@@ -49,9 +55,9 @@ void BeadModeling::load_statistics() {
   string nnum3_file = "include/statistics/nnum_8.3.dat";
 
   ndist        = load_matrix( ndist_file, 2 );
-  nnum1        = load_matrix( nnum1_file, 2 );
-  nnum2        = load_matrix( nnum2_file, 2 );
-  nnum3        = load_matrix( nnum3_file, 2 );
+  nnum1        = load_matrix( nnum1_file, 3 );
+  nnum2        = load_matrix( nnum2_file, 3 );
+  nnum3        = load_matrix( nnum3_file, 3 );
 
   ndist_sample.resize( ndist.size() );
   nnum1_sample.resize( nnum1.size() );
@@ -89,8 +95,8 @@ void BeadModeling::load_input() {
     npasses        = stoi( parse_line( file, d ) );   //total number of passes
     loops_per_pass = stoi( parse_line( file, d ) );   //number of performed loops per pass
     outdir         = parse_line( file, d );           //directory where results are saved
-    lambda1        = stoi( parse_line( file, d ) );
-    lambda2        = stoi( parse_line( file, d ) );
+    lambda         = stoi( parse_line( file, d ) );
+    //lambda2        = stoi( parse_line( file, d ) );
     connect        = stoi( parse_line( file, d ) );
 
     //cout << rad_file << "\t" << best_fit << "\t" << nresidues << "\t" << mass << endl;
@@ -265,6 +271,10 @@ void BeadModeling::update_rho() {
   double shift_z_core            = ( hcore / 2. + shift_endcaps ) * c_endcaps_1;
   double shift_z_lipid           = ( hlipid / 2. + shift_endcaps ) * c_endcaps_1;
 
+  nmethyl = 0;
+  nalkyl  = 0;
+  nhead   = 0;
+
   double x, y, z, fz, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp12;
   bool cnd1, cnd2, cnd3, cnd4;
 
@@ -303,12 +313,15 @@ void BeadModeling::update_rho() {
     if( fz < hmethyl * .5 ) {
       beads[i].type = 3;
       beads[i].rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_methyl;
+      nmethyl++;
     } else if( cnd1 || cnd2 || fz < hcore * .5 ) {
       beads[i].type = 2;
       beads[i].rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_alkyl;
+      nalkyl++;
     } else if( cnd3 || cnd4 || fz < hlipid * .5 ) {
       beads[i].type = 1;
       beads[i].rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_head;
+      nhead++;
     } else {
       beads[i].type = 0;
       beads[i].rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_solvent;
@@ -394,7 +407,6 @@ void BeadModeling::calc_intensity( vector<double> exp_q ) {
     e_scattlen = nd.get_e_scatt_len();
 
     intensity[i] = intensity[i] * e_scattlen * e_scattlen * correction_factor + background;
-    //cout << intensity[i] << endl;
   }
 }
 
@@ -437,6 +449,111 @@ void BeadModeling::update_statistics() {
   }
 
 }
+
+void BeadModeling::chi_squared() {
+
+  double tmp, err;
+  double len = rad.size();
+  X = 0.;
+
+  for( unsigned int i = 0; i < len; i++ ) {
+    tmp = intensity[i] - rad[i][1];
+    err = rad[i][2];
+    X += tmp * tmp / (err * err);
+  }
+}
+
+void BeadModeling::type_penalty() {
+
+  double tmp;
+  tmp = nalkyl + nmethyl + nhead - insertion;
+
+  if( init_type_penalty ) {
+    T = 2. * T_strength * tmp * tmp;
+  } else {
+    if( tmp > 0 ) {
+      T = 0;
+    } else {
+      T = T_strength * tmp * tmp;
+    }
+  }
+
+  init_type_penalty = false;
+}
+
+void BeadModeling::histogram_penalty() {
+
+  double tmp1, tmp2, tmp3, tmp4;
+  H = 0;
+
+  for( unsigned int i = 0; i < nnum1.size(); i++ ) {
+
+    tmp1 = nnum1[i][1] - nnum1_sample[i];
+    tmp2 = nnum2[i][1] - nnum2_sample[i];
+    tmp3 = nnum3[i][1] - nnum3_sample[i];
+
+    if( i < ndist.size() ) {
+      tmp4 = ndist[i][1] - ndist_sample[i];
+    } else {
+      tmp4 = 0.;
+    }
+
+    H += H_strength * ( tmp1 * tmp1 + tmp2 * tmp2 + tmp3 * tmp3 ) + tmp4 * tmp4;
+  }
+
+  H *= lambda;
+}
+
+void BeadModeling::recursive_connect( int i, int s, int *pop ) {
+
+  for( unsigned int j = 0; j < nresidues; j++ ) {
+    if( distance(i,j) < 5.81 && i != j ) {
+      cout << distance(i,j) << endl;
+      if( beads[j].burn == 0 ) {
+          beads[j].burn = 1;
+          pop[s]++;
+          recursive_connect(j,s,pop);
+      }
+    }
+  }
+}
+
+void BeadModeling::connect_penalty() {
+
+  int pop[nresidues];// = {0};
+  int i, s = 0, max;
+
+  for( unsigned int i = 0; i < nresidues; i++ ) {
+      beads[i].burn = 0;
+      pop[i] = 0.;
+  }
+
+  for( unsigned i = 0; i < nresidues; i++ ) {
+      if( beads[i].burn == 0 ) {
+          beads[i].burn = 1;
+          pop[s]++;
+          recursive_connect(i,s,pop);
+          s++;
+      }
+      cout << pop[i] << endl;
+  }
+  max = pop[0];
+  for(unsigned int i = 1; i < nresidues; i++ ) {
+      if( pop[i] >= max ) {
+          max = pop[i];
+      }
+
+      //cout << pop[i] << endl;
+  }
+
+  //cout << max << endl;
+  C = fabs( connect * log( nresidues / max ) );
+  //return max;
+}
+
+// void BeadModeling::penalty_function() {
+// }
+
 
 void BeadModeling::test_flat() {
 
@@ -484,6 +601,12 @@ void BeadModeling::test_flat() {
   cout << "# SIMULATED ANNEALING" << endl;
   cout << "# -------------------" << endl;
   cout << endl;
+
+  chi_squared();
+  type_penalty();
+  histogram_penalty();
+  connect_penalty();
+  //cout << C << endl;
 
 
 }
