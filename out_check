@@ -6,7 +6,6 @@
 # File 'p450.input' loaded
 # File '3a4h.FASTA.txt' loaded
 # File '3a4nd2.rad' loaded 
-# CHECK!!!12 20
 # Statistics loaded
 
 # SUMMARY OF PARAMETERS
@@ -17,16 +16,7 @@
 # Loops per pass: 490
 # Storing results in: 'p450/'
 # Initial configuration set.
-1
-0.0286299
-0.130879
-0.278119
-0.441718
-0.646217
-0.940695
-1.16155
-1.35378
-1.65644
-2.18814
-2.43763
 
+# PRELIMINARIES
+# -------------
+# Update scattering lengths: DONE

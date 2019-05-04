@@ -9,15 +9,16 @@ class Bead {
     Bead();
     ~Bead();
 
-    double x; /* position along x */
-    double y; /* position along y */
-    double z; /* position along z */
-    double rho; /* excess scattering length, associated via the corresponding residue */
+    double x;            /* position along x */
+    double y;            /* position along y */
+    double z;            /* position along z */
+    double rho;          /* excess scattering length, associated via the corresponding residue */
     double rho_modified; /* excess scattering length that changes depending on the position */
-    double v; /* volume */
-    double nn; /* number of neighbors */
+    double v;            /* volume */
+    double nn;           /* number of neighbors */
 
-    int type;
+    unsigned int type;   /* location of the bead inside the nanodisc */
+    unsigned int burn;
 
     bool position_assigned;
 

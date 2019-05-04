@@ -6,5 +6,4 @@ NPasses: 80
 LoopsPerPass: 490
 OutDir: p450/
 LambdaPro1: 100
-LambdaPro2: 2000
 ConnectPro: 30000
