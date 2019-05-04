@@ -27,6 +27,7 @@ class BeadModeling : public Input {
       bool sanity_check;           /** Flag for sanity checks */
       bool sphere_generated;       /** Flag for avoiding regereating the initial sphere */
       bool init_type_penalty;      /** True if type_penalty is being called for the first time */
+      bool init;                   /** True if penalty is called for the first time */
 
       /* INPUT FILES */
       std::string input_file;      /** Input file with run configurations */
@@ -58,6 +59,7 @@ class BeadModeling : public Input {
       double T;                    /** value of the type penalty */
       double H;                    /** value of the histogram penalty */
       double C;                    /** value of the connect penalty */
+      double P;                    /** value of the total penalty */
       double T_strength;           /** strength of the type penalty */
       double H_strength;           /** strength of the histogram penalty */
 
@@ -111,6 +113,7 @@ class BeadModeling : public Input {
       void write_xyz();
       void test_flat();
       void update_rho();
+      void penalty();
 
       /* GET FUNCTIONS */
 

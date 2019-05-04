@@ -22,6 +22,7 @@ BeadModeling::BeadModeling( const string& filename ) {
   sanity_check = false;
   sphere_generated = false;
   init_type_penalty = true;
+  init = true;
   clash_distance = 1.8; //hardcoded because experimented. Might want to leave the choice open for users though.
   sequence = "";
   shift = 50.; //same here: might want to leave this free for the user to choose
@@ -508,7 +509,6 @@ void BeadModeling::recursive_connect( int i, int s, int *pop ) {
 
   for( unsigned int j = 0; j < nresidues; j++ ) {
     if( distance(i,j) < 5.81 && i != j ) {
-      cout << distance(i,j) << endl;
       if( beads[j].burn == 0 ) {
           beads[j].burn = 1;
           pop[s]++;
@@ -535,24 +535,47 @@ void BeadModeling::connect_penalty() {
           recursive_connect(i,s,pop);
           s++;
       }
-      cout << pop[i] << endl;
   }
+
   max = pop[0];
   for(unsigned int i = 1; i < nresidues; i++ ) {
       if( pop[i] >= max ) {
           max = pop[i];
       }
-
-      //cout << pop[i] << endl;
   }
 
-  //cout << max << endl;
-  C = fabs( connect * log( nresidues / max ) );
-  //return max;
+  C = fabs( connect * log( (1. * nresidues) / max ) );
 }
 
-// void BeadModeling::penalty_function() {
-// }
+void BeadModeling::penalty() {
+
+  P = 0;
+  histogram_penalty();
+
+  if( init ) {
+
+    /* initially the penalty function is computed in a strange way: needs to be further tested!
+     * compute the histogram penalty
+     * then compute a modified type penalty
+     * set the connect penalty to 0
+     * add 100000 to everything
+     */
+
+    double tmp = nalkyl + nmethyl + nhead - insertion;
+    T = 2. * T_strength * tmp * tmp;
+    C = 0;
+    X = 0;
+    P = 100000;
+
+  } else {
+    chi_squared();
+    type_penalty();
+    connect_penalty();
+  }
+
+  init = false;
+  P += X + H + T + C;
+}
 
 
 void BeadModeling::test_flat() {
@@ -602,11 +625,14 @@ void BeadModeling::test_flat() {
   cout << "# -------------------" << endl;
   cout << endl;
 
-  chi_squared();
-  type_penalty();
-  histogram_penalty();
-  connect_penalty();
+  //chi_squared();
+  //type_penalty();
+  //histogram_penalty();
+  //connect_penalty();
   //cout << C << endl;
+
+  penalty();
+  cout << "#Chi2: " << X << " Type: " << T << " Histogram: " << H << " Connect: " << C << " Total: " << P << endl;
 
 
 }
