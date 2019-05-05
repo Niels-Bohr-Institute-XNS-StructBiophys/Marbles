@@ -70,15 +70,20 @@ class BeadModeling : public Input {
       std::vector<std::vector<double> > rad;   /* experimental SAXS value for different values of q */
       std::vector<std::vector<double> > ndist; /* histogram of number distances for selected ensemble */
       std::vector<double> ndist_sample;
+      std::vector<double> ndist_sample_old;
       std::vector<std::vector<double> > nnum1; /* distribution of number neighbours for R = 5.3A */
       std::vector<double> nnum1_sample;
+      std::vector<double> nnum1_sample_old;
       std::vector<std::vector<double> > nnum2; /* distribution of number neighbours for R = 6.8A */
       std::vector<double> nnum2_sample;
+      std::vector<double> nnum2_sample_old;
       std::vector<std::vector<double> > nnum3; /* distribution of number neighbours for R = 8.3A */
       std::vector<double> nnum3_sample;
+      std::vector<double> nnum3_sample_old;
 
       Array3D<std::complex<double>, 0, NH+1, NH+1> beta;
       Array2D<double, 1, 1> distances;
+      Array2D<double, 1, 1> distance_old;
 
       std::vector<double> intensity;
 
@@ -91,6 +96,8 @@ class BeadModeling : public Input {
       void distance_matrix();
       void update_statistics();
       void recursive_connect( int, int, int* );
+      void move();
+      void reject_move();
 
       //penalty functions
       void chi_squared();

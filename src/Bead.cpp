@@ -84,3 +84,10 @@ void Bead::assign_volume_and_scattlen( const string& residue ) {
       rho = 1.7921e-11 / e_scatt_len;
   }
 }
+
+void accept() {
+  x            = x_new;
+  y            = y_new;
+  z            = z_new;
+  rho_modified = rho_mnew;
+}
