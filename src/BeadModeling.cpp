@@ -22,7 +22,7 @@ BeadModeling::BeadModeling( const string& filename ) {
   sanity_check = false;
   sphere_generated = false;
   init_type_penalty = true;
-  init = true;
+  init = false;
   clash_distance = 1.8; //hardcoded because experimented. Might want to leave the choice open for users though.
   sequence = "";
   shift = 50.; //same here: might want to leave this free for the user to choose
@@ -30,7 +30,6 @@ BeadModeling::BeadModeling( const string& filename ) {
   insertion = 14;
   T_strength = 5;
   H_strength = 20;
-
 
   if( !sanity_check ) {
       load_input();
@@ -632,8 +631,11 @@ void BeadModeling::test_flat() {
   //cout << C << endl;
 
   penalty();
-  cout << "#Chi2: " << X << " Type: " << T << " Histogram: " << H << " Connect: " << C << " Total: " << P << endl;
+  cout << "# Chi2: " << X << " Type: " << T << " Histogram: " << H << " Connect: " << C << " Total: " << P << endl;
 
+}
+
+void BeadModeling::move() {
 
 }
 
