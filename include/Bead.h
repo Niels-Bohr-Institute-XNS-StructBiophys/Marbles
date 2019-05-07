@@ -18,10 +18,10 @@ class Bead {
     double nn;           /* number of neighbors */
 
     //info on the configuration after the attempted MC move
-    double x_new;
-    double y_new;
-    double z_mew;
-    double rho_mnew;
+    double x_old;
+    double y_old;
+    double z_old;
+    double rho_mold;
 
     unsigned int type;   /* location of the bead inside the nanodisc */
     unsigned int burn;
@@ -29,7 +29,10 @@ class Bead {
     bool position_assigned;
 
     void assign_position( double, double, double );
+    void update_position( double, double, double );
     void assign_volume_and_scattlen( const std::string& );
+    void save_old_config();
+    void recover_old_config();
     void accept(); /** assign new configuration */
 
 };

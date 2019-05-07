@@ -1,4 +1,5 @@
 #include <gsl/gsl_rng.h>
+#include <vector>
 
 /*
  * Class for the computation of random numbers
@@ -19,6 +20,10 @@ class RandomNumbers {
         double in_range( double, double ); /** return a random number uniformly distributed in [a,b] **/
         double in_range2( double, double );
         double gaussian( double ); /** returns a random number gaussian distributed with variance tau */
+        std::vector<double> vector( double );
+        std::vector<double> vector3( double );
+        std::vector<double> vector2( double, double );
+
 
     private:
         /*

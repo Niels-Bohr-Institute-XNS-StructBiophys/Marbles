@@ -85,9 +85,23 @@ void Bead::assign_volume_and_scattlen( const string& residue ) {
   }
 }
 
-void accept() {
-  x            = x_new;
-  y            = y_new;
-  z            = z_new;
-  rho_modified = rho_mnew;
+void Bead::save_old_config() {
+  x_old    = x;
+  y_old    = y;
+  z_old    = z;
+  rho_mold = rho_modified;
 }
+
+void Bead::recover_old_config() {
+  x = x_old;
+  y = y_old;
+  z = z_old;
+  rho_modified = rho_mold;
+}
+
+// void accept() {
+//   x            = x_new;
+//   y            = y_new;
+//   z            = z_new;
+//   rho_modified = rho_mnew;
+// }

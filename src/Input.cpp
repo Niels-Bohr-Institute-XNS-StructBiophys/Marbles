@@ -102,8 +102,8 @@ vector<vector<double> > Input::load_matrix( const string& filename, int ncols ) 
    *
    * Inputs
    * ------
-   * ifstream& file: address of a file stream
-   * int ncols:      number of columns of the matrix
+   * const string& filename: path to a file
+   * int ncols:              number of columns of the matrix
    *
    * Returns
    * -------
@@ -143,6 +143,59 @@ vector<vector<double> > Input::load_matrix( const string& filename, int ncols ) 
   return vec;
 }
 //------------------------------------------------------------------------------
+
+vector<double> Input::load_vector_from_matrix( const string& filename, int col, int ncols ) {
+
+  /**
+   * loads a column from a matrix file. Only the number of the column is needed, not the number of lines.
+   *
+   * Inputs
+   * ------
+   * const string& filename: path to a file
+   * int ncol:               the column that has to be loaded
+   *
+   * Returns
+   * -------
+   * vector<double> vec: the loaded vector
+   */
+
+   ifstream file( filename );
+   string line;
+   int n = 0;
+   double tmp;
+   //vector<vector<double> > tmp;
+   vector<double> vec;
+
+   if( file.is_open() ) {
+
+     //get file length
+     while( getline(file, line) )
+       ++n;
+
+     //go back to beginning of file
+     file.clear();
+     file.seekg(0, ios::beg);
+
+     //load vector
+     vec.resize( n );
+     for( int i = 0; i < n; i++ ) {
+       for( int j = 0; j < ncols; j++ ) {
+         file >> tmp;
+         if( j == col ) {
+           vec[i] = tmp;
+         }
+       }
+     }
+
+   } else {
+     cerr << "Cannot open '" << filename << "'" << endl;
+     exit(-1);
+   }
+
+   file.close();
+
+   return vec;
+}
 
 Input::~Input() {
 }

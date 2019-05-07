@@ -7,6 +7,7 @@
 #include <ctime>
 #include <gsl/gsl_sf_bessel.h>
 #include <gsl/gsl_sf_legendre.h>
+#include <iomanip>
 #define AV_RESIDUE_MASS 0.1 //average mass of a residue in kDa
 
 using namespace std;
@@ -19,84 +20,35 @@ using namespace std;
 BeadModeling::BeadModeling( const string& filename ) {
 
   input_file = filename;
-  sanity_check = false;
+
+  ifstream file( input_file );
+  string line;
+  string d = " ";
+
   sphere_generated = false;
   init_type_penalty = true;
   init = false;
   clash_distance = 1.8; //hardcoded because experimented. Might want to leave the choice open for users though.
   sequence = "";
   shift = 50.; //same here: might want to leave this free for the user to choose
-  X = std::numeric_limits<float>::max();
+  //X = std::numeric_limits<float>::max();
   insertion = 14;
   T_strength = 5;
   H_strength = 20;
+  init = true;
 
-  if( !sanity_check ) {
-      load_input();
-      nd.load_input( best_fit );
-  }
-
-  beads.resize( nresidues );
-
-  sanity_check = true;
-}
-//------------------------------------------------------------------------------
-
-void BeadModeling::load_rad() {
-  rad = load_matrix( rad_file, 3 );
-}
-//------------------------------------------------------------------------------
-
-void BeadModeling::load_statistics() {
-
-  string ndist_file = "include/statistics/ndist.dat";
-  string nnum1_file = "include/statistics/nnum_5.3.dat";
-  string nnum2_file = "include/statistics/nnum_6.8.dat";
-  string nnum3_file = "include/statistics/nnum_8.3.dat";
-
-  ndist        = load_matrix( ndist_file, 2 );
-  nnum1        = load_matrix( nnum1_file, 3 );
-  nnum2        = load_matrix( nnum2_file, 3 );
-  nnum3        = load_matrix( nnum3_file, 3 );
-
-  ndist_sample.resize( ndist.size() );
-  nnum1_sample.resize( nnum1.size() );
-  nnum2_sample.resize( nnum2.size() );
-  nnum3_sample.resize( nnum3.size() );
-}
-//------------------------------------------------------------------------------
-
-void BeadModeling::load_input() {
-
-  ifstream file( input_file );
-  string line;
-  string d = " ";
+  //load_input();
 
   if( file.is_open() ) {
 
-    rad_file       = parse_line( file, d );            //path to the experimental .rad file
-    best_fit       = parse_line( file, d );            //path to the WillItFit results
-    sequence_file  = parse_line( file, d );
-    //nresidues      = stoi( parse_line( file, d ) );    //number of residues composing the protein
-
-    // if( !nresidues ) {
-    //   mass         = stoi( parse_line( file, d ) );    //molecular mass of the protein
-    //   nresidues    = (int)( mass/AV_RESIDUE_MASS ); //number of residues computed from the molecular mass
-    //
-    //   cout << "# NOTE! You specified Residues: 0. The number of beads will be deduced from the molecular mass." << endl;
-    //   cout << "# Using " << nresidues << " beads" << endl;
-    // } else {
-    //   cout << "# NOTE! You explicitely passed the number of residues: Mass parameter will be ignored." << endl;
-    // }
-
-    //nresidues = 495; //JUST FOR DEBUG!!!
-
+    rad_file       = parse_line( file, d );           //path to the experimental .rad file
+    best_fit       = parse_line( file, d );           //path to the WillItFit results
+    sequence_file  = parse_line( file, d );           //path to the file with the protein sequence
     dmax           = stof( parse_line( file, d ) );   //dmax from fit
     npasses        = stoi( parse_line( file, d ) );   //total number of passes
     loops_per_pass = stoi( parse_line( file, d ) );   //number of performed loops per pass
     outdir         = parse_line( file, d );           //directory where results are saved
     lambda         = stoi( parse_line( file, d ) );
-    //lambda2        = stoi( parse_line( file, d ) );
     connect        = stoi( parse_line( file, d ) );
 
     //cout << rad_file << "\t" << best_fit << "\t" << nresidues << "\t" << mass << endl;
@@ -120,6 +72,8 @@ void BeadModeling::load_input() {
   load_statistics(); //statistics needed for penalty function
   cout << "# Statistics loaded" << endl;
 
+  nnnum = nnum1_ref.size();
+
   cout << endl;
   cout << "# SUMMARY OF PARAMETERS" << endl;
   cout << "# ---------------------" << endl;
@@ -129,8 +83,121 @@ void BeadModeling::load_input() {
   cout << "# Loops per pass: " << loops_per_pass << endl;
   cout << "# Storing results in: '" << outdir << "'" << endl;
 
-  sanity_check = true;
+  nq = rad.size();
+  beads.resize( nresidues );
+  exp_q.resize( nq );
+  beta.resize_width( nq );
+  beta.initialize(0);
+  beta_old.resize_width( nq );
+  distances.resize( nresidues, nresidues );
+  distances_old.resize( nresidues, nresidues );
+  distances.initialize(0);
+  intensity.resize( nq );
+  intensity_old.resize( nq );
+
+  //vector<double> exp_q( dim );
+  for( unsigned int i = 0; i < nq; i++ ) {
+    exp_q[i] = rad[i][0];
+  }
+
+  nd.load_input( best_fit );
 }
+//------------------------------------------------------------------------------
+
+void BeadModeling::load_rad() {
+  rad = load_matrix( rad_file, 3 );
+}
+//------------------------------------------------------------------------------
+
+void BeadModeling::load_statistics() {
+
+  string ndist_file = "include/statistics/ndist.dat";
+  string nnum1_file = "include/statistics/nnum_5.3.dat";
+  string nnum2_file = "include/statistics/nnum_6.8.dat";
+  string nnum3_file = "include/statistics/nnum_8.3.dat";
+
+  ndist_ref = load_vector_from_matrix( ndist_file, 1, 2 );
+  nnum1_ref = load_vector_from_matrix( nnum1_file, 1, 3 );
+  nnum2_ref = load_vector_from_matrix( nnum2_file, 1, 3 );
+  nnum3_ref = load_vector_from_matrix( nnum3_file, 1, 3 );
+
+  ndist.resize( ndist_ref.size() );
+  nnum1.resize( nnum1_ref.size() );
+  nnum2.resize( nnum2_ref.size() );
+  nnum3.resize( nnum3_ref.size() );
+
+  ndist_old.resize( ndist_ref.size() );
+  nnum1_old.resize( nnum1_ref.size() );
+  nnum2_old.resize( nnum2_ref.size() );
+  nnum3_old.resize( nnum3_ref.size() );
+}
+//------------------------------------------------------------------------------
+
+// void BeadModeling::load_input() {
+//
+//   ifstream file( input_file );
+//   string line;
+//   string d = " ";
+//
+//   if( file.is_open() ) {
+//
+//     rad_file       = parse_line( file, d );            //path to the experimental .rad file
+//     best_fit       = parse_line( file, d );            //path to the WillItFit results
+//     sequence_file  = parse_line( file, d );
+//     //nresidues      = stoi( parse_line( file, d ) );    //number of residues composing the protein
+//
+//     // if( !nresidues ) {
+//     //   mass         = stoi( parse_line( file, d ) );    //molecular mass of the protein
+//     //   nresidues    = (int)( mass/AV_RESIDUE_MASS ); //number of residues computed from the molecular mass
+//     //
+//     //   cout << "# NOTE! You specified Residues: 0. The number of beads will be deduced from the molecular mass." << endl;
+//     //   cout << "# Using " << nresidues << " beads" << endl;
+//     // } else {
+//     //   cout << "# NOTE! You explicitely passed the number of residues: Mass parameter will be ignored." << endl;
+//     // }
+//
+//     //nresidues = 495; //JUST FOR DEBUG!!!
+//
+//     dmax           = stof( parse_line( file, d ) );   //dmax from fit
+//     npasses        = stoi( parse_line( file, d ) );   //total number of passes
+//     loops_per_pass = stoi( parse_line( file, d ) );   //number of performed loops per pass
+//     outdir         = parse_line( file, d );           //directory where results are saved
+//     lambda         = stoi( parse_line( file, d ) );
+//     //lambda2        = stoi( parse_line( file, d ) );
+//     connect        = stoi( parse_line( file, d ) );
+//
+//     //cout << rad_file << "\t" << best_fit << "\t" << nresidues << "\t" << mass << endl;
+//     //cout << npasses << "\t" << loops_per_pass << "\t" << outdir << endl;
+//     //cout << lambda1 << "\t" << lambda2 << "\t" << connect << endl;
+//
+//   } else {
+//     cerr << "Cannot open " << input_file << endl;
+//     exit(-1);
+//   }
+//
+//   cout << "# File '" << input_file << "' loaded" << endl;
+//
+//   load_FASTA(); //load sequence file
+//   cout << "# File '" << sequence_file << "' loaded" << endl;
+//   nresidues = sequence.length();
+//
+//   load_rad(); //experimental file with SAXS or SANS data
+//   cout << "# File '" << rad_file << "' loaded " << endl;
+//
+//   load_statistics(); //statistics needed for penalty function
+//   cout << "# Statistics loaded" << endl;
+//
+//   cout << endl;
+//   cout << "# SUMMARY OF PARAMETERS" << endl;
+//   cout << "# ---------------------" << endl;
+//   cout << "# Number of beads: " << nresidues << endl;
+//   cout << "# Radius of initial sphere: " << 2. * dmax / 3. << endl;
+//   cout << "# Number of passes: " << npasses << endl;
+//   cout << "# Loops per pass: " << loops_per_pass << endl;
+//   cout << "# Storing results in: '" << outdir << "'" << endl;
+//
+//   sanity_check = true;
+// }
 //------------------------------------------------------------------------------
 
 void BeadModeling::load_FASTA() {
@@ -219,6 +286,7 @@ void BeadModeling::initial_configuration() {
   }
 
 }
+//------------------------------------------------------------------------------
 
 // void BeadModeling::WritePDB()
 // {
@@ -246,8 +314,9 @@ void BeadModeling::write_xyz() {
 
   }
 }
+//------------------------------------------------------------------------------
 
-void BeadModeling::update_rho() {
+void BeadModeling::update_rho( int i ) {
 
   double radius_major            = nd.get_radius_major();
   double radius_minor            = nd.get_radius_minor();
@@ -271,14 +340,14 @@ void BeadModeling::update_rho() {
   double shift_z_core            = ( hcore / 2. + shift_endcaps ) * c_endcaps_1;
   double shift_z_lipid           = ( hlipid / 2. + shift_endcaps ) * c_endcaps_1;
 
-  nmethyl = 0;
-  nalkyl  = 0;
-  nhead   = 0;
+  //nmethyl = 0;
+  //nalkyl  = 0;
+  //nhead   = 0;
 
   double x, y, z, fz, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp12;
   bool cnd1, cnd2, cnd3, cnd4;
 
-  for( unsigned int i = 0; i < nresidues; i++ ) {
+  //for( unsigned int i = 0; i < nresidues; i++ ) {
 
     x = beads[i].x;
     y = beads[i].y;
@@ -329,10 +398,11 @@ void BeadModeling::update_rho() {
 
     //cout << beads[i].v << " " << beads[i].rho << endl;
 
-  }
+  //}
 }
+//------------------------------------------------------------------------------
 
-void BeadModeling::expand_sh( double q, int index, int sign ) {
+void BeadModeling::expand_sh( double q, int index, int i, int sign ) {
 
   double x, y, z, r, theta, phi;
   double sqrt_4pi = sqrt( 4. * M_PI );
@@ -341,11 +411,17 @@ void BeadModeling::expand_sh( double q, int index, int sign ) {
   vector<double> legendre( harmonics_order + 1 );
   complex<double> j(0,1), tmp, p;
 
-  for( unsigned int i = 0; i < nresidues; i++ ) {
+  //for( unsigned int i = 0; i < nresidues; i++ ) {
+    if( sign < 0 ) {
+      x     = beads[i].x_old;
+      y     = beads[i].y_old;
+      z     = beads[i].z_old;
+    } else {
+      x     = beads[i].x;
+      y     = beads[i].y;
+      z     = beads[i].z;
+    }
 
-    x     = beads[i].x;
-    y     = beads[i].y;
-    z     = beads[i].z;
     r     = sqrt( x*x + y*y + z*z );
     theta = acos( z / r );
     phi   = acos( x / ( r * sin(theta) ) ) * sgn( y );
@@ -371,27 +447,27 @@ void BeadModeling::expand_sh( double q, int index, int sign ) {
           beta.add( index, l, m, tmp );
         } else {
           beta.add( index, l, m, -tmp );
+          //cout << real(beta.at( index, l, m )) << " " << imag(beta.at( index, l, m )) << endl;
         }
-
-        //cout << real(beta.at( index, l, m )) << " " << imag(beta.at( index, l, m )) << endl;
 
       }
     }
-  }
+  //}
 }
 
 
 void BeadModeling::calc_intensity( vector<double> exp_q ) {
 
   double xr = nd.get_xrough();
-  double r, q, tmp, exponent, e_scattlen;
+  double r, q, tmp, exponent;
+  double e_scattlen = nd.get_e_scatt_len();
   double background = 7.8e-5; //TODO! Load this from WillItFit
   double correction_factor = 2.409e15; //TODO! Understand how to compute this factor
 
-  intensity.resize( rad.size() );
+  //intensity.resize( nq );
   fill(intensity.begin(),intensity.end(),0);
 
-  for( int i = 0; i < rad.size(); i++ ) {
+  for( int i = 0; i < nq; i++ ) {
     q = exp_q[i];
     exponent = xr * q * xr * q;
     r = exp( - exponent / 2. );
@@ -401,10 +477,9 @@ void BeadModeling::calc_intensity( vector<double> exp_q ) {
         tmp = abs( r * nd.get_alpha( i, l, m ) + beta.at( i, l, m ) );
         tmp *= tmp;
         intensity[i] += ( (m > 0) + 1. ) * tmp;
+        //cout << r << " " << real( nd.get_alpha( i, l, m ) ) << " " << imag( nd.get_alpha( i, l, m ) ) << " " << real( beta.at( i, l, m ) ) << " " << imag(beta.at( i, l, m )) << endl;
       }
     }
-
-    e_scattlen = nd.get_e_scatt_len();
 
     intensity[i] = intensity[i] * e_scattlen * e_scattlen * correction_factor + background;
   }
@@ -427,8 +502,12 @@ void BeadModeling::distance_matrix() {
 void BeadModeling::update_statistics() {
 
   int count1, count2, count3;
-  int len = nnum1_sample.size();
   double d;
+
+  fill( ndist.begin(), ndist.end(), 0.);
+  fill( nnum1.begin(), nnum1.end(), 0.);
+  fill( nnum2.begin(), nnum2.end(), 0.);
+  fill( nnum3.begin(), nnum3.end(), 0.);
 
   for( unsigned int i = 0; i < nresidues; i++ ) {
 
@@ -437,15 +516,15 @@ void BeadModeling::update_statistics() {
     for( unsigned int j = 0; j < nresidues; j++ ) {
 
       d = distances.at(i,j);
-      if( d < 12. ) ndist_sample[ (int)(d) ] += 1. / nresidues;
+      if( d < 12. ) ndist[ (int)(d) ] += 1. / nresidues;
       if( d < 5.3 ) count1++;
       if( d < 6.8 ) count2++;
       if( d < 8.3 ) count3++;
     }
 
-    if( count1 < len ) nnum1_sample[count1-1] += 1. / nresidues;
-    if( count2 < len ) nnum2_sample[count2-1] += 1. / nresidues;
-    if( count3 < len ) nnum3_sample[count3-1] += 1. / nresidues;
+    if( count1 < nnnum ) nnum1[count1-1] += 1. / nresidues;
+    if( count2 < nnnum ) nnum2[count2-1] += 1. / nresidues;
+    if( count3 < nnnum ) nnum3[count3-1] += 1. / nresidues;
   }
 
 }
@@ -453,10 +532,10 @@ void BeadModeling::update_statistics() {
 void BeadModeling::chi_squared() {
 
   double tmp, err;
-  double len = rad.size();
+  //double len = rad.size();
   X = 0.;
 
-  for( unsigned int i = 0; i < len; i++ ) {
+  for( unsigned int i = 0; i < nq; i++ ) {
     tmp = intensity[i] - rad[i][1];
     err = rad[i][2];
     X += tmp * tmp / (err * err);
@@ -467,33 +546,36 @@ void BeadModeling::type_penalty() {
 
   double tmp;
   tmp = nalkyl + nmethyl + nhead - insertion;
+  //cout << "TEMP " << tmp << endl;
 
-  if( init_type_penalty ) {
-    T = 2. * T_strength * tmp * tmp;
-  } else {
+  // if( init_type_penalty ) {
+  //   T = 2. * T_strength * tmp * tmp;
+  // } else {
     if( tmp > 0 ) {
       T = 0;
     } else {
       T = T_strength * tmp * tmp;
     }
-  }
+  //}
 
-  init_type_penalty = false;
+  //init_type_penalty = false;
 }
 
 void BeadModeling::histogram_penalty() {
 
   double tmp1, tmp2, tmp3, tmp4;
+  double nnum_len = nnum1_ref.size();
+  double ndist_len = ndist_ref.size();
   H = 0;
 
-  for( unsigned int i = 0; i < nnum1.size(); i++ ) {
+  for( unsigned int i = 0; i < nnum_len; i++ ) {
 
-    tmp1 = nnum1[i][1] - nnum1_sample[i];
-    tmp2 = nnum2[i][1] - nnum2_sample[i];
-    tmp3 = nnum3[i][1] - nnum3_sample[i];
+    tmp1 = nnum1_ref[i] - nnum1[i];
+    tmp2 = nnum2_ref[i] - nnum2[i];
+    tmp3 = nnum3_ref[i] - nnum3[i];
 
-    if( i < ndist.size() ) {
-      tmp4 = ndist[i][1] - ndist_sample[i];
+    if( i < ndist_len ) {
+      tmp4 = ndist_ref[i] - ndist[i];
     } else {
       tmp4 = 0.;
     }
@@ -564,7 +646,7 @@ void BeadModeling::penalty() {
     T = 2. * T_strength * tmp * tmp;
     C = 0;
     X = 0;
-    P = 100000;
+    P = 200000;
 
   } else {
     chi_squared();
@@ -574,50 +656,176 @@ void BeadModeling::penalty() {
 
   init = false;
   P += X + H + T + C;
+  init = false;
+}
+
+void BeadModeling::save_old_config() {
+
+  for( unsigned int i = 0; i < nresidues; i++ ) {
+    beads[i].save_old_config();
+  }
+
+  ndist_old     = ndist;
+  nnum1_old     = nnum1;
+  nnum2_old     = nnum2;
+  nnum3_old     = nnum3;
+  intensity_old = intensity;
+  nmethyl_old   = nmethyl;
+  nalkyl_old    = nalkyl;
+  nhead_old     = nhead;
+  P_old         = P;
+
+  distances_old.copy_from( distances );
+  beta_old.copy_from( beta );
+}
+
+void BeadModeling::reject_move() {
+
+  for( unsigned int i = 0; i < nresidues; i++ ) {
+    beads[i].recover_old_config();
+  }
+
+  ndist     = ndist_old;
+  nnum1     = nnum1_old;
+  nnum2     = nnum2_old;
+  nnum3     = nnum3_old;
+  intensity = intensity_old;
+  nmethyl   = nmethyl_old;
+  nalkyl    = nalkyl_old;
+  nhead     = nhead_old;
+  P         = P_old;
+
+  distances.copy_from( distances_old );
+  beta.copy_from( beta_old );
+
+}
+
+bool BeadModeling::inside_ellipse( int i, double a, double b ) {
+
+  double x = beads[i].x;
+  double y = beads[i].y;
+  double tmp = x * x / (a * a) + y * y / ( b * b );
+
+  return ( tmp < 1 );
+}
+
+void BeadModeling::move() {
+
+  int s = 0, i, j;
+  bool legal;
+  save_old_config();
+
+  //JUST FOR DEBUGGING PURPOSE
+  double rmax, rmin, d2, z_ref;
+  vector<double> vec(3);
+  // I would expect these to be radius_minor and radius_major
+  rmax = 42.6;
+  rmin = 29.0;
+  d2 = rng.in_range2( 1.8, 5.1 ); //5.1 seems quite random
+
+  //cout << "d2 " << d2 << endl;
+  z_ref = 14.; //seems wuite random too
+  //END DEBUGGING PURPOSE
+
+  //cout << nd.get_radius_major() << " " << nd.get_radius_minor() << endl;
+
+  do {
+    s++;
+    legal = true;
+    if( s == 1 || s == 1001 ) { /*Try the same set of beads 1000 times*/
+      do {
+        s = 1;
+        i = (int)( rng.in_range2(0 ,nresidues) ); /*Pick a bead to be moved*/
+        j = (int)( rng.in_range2(0, nresidues) ); /*Pick another bead. n is to be placed in contact with m*/
+      } while( i == j );
+    }
+
+    vec = rng.vector3( d2 );
+    //cout << vec[0] << " " << vec[1] << " " << vec[2] << endl;
+    beads[i].assign_position( beads[j].x + vec[0], beads[j].y + vec[1], beads[j].z + vec[2] );
+
+    //cout << "#Moving bead " << i << " using bead " << j << ". Assigned x = " << beads[j].x + vec[0] << ", y = " << beads[j].y + vec[1] << ", z = " << beads[j].z + vec[2] << endl;
+    //cout << i << " " << j << endl;
+    if( legal ) {
+      legal = ( fabs( beads[i].z ) > z_ref || inside_ellipse( i, rmax, rmin ) );
+    }
+
+    if( legal ) {
+      bead_clash( i );
+    }
+
+  } while( legal == false );
+
+  //cout << "#s = " << s << endl;
+
+  update_rho( i );
+
+  for( unsigned int k = 0; k < nq; k++ ) {
+    expand_sh( exp_q[k], k, i, -1 ); //subtract the contribution of the previous position
+    expand_sh( exp_q[k], k, i, 1 );  //update beta with the new position
+  }
+
+  calc_intensity( exp_q );
+  distance_matrix();
+
+  // for( int i = 0; i < nresidues; i++ ) {
+  //   for( int j = 0; j < nresidues; j++ ) {
+  //     cout << distances.at(i,j) << endl;
+  //   }
+  // }
+
+  update_statistics();
+  penalty();
+
+  //cout << "# Chi2: " << X << " Type: " << T << " Histogram: " << H << " Connect: " << C << " Total: " << P << endl;
+
+
+
+  // for( unsigned int i = 0; i < nq; i++ ) {
+  //   cout << intensity[i] << endl;
+  // }
+
 }
 
 
 void BeadModeling::test_flat() {
 
-  int dim = rad.size();
+  //
+  // REMEMBER YOU WERE PLAYING AROUND WITH NDIST AND NNUM
+  //
 
-  vector<double> exp_q( dim );
-  for( int i = 0; i < dim; i++ ) {
-    exp_q[i] = rad[i][0];
-  }
+  bool decreasing_p, metropolis, accept;
 
   cout << endl;
   cout << "# PRELIMINARIES" << endl;
   cout << "# -------------" << endl;
 
-  cout << "# Update scattering lengths:";
-  update_rho();
-  cout << " DONE" << endl;
+  nmethyl = 0;
+  nalkyl = 0;
+  nhead = 0;
 
-  cout << "# Compute form factor:";
+  for( unsigned int i = 0; i < nresidues; i++ ) {
+    update_rho( i );
+  }
+    cout << "# Update scattering lengths: done!" << endl;
+
   nd.nanodisc_form_factor( exp_q );
 
-  beta.resize_width( dim );
-  beta.initialize(0);
-
-  for( int i = 0; i < dim; i++ ) {
-    //cout << i << " " << endl;
-    expand_sh( exp_q[i], i, 1 );
+  for( unsigned int i = 0; i < nresidues; i++ ) {
+    for( unsigned int j = 0; j < nq; j++ ) {
+      expand_sh( exp_q[j], j, i, 1 );
     //exit(-1);
+    }
   }
-  cout << " DONE" << endl;
+  cout << "# Compute form factor: done!" << endl;
 
-  cout << "# Compute intensity:";
+
   calc_intensity( exp_q );
-  cout << " DONE" << endl;
+  cout << "# Compute intensity: done!" << endl;
 
-  distances.resize( nresidues, nresidues );
-  distances.initialize(0);
-
-  cout << "# Update statistics:";
   distance_matrix();
   update_statistics();
-  cout << " DONE" << endl;
+  cout << "#Update statistics: done!" << endl;
 
   cout << endl;
   cout << "# SIMULATED ANNEALING" << endl;
@@ -631,11 +839,60 @@ void BeadModeling::test_flat() {
   //cout << C << endl;
 
   penalty();
-  cout << "# Chi2: " << X << " Type: " << T << " Histogram: " << H << " Connect: " << C << " Total: " << P << endl;
+  chi_squared();
 
-}
+  B = X/10; //effective temperature
+  //cout << "# Chi2: " << X << " Type: " << T << " Histogram: " << H << " Connect: " << C << " Total: " << P << endl;
 
-void BeadModeling::move() {
+  // for( int i = 0; i < 20; i++ ) {
+  //   cout << nnum1_ref[i] - nnum1[i] << " " << nnum2_ref[i] - nnum2[i] << " " << nnum3_ref[i] - nnum3[i] << endl;
+  // }
+
+
+  for( unsigned int p = 0; p < npasses; p++ ) {
+
+    cout << "# PASS " << p << endl;
+    for( unsigned int l = 0; l < loops_per_pass; l++ ) {
+      //cout << "# Loops " << l << "/" << loops_per_pass << flush;
+      do {
+
+        move();
+
+        decreasing_p = ( P < P_old );
+        double tmp = rng.in_range2(0.,1.);
+        //cout << endl << "tmp " << tmp << endl;
+        metropolis   = ( exp( - (P - P_old)/B ) > tmp );
+        accept = ( decreasing_p || metropolis );
+
+        cout << P - P_old << " " << tmp << " " << accept << endl;
+
+        if( !accept ) {
+          reject_move();
+          //cout << "# REJECTED" << endl;
+        }
+
+      } while( accept == false );
+      //cout << "Loop done" << endl;
+    }
+
+    //cout << fixed << setprecision(2) << setfill('0');
+    //cout << setw(5)<< "# Chi2: " << X << " Type: " << T << " Histogram: " << H << " Connect: " << C << " Total: " << P << endl;
+
+    cout << "# Statistics                   " << endl;
+    cout << fixed << setprecision(2) << setfill('0');
+    cout << setw(5) << "# Effective temperature:  " << B << endl;
+    //cout << setw(5) << "# Acceptance probability: " << (1. * loops_per_pass)/trials << endl;
+    cout << setw(5) << "# Chi squared:            " << X << endl;
+    cout << setw(5) << "# Type penalty:           " << T << endl;
+    cout << setw(5) << "# Histogram penalty:      " << H << endl;
+    cout << setw(5) << "# Connect penalty:        " << C << endl;
+    cout << setw(5) << "# Total penalty:          " << P << endl;
+    cout << endl;
+
+    if( B > 0.0001 ) {
+      B *= 0.9;
+    }
+  }
 
 }
 

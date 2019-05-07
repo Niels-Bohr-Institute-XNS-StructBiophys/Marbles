@@ -20,11 +20,10 @@ class BeadModeling : public Input {
 
       /* CLASSES */
       Nanodisc nd;                 /** Nanodisc class for nanodisc handling */
-      RandomNumbers rng;           /** RandomNumbers class fro random number generation */
+      RandomNumbers rng;           /** RandomNumbers class for random number generation */
       std::vector<Bead> beads;     /** Vector of Bead classes for protein beads handling */
 
       /* FLAGS */
-      bool sanity_check;           /** Flag for sanity checks */
       bool sphere_generated;       /** Flag for avoiding regereating the initial sphere */
       bool init_type_penalty;      /** True if type_penalty is being called for the first time */
       bool init;                   /** True if penalty is called for the first time */
@@ -47,7 +46,12 @@ class BeadModeling : public Input {
       unsigned int nalkyl;         /** Number of beads in the alkyl region of the nanodisc */
       unsigned int nmethyl;        /** Number of beads in the methyl region of the nanodisc */
       unsigned int nhead;          /** Number of beads in the head region of the nanodisc */
+      unsigned int nalkyl_old;
+      unsigned int nmethyl_old;
+      unsigned int nhead_old;
       unsigned int insertion;      /** Number of residues that are required to be inserted in the nanodisc */
+      unsigned int nq;             /** Length of the rad file, i.e. number of experimental q points */
+      unsigned int nnnum;          /** Length of the nnum files */
 
       double lambda;              /** TO BE CLEARED */
       //double lambda2;              /** TO BE CLEARED */
@@ -60,6 +64,8 @@ class BeadModeling : public Input {
       double H;                    /** value of the histogram penalty */
       double C;                    /** value of the connect penalty */
       double P;                    /** value of the total penalty */
+      double P_old;
+      double B;
       double T_strength;           /** strength of the type penalty */
       double H_strength;           /** strength of the histogram penalty */
 
@@ -68,34 +74,43 @@ class BeadModeling : public Input {
       const unsigned int nphi   = (harmonics_order + 1) * 2;
 
       std::vector<std::vector<double> > rad;   /* experimental SAXS value for different values of q */
-      std::vector<std::vector<double> > ndist; /* histogram of number distances for selected ensemble */
-      std::vector<double> ndist_sample;
-      std::vector<double> ndist_sample_old;
-      std::vector<std::vector<double> > nnum1; /* distribution of number neighbours for R = 5.3A */
-      std::vector<double> nnum1_sample;
-      std::vector<double> nnum1_sample_old;
-      std::vector<std::vector<double> > nnum2; /* distribution of number neighbours for R = 6.8A */
-      std::vector<double> nnum2_sample;
-      std::vector<double> nnum2_sample_old;
-      std::vector<std::vector<double> > nnum3; /* distribution of number neighbours for R = 8.3A */
-      std::vector<double> nnum3_sample;
-      std::vector<double> nnum3_sample_old;
+      std::vector<double> exp_q;
+
+      std::vector<double> ndist;
+      std::vector<double> ndist_ref;
+      std::vector<double> ndist_old;
+
+      std::vector<double> nnum1;
+      std::vector<double> nnum1_ref;
+      std::vector<double> nnum1_old;
+
+      std::vector<double> nnum2;
+      std::vector<double> nnum2_ref;
+      std::vector<double> nnum2_old;
+
+      std::vector<double> nnum3;
+      std::vector<double> nnum3_ref;
+      std::vector<double> nnum3_old;
 
       Array3D<std::complex<double>, 0, NH+1, NH+1> beta;
+      Array3D<std::complex<double>, 0, NH+1, NH+1> beta_old;
+
       Array2D<double, 1, 1> distances;
-      Array2D<double, 1, 1> distance_old;
+      Array2D<double, 1, 1> distances_old;
 
       std::vector<double> intensity;
+      std::vector<double> intensity_old;
 
       /* PRIVATE FUNCTIONS */
       void load_rad(); /* loads the .rad experiment file */
       void load_statistics(); /* loads the tabulated statistics files */
       void load_FASTA();
-      void expand_sh( double, int, int );
+      void expand_sh( double, int, int, int );
       void calc_intensity( std::vector<double> );
       void distance_matrix();
       void update_statistics();
       void recursive_connect( int, int, int* );
+      void save_old_config();
       void move();
       void reject_move();
 
@@ -109,6 +124,7 @@ class BeadModeling : public Input {
       double bead_distance( Bead, Bead );
 
       bool bead_clash( unsigned const int ); /** checks wether the position of a bead clashes with another one **/
+      bool inside_ellipse( int, double, double );
 
     public:
       BeadModeling( const std::string& );
@@ -119,7 +135,7 @@ class BeadModeling : public Input {
       void initial_configuration();
       void write_xyz();
       void test_flat();
-      void update_rho();
+      void update_rho( int );
       void penalty();
 
       /* GET FUNCTIONS */
