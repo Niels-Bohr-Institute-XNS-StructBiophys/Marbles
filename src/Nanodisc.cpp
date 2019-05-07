@@ -409,6 +409,7 @@ double Nanodisc::expand_sh( int index ) {
         }
 
         fm[t] += F.at( index, t, p ) * phase[m][p];
+        //cout << real(F.at( index, t, p )) << " " << imag(F.at( index, t, p )) << endl;
       }
     }
 
@@ -458,9 +459,10 @@ void Nanodisc::nanodisc_form_factor( vector<double> exp_q ) {
 
     // for( unsigned int t = 0; t < ntheta; t++ ) {
     //   for( unsigned int p = 0; p < nphi; p++ ) {
-    //     cout << q << " " << t << " " << p << " " << F.at(i, t, p) << endl;
+    //     cout << F.at(i, t, p) << endl;
     //  }
-    //}
+    // }
+
     double intensity = expand_sh( i );
     //cout << intensity << endl;
   }

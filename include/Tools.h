@@ -29,6 +29,15 @@ class Array2D {
       height = x;
     }
 
+    std::vector<T> get_buffer() {
+      return buffer;
+    }
+
+    //I will need to check the type here!
+    void copy_from( Array2D to_copy ) {
+      buffer = to_copy.get_buffer();
+    }
+
   private:
     std::vector<T> buffer;
 };
@@ -62,6 +71,15 @@ class Array3D {
 
     void initialize( T value ) {
       fill( buffer.begin(), buffer.end(), value );
+    }
+
+    std::vector<T> get_buffer() {
+      return buffer;
+    }
+
+    //I will need to check the type here!
+    void copy_from( Array3D to_copy ) {
+      buffer = to_copy.get_buffer();
     }
 
   private:

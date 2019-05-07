@@ -58,3 +58,68 @@ double RandomNumbers::gaussian( double tau ) {
 
 }
 //------------------------------------------------------------------------------
+
+//VERY STRANGE WAY TO GENERATE A UNIT VECTOR
+std::vector<double> RandomNumbers::vector2( double min_modulus, double max_modulus ) {
+
+  std::vector<double> vec(3);
+  double v1, v2, s, alpha, modulus;
+
+  modulus = in_range2( min_modulus, max_modulus );
+
+  do{
+    v1 = 2. * rand() / RAND_MAX - 1.;
+    v2 = 2. * rand() / RAND_MAX - 1.;
+    s = v1 * v1 + v2 * v2;
+  } while( s >= 1.0 );
+
+  alpha = 2. * sqrt( 1. - s );
+  vec[0] = modulus * ( 2. * s - 1. );
+  vec[1] = modulus * alpha * v2;
+  vec[2] = modulus * alpha * v1;
+
+  //cout << modulus << " " << sqrt( vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2] ) << endl;
+
+  return vec;
+
+}
+
+std::vector<double> RandomNumbers::vector3( double modulus ) {
+
+  std::vector<double> vec(3);
+  double v1, v2, s, alpha;
+
+  do{
+    v1 = 2. * rand() / RAND_MAX - 1.;
+    v2 = 2. * rand() / RAND_MAX - 1.;
+    s = v1 * v1 + v2 * v2;
+  } while( s >= 1.0 );
+
+  alpha = 2. * sqrt( 1. - s );
+  vec[0] = modulus * ( 2. * s - 1. );
+  vec[1] = modulus * alpha * v2;
+  vec[2] = modulus * alpha * v1;
+
+  //cout << modulus << " " << sqrt( vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2] ) << endl;
+
+  return vec;
+
+}
+
+std::vector<double> RandomNumbers::vector( double modulus ) {
+
+  std::vector<double> vec(3);
+  double x, y, z, norm;
+
+  x = in_range( -1, 1 );
+  y = in_range( -1, 1 );
+  z = in_range( -1, 1 );
+
+  norm = sqrt( x*x + y*y + z*z );
+
+  vec[0] = modulus * x / norm;
+  vec[1] = modulus * y / norm;
+  vec[2] = modulus * z / norm;
+
+  return vec;
+}
