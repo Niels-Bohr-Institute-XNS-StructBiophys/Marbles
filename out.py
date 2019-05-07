@@ -2,12 +2,19 @@ import numpy as np
 import sys
 import os
 
-col = int(sys.argv[1])
+#col = int(sys.argv[1])
 
 print("Loading file mine")
 mine = np.loadtxt("out_check")
 print("Loading file ref")
 ref  = np.loadtxt("../bead_modeling_flat/out_check")
+
+diff = np.abs(mine - ref)
+err = np.sum(diff)
+
+print(err)
+"""
+
 thresh = 1e-12
 
 print("Checking!")
@@ -49,6 +56,7 @@ for i in range( dim ):
         print( f"CHECK! Rel err: {rel_err},  {mine_f[i]} != {ref_f[i]} at {i}" )
         count += 1
 
-print( f"Average rel err: {np.mean(err)} +- {np.std(err)}")
+print( "Average rel err: ", np.mean(err) )
 print( "Percentage of errors: ",  count / dim )
 print( "Negligible numbers: ", count2 / dim )
+"""

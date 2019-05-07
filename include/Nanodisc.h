@@ -2,6 +2,7 @@
 #include <complex>
 #include "Input.h"
 #include "Tools.h"
+#include<complex.h>
 
 #define NH 17 //Order of harmonics
 #define NTHETA ((NH+1)*2)
@@ -68,10 +69,13 @@ class Nanodisc : public Input {
 
     /* PRIVATE FUNCTIONS */
     void flat_disc_form_factor( double, double, double, double, double, int );      /** computes the form factor of a flat disc */
+    void flat_disc_form_factor2( double, double, double, double, double, int );
     void disc_w_endcaps_form_factor( double, double, double, double, double, int ); /** computes the form factor of a disc with elliptic endcaps */
 
     double PsiEllipticCylinderWithEndcaps( double, double, double, double, double, double, double, double ); /** will get rid of this in flat version! */
     double expand_sh( int );                                                        /** expands the form factor in the basis of spherical harmonics */
+
+    int Discflat( double _Complex**, double, double, double, double, double, double, double, double);
 
   public:
     Nanodisc();  /** class constructor */
@@ -80,6 +84,7 @@ class Nanodisc : public Input {
     /* PUBLIC UTILITIES */
     void load_input( const std::string& );            /** reads the output of WillItFit to obtain info on the nanodisc */
     void nanodisc_form_factor( std::vector<double> ); /** computes the form factor of the nanodisc */
+    void test_nanodisc_flat( std::vector<double> );
 
     /* GET FUNCTIONS */
     // Return the current value of private members

@@ -810,6 +810,7 @@ void BeadModeling::test_flat() {
     cout << "# Update scattering lengths: done!" << endl;
 
   nd.nanodisc_form_factor( exp_q );
+  exit(-1);
 
   for( unsigned int i = 0; i < nresidues; i++ ) {
     for( unsigned int j = 0; j < nq; j++ ) {
