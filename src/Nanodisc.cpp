@@ -161,8 +161,6 @@ void Nanodisc::load_input( const string& best_fit ) {
 
 void Nanodisc::flat_disc_form_factor( double a, double b, double L, double rho, double q, int index ) {
 
-  cout << "# FORM FACTOR GOOD DIOCANE" << endl;
-
   /** Computes the orientationally averaged form factor of a disc for different values of the momentum:
     * psi = 2 * J1( q1 ) / q1 * sinc( q * L * cos(alpha/2) )
     * where
@@ -581,14 +579,16 @@ double Nanodisc::expand_sh2( int index ) {
                 alpha.add( index, l, m, 1/sqrt(4*M_PI)*legendre[t][l]*w[t]*sinth[t]*fm[t]);
                 //alpha[l][m]+=1/sqrt(4*M_PI)*legendre[t][l]*w[t]*sinth[t]*fm[t];//alpha_lm=int_0^pi [ P_lm*sin(theta)*fm(theta)*dtheta ]
                 //printf("%lf %lf %lf %lf %lf %lf\n", 1/sqrt(4*M_PI), cos(theta), legendre[t][l], w[t], sinth[t], real(fm[t]), imag(fm[t]) );
-                printf("%lf %lf\n", real(alpha.at(index,l,m)), imag(alpha.at(index,l,m)) );
+                //printf("%lf %lf\n", real(alpha.at(index,l,m)), imag(alpha.at(index,l,m)) );
 
             }
-            //Int+=((m>0)+1)*pow( cabs(alpha[l][m]) , 2 ); //sum over l and m
+            Int+=((m>0)+1)*pow( abs( alpha.at(index,l,m) ), 2 ); //sum over l and m
             //// Intensity can be calculated here or outside the function in
             //seperate loop
         }
     }
+
+    cout << Int << endl;
 
     // for(m=0;m<Nh+1;m+=skip){
     //   for(l=m;l<=Nh;l+=skip){   //For disc symmetry only even harmonics contribute
