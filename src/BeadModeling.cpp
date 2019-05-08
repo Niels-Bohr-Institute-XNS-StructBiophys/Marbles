@@ -487,7 +487,7 @@ void BeadModeling::calc_intensity( vector<double> exp_q ) {
     }
 
     intensity[i] = intensity[i] * e_scattlen * e_scattlen * correction_factor + background;
-    cout << intensity[i] << endl;
+    //cout << intensity[i] << endl;
   }
 }
 
@@ -502,6 +502,12 @@ void BeadModeling::distance_matrix() {
       distances.set( j, i, tmp );
     }
   }
+
+  // for( unsigned int i = 0; i < nresidues; i ++ ) {
+  //   for( unsigned int j = 0; j < nresidues; j++ ) {
+  //     cout << distances.at( i, j ) << endl;
+  //   }
+  // }
 
 }
 
@@ -531,6 +537,11 @@ void BeadModeling::update_statistics() {
     if( count1 < nnnum ) nnum1[count1-1] += 1. / nresidues;
     if( count2 < nnnum ) nnum2[count2-1] += 1. / nresidues;
     if( count3 < nnnum ) nnum3[count3-1] += 1. / nresidues;
+  }
+
+  for( int i = 0; i < 12; i++ ) {
+    //cout << nnum1[i] << " " << nnum2[i] << " " << nnum3[i] << endl;
+    cout << ndist[i] << endl;
   }
 
 }
@@ -829,10 +840,11 @@ void BeadModeling::test_flat() {
 
   calc_intensity( exp_q );
   cout << "# Compute intensity: done!" << endl;
-  exit(-1);
 
   distance_matrix();
   update_statistics();
+
+  exit(-1);
   cout << "#Update statistics: done!" << endl;
 
   cout << endl;

@@ -45,7 +45,7 @@ for i in range( dim ):
         rel_err = np.fabs( (mine_f[i] - ref_f[i])/ref_f[i] )
 
     err.append( rel_err )
-    if( rel_err > 5e-4 ):
+    if( rel_err > 5e-6 ):
         print( f"CHECK! Rel err: {rel_err},  {mine_f[i]} != {ref_f[i]} at {i}" )
         count += 1
 
