@@ -40,58 +40,58 @@ void Nanodisc::load_input( const string& best_fit ) {
   if( file.is_open() ) {
 
     skip_lines( file, 18 );
-    hbelt                 = stof( parse_line( file, d_ ) );
-    nlipids               = stof( parse_line( file, d_ ) );
+    hbelt                 = stod( parse_line( file, d_ ) );
+    nlipids               = stod( parse_line( file, d_ ) );
 
     skip_lines( file, 1 );
-    wathead               = stof( parse_line( file, d_ ) );
+    wathead               = stod( parse_line( file, d_ ) );
 
     skip_lines( file, 2 );
-    xrough                = stof( parse_line( file, d_ ) );
-    cvbelt                = stof( parse_line( file, d_ ) );
-    cvlipid               = stof( parse_line( file, d_ ) );
-    cvprotein             = stof( parse_line( file, d_ ) );
+    xrough                = stod( parse_line( file, d_ ) );
+    cvbelt                = stod( parse_line( file, d_ ) );
+    cvlipid               = stod( parse_line( file, d_ ) );
+    cvprotein             = stod( parse_line( file, d_ ) );
 
     skip_lines( file, 7 );
-    cvwater               = stof( parse_line( file, d_ ) );
+    cvwater               = stod( parse_line( file, d_ ) );
 
     skip_lines( file, 1 );
-    vertical_axis_endcaps = stof( parse_line( file, d_ ) );
-    scale_endcaps         = stof( parse_line( file, d_ ) );
+    vertical_axis_endcaps = stod( parse_line( file, d_ ) );
+    scale_endcaps         = stod( parse_line( file, d_ ) );
 
     skip_lines( file, 31 );
-    hlipid                = stof( parse_line( file, d ) );
-    hcore                 = stof( parse_line( file, d ) );
-    hmethyl               = stof( parse_line( file, d ) );
+    hlipid                = stod( parse_line( file, d ) );
+    hcore                 = stod( parse_line( file, d ) );
+    hmethyl               = stod( parse_line( file, d ) );
 
     skip_lines( file, 7 );
-    radius_major          = stof( parse_line( file, d ) );
-    radius_minor          = stof( parse_line( file, d ) );
+    radius_major          = stod( parse_line( file, d ) );
+    radius_minor          = stod( parse_line( file, d ) );
 
     skip_lines( file, 2 );
-    width_belt            = stof( parse_line( file, d ) );
+    width_belt            = stod( parse_line( file, d ) );
 
     skip_lines( file, 3 );
-    rho_h2o               = stof( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
-    rho_d2o               = stof( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
-    rho_head              = stof( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
-    rho_alkyl             = stof( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
-    rho_methyl            = stof( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
-    rho_belt              = stof( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
+    rho_h2o               = stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
+    rho_d2o               = stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
+    rho_head              = stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
+    rho_alkyl             = stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
+    rho_methyl            = stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
+    rho_belt              = stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
 
     skip_lines( file, 1 );
-    rho_protein           = stof( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
+    rho_protein           = stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
 
     skip_lines( file, 2 );
-    vh2o                  = stof( parse_double_delimiter( file, d_, d__ ) );
-    vd2o                  = stof( parse_double_delimiter( file, d_, d__ ) );
-    vhead                 = stof( parse_double_delimiter( file, d_, d__ ) );
-    valkyl                = stof( parse_double_delimiter( file, d_, d__ ) );
-    vmethyl               = stof( parse_double_delimiter( file, d_, d__ ) );
-    vbelt                 = stof( parse_double_delimiter( file, d_, d__ ) );
+    vh2o                  = stod( parse_double_delimiter( file, d_, d__ ) );
+    vd2o                  = stod( parse_double_delimiter( file, d_, d__ ) );
+    vhead                 = stod( parse_double_delimiter( file, d_, d__ ) );
+    valkyl                = stod( parse_double_delimiter( file, d_, d__ ) );
+    vmethyl               = stod( parse_double_delimiter( file, d_, d__ ) );
+    vbelt                 = stod( parse_double_delimiter( file, d_, d__ ) );
 
     skip_lines( file, 1 );
-    vprotein              = stof( parse_double_delimiter( file, d_, d__ ) );
+    vprotein              = stod( parse_double_delimiter( file, d_, d__ ) );
 
     tmp = sqrt( scale_endcaps * scale_endcaps - 1. ) / scale_endcaps;
     vertical_axis_ellipsoid = vertical_axis_endcaps / ( 1. - tmp );
@@ -210,11 +210,11 @@ void Nanodisc::flat_disc_form_factor( double a, double b, double L, double rho, 
     }
   }
 
-  for( int t=0; t < ntheta; t++){
-    for(int p=0; p<nphi; p++){
-      printf("%lf\n", F.at(index,t,p) );
-    }
-  }
+  // for( int t=0; t < ntheta; t++){
+  //   for(int p=0; p<nphi; p++){
+  //     printf("%lf\n", F.at(index,t,p) );
+  //   }
+  // }
 }
 
 double Sinc(double x){
@@ -226,71 +226,74 @@ double Sinc(double x){
     return result;
 }
 
-void Nanodisc::flat_disc_form_factor2( double a, double b, double L, double rho, double q, int index ) {
-    //Søren Kynde 2012
-    //This function calculates the form factor F(Q,theta,phi) of a cylinder
-    //with elliptical cross-section with half axes a and b and height L. The
-    //cylinder may be dispaced from the origin by a (real space) vector
-    //(r0, theta0, phi0).
-
-    double r;
-    double cosr0q=0;
-    //int ntheta,nphi;
-    double sinc,theta,phi,tmp;
-    double thetastep = M_PI/ntheta, phistep = 2. * M_PI / nphi;
-    double volume = 14649.395228;//b*a*L;//*M_PI*L;
-
-    //printf("%lf %lf %lf %lf %lf\n", thetastep, phistep, volume, rho, L);
-    //printf("%lf %lf\n", a, b);
-    //exit(-1);
-
-    //cout << thetastep << " " << phistep << " " << volume << " " << rho << " " << L << endl;
-    //exit(-1);
-
-    // for(ntheta=0; ntheta < Ntheta; ntheta++){
-    //   for(nphi=0; nphi<Nphi; nphi++){
-    //     F[ntheta][nphi] = 0.;
-    //   }
-    // }
-
-    //printf("%d %d", Ntheta, Nphi);
-
-    for(int t =0; t < ntheta; t++){
-        theta=(t+.5)*thetastep;
-    //printf("P: %g, %g, %g, %g, %g, %g, %g\n",Q,a,b,rho,L,theta,sinc);
-        //sinc=gsl_sf_bessel_j0( L/2.*Q*cos(theta) );
-        sinc=Sinc( L/2.*q*cos(theta) );
-        //printf("%d %g %g\n", ntheta, sinc, sin(theta) );
-        for(int p=0; p<nphi; p++){
-            phi=(p+.5)*phistep;
-
-            r=sin(theta)*sqrt( pow(a*cos(phi),2)+pow(b*sin(phi),2) );
-            //if( ntheta == 0 ) printf("%g\n", sqrt( pow(a*cos(phi),2)+pow(b*sin(phi),2) ));
-            //printf("%d %d %g\n", ntheta, nphi, Q*r );
-
-            //printf("%g\n", Q*r);
-            if(q*r==0) {
-                tmp = volume*rho*sinc;
-                F.add(index, t, p, tmp);
-                //F[ntheta][nphi] += volume*pol(1.0*sinc,0.0);
-            } else {
-                tmp = volume*rho*2*j1(q*r)/(q*r)*sinc;
-                F.add( index, t, p, tmp);
-              }
-                //F[ntheta][nphi]+=volume*pol(2*j1(Q*r)/(Q*r)*sinc,-r0*Q*cosr0q);
-
-            //printf("%g\n", F[ntheta][nphi] );
-        }
-    }
-
-    // for( int t=0; t < ntheta; t++){
-    //   for(int p=0; p<nphi; p++){
-    //     printf("%lf\n", F.at(index,t,p) );
-    //   }
-    // }
-    //printf("P: %g, %g, %g, %g, %g, %g, %g\n",Q,a,b,rho,L,theta,sinc);
-    //getchar();
-}
+// void Nanodisc::flat_disc_form_factor2( double a, double b, double L, double rho, double q, int index ) {
+//     //Søren Kynde 2012
+//     //This function calculates the form factor F(Q,theta,phi) of a cylinder
+//     //with elliptical cross-section with half axes a and b and height L. The
+//     //cylinder may be dispaced from the origin by a (real space) vector
+//     //(r0, theta0, phi0).
+//
+//     double r;
+//     double cosr0q=0;
+//     //int ntheta,nphi;
+//     double sinc,theta,phi,tmp;
+//     double thetastep = M_PI/ntheta, phistep = 2. * M_PI / nphi;
+//     double volume = 101666.310648;//14649.395228;//b*a*L;//*M_PI*L;
+//
+//     // printf("%lf %lf %lf %lf %lf\n", thetastep, phistep, volume, rho, L);
+//     // printf("%lf %lf\n", a, b);
+//     // exit(-1);
+//     //
+//     // a = 44.521200;
+//     // b = 30.286500;
+//
+//     //cout << thetastep << " " << phistep << " " << volume << " " << rho << " " << L << endl;
+//     //exit(-1);
+//
+//     // for(ntheta=0; ntheta < Ntheta; ntheta++){
+//     //   for(nphi=0; nphi<Nphi; nphi++){
+//     //     F[ntheta][nphi] = 0.;
+//     //   }
+//     // }
+//
+//     //printf("%d %d", Ntheta, Nphi);
+//
+//     for(int t =0; t < ntheta; t++){
+//         theta=(t+.5)*thetastep;
+//     //printf("P: %g, %g, %g, %g, %g, %g, %g\n",Q,a,b,rho,L,theta,sinc);
+//         //sinc=gsl_sf_bessel_j0( L/2.*Q*cos(theta) );
+//         sinc=Sinc( L/2.*q*cos(theta) );
+//         //printf("%d %g %g\n", ntheta, sinc, sin(theta) );
+//         for(int p=0; p<nphi; p++){
+//             phi=(p+.5)*phistep;
+//
+//             r=sin(theta)*sqrt( pow(a*cos(phi),2)+pow(b*sin(phi),2) );
+//             //if( ntheta == 0 ) printf("%g\n", sqrt( pow(a*cos(phi),2)+pow(b*sin(phi),2) ));
+//             //printf("%d %d %g\n", ntheta, nphi, Q*r );
+//
+//             //printf("%g\n", Q*r);
+//             if(q*r==0) {
+//                 tmp = volume*rho*sinc;
+//                 F.add(index, t, p, tmp);
+//                 //F[ntheta][nphi] += volume*pol(1.0*sinc,0.0);
+//             } else {
+//                 tmp = volume*rho*2*j1(q*r)/(q*r)*sinc;
+//                 F.add( index, t, p, tmp);
+//               }
+//                 //F[ntheta][nphi]+=volume*pol(2*j1(Q*r)/(Q*r)*sinc,-r0*Q*cosr0q);
+//
+//             //printf("%g\n", F[ntheta][nphi] );
+//         }
+//     }
+//
+//     for( int t=0; t < ntheta; t++){
+//       for(int p=0; p<nphi; p++){
+//         printf("%lf\n", F.at(index,t,p) );
+//       }
+//     }
+//     //printf("P: %g, %g, %g, %g, %g, %g, %g\n",Q,a,b,rho,L,theta,sinc);
+//     //getchar();
+// }
 
 double Nanodisc::PsiEllipticCylinderWithEndcaps(double q, double Alpha, double Beta, double MajorRadius,
   double MinorRadius, double Height, double ScaleFactorOfEndcaps, double VerticalAxisOfEndcaps)
@@ -533,13 +536,11 @@ void Nanodisc::nanodisc_form_factor( vector<double> exp_q ) {
     F.initialize(0);
 
     q = exp_q[i];
-    //disc_w_endcaps_form_factor( radius_major, radius_minor, hlipid, rho_head - rho_h2o, q, i);
-    //disc_w_endcaps_form_factor( radius_major, radius_minor, hcore, rho_alkyl - rho_head, q, i);
-    //flat_disc_form_factor2( radius_major, radius_minor, fabs(hmethyl), rho_methyl - rho_alkyl, q, i);
-    flat_disc_form_factor2( 44.5212, 30.2865, fabs(hmethyl), rho_methyl - rho_alkyl, q, i);
-
-    //flat_disc_form_factor( radius_major, radius_minor, hbelt, rho_h2o - rho_belt, q, i);
-    //flat_disc_form_factor( radius_major + width_belt, radius_minor + width_belt, hbelt, rho_belt - rho_h2o, q, i);
+    disc_w_endcaps_form_factor( radius_major, radius_minor, hlipid, rho_head - rho_h2o, q, i);
+    disc_w_endcaps_form_factor( radius_major, radius_minor, hcore, rho_alkyl - rho_head, q, i);
+    flat_disc_form_factor( radius_major, radius_minor, fabs(hmethyl), rho_methyl - rho_alkyl, q, i);
+    flat_disc_form_factor( radius_major, radius_minor, hbelt, rho_h2o - rho_belt, q, i);
+    flat_disc_form_factor( radius_major + width_belt, radius_minor + width_belt, hbelt, rho_belt - rho_h2o, q, i);
 
     // for( unsigned int t = 0; t < ntheta; t++ ) {
     //   for( unsigned int p = 0; p < nphi; p++ ) {
@@ -547,10 +548,10 @@ void Nanodisc::nanodisc_form_factor( vector<double> exp_q ) {
     //  }
     // }
 
-    //double intensity = expand_sh( i ); //uncomment
-    //cout << intensity << endl;
+    double intensity = expand_sh( i ); //uncomment
+    cout << intensity << endl;
   }
-  exit(-1);
+  //exit(-1);
   //clock_t end = clock();
   //double elapsed_secs = (double)(end - begin) / CLOCKS_PER_SEC;
   //cout << "Average time per execution: " << (1.*elapsed_secs)/dim << endl;

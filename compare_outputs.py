@@ -8,7 +8,7 @@ print("Loading file mine")
 mine = np.loadtxt("out_check")
 print("Loading file ref")
 ref  = np.loadtxt("../bead_modeling_flat/out_check")
-thresh = 1e-12
+thresh = 1e-15
 
 print("Checking!")
 if( col == -1 ):
