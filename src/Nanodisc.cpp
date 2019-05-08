@@ -528,10 +528,9 @@ void Nanodisc::nanodisc_form_factor( vector<double> exp_q ) {
     F.initialize(0);
 
     q = exp_q[i];
-    //disc_w_endcaps_form_factor( radius_major, radius_minor, hlipid, rho_head - rho_h2o, q, i);
-    //disc_w_endcaps_form_factor( radius_major, radius_minor, hcore, rho_alkyl - rho_head, q, i);
+    disc_w_endcaps_form_factor( radius_major, radius_minor, hlipid, rho_head - rho_h2o, q, i);
+    disc_w_endcaps_form_factor( radius_major, radius_minor, hcore, rho_alkyl - rho_head, q, i);
     flat_disc_form_factor( radius_major, radius_minor, fabs(hmethyl), rho_methyl - rho_alkyl, q, i);
-
     flat_disc_form_factor( radius_major, radius_minor, hbelt, rho_h2o - rho_belt, q, i);
     flat_disc_form_factor( radius_major + width_belt, radius_minor + width_belt, hbelt, rho_belt - rho_h2o, q, i);
 
