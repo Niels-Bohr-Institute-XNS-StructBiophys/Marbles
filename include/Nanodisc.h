@@ -74,6 +74,7 @@ class Nanodisc : public Input {
 
     double PsiEllipticCylinderWithEndcaps( double, double, double, double, double, double, double, double ); /** will get rid of this in flat version! */
     double expand_sh( int );                                                        /** expands the form factor in the basis of spherical harmonics */
+    double expand_sh2( int );
 
     int Discflat( double _Complex**, double, double, double, double, double, double, double, double);
 

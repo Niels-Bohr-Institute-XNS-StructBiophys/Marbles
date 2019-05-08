@@ -459,6 +459,12 @@ double Nanodisc::expand_sh( int index ) {
   vector<double> sin_t(ntheta), cos_t(ntheta), w(ntheta);
   vector<vector<double> > legendre( ntheta, vector<double>(harmonics_order+1));
 
+  for( int i = 0; i < ntheta; i++ ) {
+    for( int j = 0; j < harmonics_order+1; j++ ) {
+      legendre[i][j] = 0.;
+    }
+  }
+
 
   for( unsigned int t = 0; t < ntheta; t++ ) {
       w[t]  = 0.;
@@ -496,6 +502,7 @@ double Nanodisc::expand_sh( int index ) {
         if( l == m ) gsl_sf_legendre_sphPlm_array( harmonics_order, m, cos_t[t], &legendre[t][l] );
 
          tmp = sqrt_4pi_1 * legendre[t][l] * w[t] * sin_t[t] * fm[t];
+         cout << sqrt_4pi_1 << " " << cos_t[t] << " " << legendre[t][l] << " " << w[t] << " " << sin_t[t]  << " " << real(fm[t]) << " " << imag(fm[t]) << endl;
         //cout << legendre[t][l] << " " << sinth[t] << endl;
         alpha.add( index, l, m, tmp );
         //cout << real(alpha.at( index, l, m )) << " " << imag(alpha.at( index, l, m )) << endl;
@@ -506,6 +513,90 @@ double Nanodisc::expand_sh( int index ) {
   }
 
   return intensity;
+}
+
+complex<double> pol2(double r, double phi)
+{
+  if( phi == 0 )
+    return { r, 0. };
+  else
+    return { r * cos(phi), r * sin(phi) };
+}
+
+double Nanodisc::expand_sh2( int index ) {
+//Søren Kynde 2011
+//This function calculates the coefficients Alm of the spherical harmonics
+//expansion of an analytical form factor F(theta,phi) (phi is the azimuthal angle)
+    double theta,phi;
+    double thetastep=M_PI/(ntheta), phistep=2*M_PI/(nphi);
+    //int ntheta,nphi;
+    complex<double> fm[ntheta];//={0};
+    complex<double> phase[harmonics_order+1][nphi];
+    int l,m,i,j,p, t;
+    double Int=0;
+    double sinth[ntheta];
+    double w[ntheta];//={0};
+    double legendre[ntheta][harmonics_order+1];
+
+    for(i=0;i<ntheta;i++){
+        fm[i]={0.,0.};
+    }
+
+    for(i=0;i<ntheta;i++){
+        w[i]=0;
+    }
+    for(j=0;j<ntheta;j++){ //calculate weights dtheta for theta integral
+        theta=(j+.5)*thetastep;
+        for(l=0;l<ntheta/2;l++){
+            w[j]+=(double) 2./(ntheta/2)*1./(2*l+1)*sin((2*l+1)*theta);
+        }
+
+        //printf("%g\n", w[j]);
+    }
+
+    for(m=0;m<harmonics_order+1;m+=2){ //Because symetry of disc only the even harmonics contribute
+        for(t=0;t<ntheta;t++){
+            fm[t]=0.;
+            for(p=0;p<nphi;p++){  //integration over phi
+                phi=phistep*(p+.5);
+                if(t==0) {
+                    phase[m][p]=pol2(phistep,-m*phi);
+
+                  }
+                fm[t]+= F.at(index,t,p)*phase[m][p];  //fm(theta)= int_0^2pi [ F(theta,phi) exp(-m*phi) dphi ]
+                //printf("%g %g\n", creal(F[ntheta][nphi]), cimag(F[ntheta][nphi]) );
+                //printf("%g %g\n", creal(fm[ntheta]), cimag(fm[ntheta]));
+                //printf("%g\n", F[ntheta][nphi]);
+            }
+            //printf("%g %g\n", creal(fm[ntheta]), cimag(fm[ntheta]));
+
+        }
+        for(l=m;l<=harmonics_order;l+=2){   //For disc symmetry only even harmonics contribute
+            for(t=0;t<ntheta;t++){    //integration over theta
+                theta=(t+.5)*thetastep;
+                if(l==m){
+                    gsl_sf_legendre_sphPlm_array(harmonics_order,m,cos(theta),&legendre[t][l]);//Calculate all Plm(cos(th)) for l=m ... to l=N;
+                    sinth[t]=sin(theta);
+                }
+                alpha.add( index, l, m, 1/sqrt(4*M_PI)*legendre[t][l]*w[t]*sinth[t]*fm[t]);
+                //alpha[l][m]+=1/sqrt(4*M_PI)*legendre[t][l]*w[t]*sinth[t]*fm[t];//alpha_lm=int_0^pi [ P_lm*sin(theta)*fm(theta)*dtheta ]
+                //printf("%lf %lf %lf %lf %lf %lf\n", 1/sqrt(4*M_PI), cos(theta), legendre[t][l], w[t], sinth[t], real(fm[t]), imag(fm[t]) );
+                printf("%lf %lf\n", real(alpha.at(index,l,m)), imag(alpha.at(index,l,m)) );
+
+            }
+            //Int+=((m>0)+1)*pow( cabs(alpha[l][m]) , 2 ); //sum over l and m
+            //// Intensity can be calculated here or outside the function in
+            //seperate loop
+        }
+    }
+
+    // for(m=0;m<Nh+1;m+=skip){
+    //   for(l=m;l<=Nh;l+=skip){   //For disc symmetry only even harmonics contribute
+    //       printf("%g %g\n", creal(alpha[l][m]), cimag(alpha[l][m]));
+    //     }
+    //   }
+
+    return Int;
 }
 
 //compatible with previous version within 5e-4 relative error.
@@ -534,13 +625,13 @@ void Nanodisc::nanodisc_form_factor( vector<double> exp_q ) {
     flat_disc_form_factor( radius_major, radius_minor, hbelt, rho_h2o - rho_belt, q, i);
     flat_disc_form_factor( radius_major + width_belt, radius_minor + width_belt, hbelt, rho_belt - rho_h2o, q, i);
 
-    for( unsigned int t = 0; t < ntheta; t++ ) {
-      for( unsigned int p = 0; p < nphi; p++ ) {
-        cout << F.at(i, t, p) << endl;
-     }
-    }
+    // for( unsigned int t = 0; t < ntheta; t++ ) {
+    //   for( unsigned int p = 0; p < nphi; p++ ) {
+    //     cout << F.at(i, t, p) << endl;
+    //  }
+    // }
 
-    double intensity = expand_sh( i ); //uncomment
+    double intensity = expand_sh2( i ); //uncomment
     //cout << intensity << endl;
   }
   //exit(-1);
