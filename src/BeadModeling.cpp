@@ -450,7 +450,7 @@ void BeadModeling::expand_sh( double q, int index, int i, int sign ) {
         } else {
           beta.add( index, l, m, -tmp );
         }
-        //cout << real(beta.at( index, l, m )) << " " << imag(beta.at( index, l, m )) << endl;
+        cout << real(beta.at( index, l, m )) << " " << imag(beta.at( index, l, m )) << endl;
 
       }
     }
@@ -816,7 +816,6 @@ void BeadModeling::test_flat() {
     cout << "# Update scattering lengths: done!" << endl;
 
   nd.nanodisc_form_factor( exp_q );
-  exit(-1);
 
   for( unsigned int j = 0; j < nq; j++ ) {
     for( unsigned int i = 0; i < nresidues; i++ ) {
@@ -824,6 +823,7 @@ void BeadModeling::test_flat() {
     //exit(-1);
     }
   }
+  exit(-1);
 
   cout << "# Compute form factor: done!" << endl;
 

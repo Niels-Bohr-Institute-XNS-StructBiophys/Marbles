@@ -500,7 +500,7 @@ double Nanodisc::expand_sh( int index ) {
         if( l == m ) gsl_sf_legendre_sphPlm_array( harmonics_order, m, cos_t[t], &legendre[t][l] );
 
          tmp = sqrt_4pi_1 * legendre[t][l] * w[t] * sin_t[t] * fm[t];
-         cout << sqrt_4pi_1 << " " << cos_t[t] << " " << legendre[t][l] << " " << w[t] << " " << sin_t[t]  << " " << real(fm[t]) << " " << imag(fm[t]) << endl;
+         //cout << sqrt_4pi_1 << " " << cos_t[t] << " " << legendre[t][l] << " " << w[t] << " " << sin_t[t]  << " " << real(fm[t]) << " " << imag(fm[t]) << endl;
         //cout << legendre[t][l] << " " << sinth[t] << endl;
         alpha.add( index, l, m, tmp );
         //cout << real(alpha.at( index, l, m )) << " " << imag(alpha.at( index, l, m )) << endl;
@@ -588,7 +588,7 @@ double Nanodisc::expand_sh2( int index ) {
         }
     }
 
-    cout << Int << endl;
+    //cout << Int << endl;
 
     // for(m=0;m<Nh+1;m+=skip){
     //   for(l=m;l<=Nh;l+=skip){   //For disc symmetry only even harmonics contribute
