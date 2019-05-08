@@ -161,6 +161,8 @@ void Nanodisc::load_input( const string& best_fit ) {
 
 void Nanodisc::flat_disc_form_factor( double a, double b, double L, double rho, double q, int index ) {
 
+  cout << "# FORM FACTOR GOOD DIOCANE" << endl;
+
   /** Computes the orientationally averaged form factor of a disc for different values of the momentum:
     * psi = 2 * J1( q1 ) / q1 * sinc( q * L * cos(alpha/2) )
     * where
@@ -209,12 +211,6 @@ void Nanodisc::flat_disc_form_factor( double a, double b, double L, double rho, 
       }
     }
   }
-
-  // for( int t=0; t < ntheta; t++){
-  //   for(int p=0; p<nphi; p++){
-  //     printf("%lf\n", F.at(index,t,p) );
-  //   }
-  // }
 }
 
 double Sinc(double x){
@@ -226,74 +222,68 @@ double Sinc(double x){
     return result;
 }
 
-// void Nanodisc::flat_disc_form_factor2( double a, double b, double L, double rho, double q, int index ) {
-//     //Søren Kynde 2012
-//     //This function calculates the form factor F(Q,theta,phi) of a cylinder
-//     //with elliptical cross-section with half axes a and b and height L. The
-//     //cylinder may be dispaced from the origin by a (real space) vector
-//     //(r0, theta0, phi0).
-//
-//     double r;
-//     double cosr0q=0;
-//     //int ntheta,nphi;
-//     double sinc,theta,phi,tmp;
-//     double thetastep = M_PI/ntheta, phistep = 2. * M_PI / nphi;
-//     double volume = 101666.310648;//14649.395228;//b*a*L;//*M_PI*L;
-//
-//     // printf("%lf %lf %lf %lf %lf\n", thetastep, phistep, volume, rho, L);
-//     // printf("%lf %lf\n", a, b);
-//     // exit(-1);
-//     //
-//     // a = 44.521200;
-//     // b = 30.286500;
-//
-//     //cout << thetastep << " " << phistep << " " << volume << " " << rho << " " << L << endl;
-//     //exit(-1);
-//
-//     // for(ntheta=0; ntheta < Ntheta; ntheta++){
-//     //   for(nphi=0; nphi<Nphi; nphi++){
-//     //     F[ntheta][nphi] = 0.;
-//     //   }
-//     // }
-//
-//     //printf("%d %d", Ntheta, Nphi);
-//
-//     for(int t =0; t < ntheta; t++){
-//         theta=(t+.5)*thetastep;
-//     //printf("P: %g, %g, %g, %g, %g, %g, %g\n",Q,a,b,rho,L,theta,sinc);
-//         //sinc=gsl_sf_bessel_j0( L/2.*Q*cos(theta) );
-//         sinc=Sinc( L/2.*q*cos(theta) );
-//         //printf("%d %g %g\n", ntheta, sinc, sin(theta) );
-//         for(int p=0; p<nphi; p++){
-//             phi=(p+.5)*phistep;
-//
-//             r=sin(theta)*sqrt( pow(a*cos(phi),2)+pow(b*sin(phi),2) );
-//             //if( ntheta == 0 ) printf("%g\n", sqrt( pow(a*cos(phi),2)+pow(b*sin(phi),2) ));
-//             //printf("%d %d %g\n", ntheta, nphi, Q*r );
-//
-//             //printf("%g\n", Q*r);
-//             if(q*r==0) {
-//                 tmp = volume*rho*sinc;
-//                 F.add(index, t, p, tmp);
-//                 //F[ntheta][nphi] += volume*pol(1.0*sinc,0.0);
-//             } else {
-//                 tmp = volume*rho*2*j1(q*r)/(q*r)*sinc;
-//                 F.add( index, t, p, tmp);
-//               }
-//                 //F[ntheta][nphi]+=volume*pol(2*j1(Q*r)/(Q*r)*sinc,-r0*Q*cosr0q);
-//
-//             //printf("%g\n", F[ntheta][nphi] );
-//         }
-//     }
-//
-//     for( int t=0; t < ntheta; t++){
-//       for(int p=0; p<nphi; p++){
-//         printf("%lf\n", F.at(index,t,p) );
-//       }
-//     }
-//     //printf("P: %g, %g, %g, %g, %g, %g, %g\n",Q,a,b,rho,L,theta,sinc);
-//     //getchar();
-// }
+void Nanodisc::flat_disc_form_factor2( double a, double b, double L, double rho, double q, int index ) {
+
+    //cout << "# FORM FACTOR SHIT DIOCANE" << endl;
+    //Søren Kynde 2012
+    //This function calculates the form factor F(Q,theta,phi) of a cylinder
+    //with elliptical cross-section with half axes a and b and height L. The
+    //cylinder may be dispaced from the origin by a (real space) vector
+    //(r0, theta0, phi0).
+
+    double r;
+    double cosr0q=0;
+    //int ntheta,nphi;
+    double sinc,theta,phi,tmp;
+    double thetastep = M_PI/ntheta, phistep = 2. * M_PI / nphi;
+    double volume=a*b*L*M_PI;
+
+    // printf("%lf %lf %lf %lf %lf\n", thetastep, phistep, volume, rho, L);
+    // printf("%lf %lf\n", a, b);
+    // exit(-1);
+    //
+    // a = 44.521200;
+    // b = 30.286500;
+
+    //cout << thetastep << " " << phistep << " " << volume << " " << rho << " " << L << endl;
+    //exit(-1);
+
+    // for(ntheta=0; ntheta < Ntheta; ntheta++){
+    //   for(nphi=0; nphi<Nphi; nphi++){
+    //     F[ntheta][nphi] = 0.;
+    //   }
+    // }
+
+    //printf("%d %d", Ntheta, Nphi);
+
+    for(int t =0; t < ntheta; t++){
+        theta=(t+.5)*thetastep;
+    //printf("P: %g, %g, %g, %g, %g, %g, %g\n",Q,a,b,rho,L,theta,sinc);
+        //sinc=gsl_sf_bessel_j0( L/2.*Q*cos(theta) );
+        sinc=Sinc( L/2.*q*cos(theta) );
+        //printf("%d %g %g\n", ntheta, sinc, sin(theta) );
+        for(int p=0; p<nphi; p++){
+            phi=(p+.5)*phistep;
+
+            r=sin(theta)*sqrt( pow(a*cos(phi),2)+pow(b*sin(phi),2) );
+            //if( ntheta == 0 ) printf("%g\n", sqrt( pow(a*cos(phi),2)+pow(b*sin(phi),2) ));
+            //printf("%d %d %g\n", ntheta, nphi, Q*r );
+
+            //printf("%g\n", Q*r);
+            if(q*r==0) {
+                tmp = volume*rho*sinc;
+                F.add(index, t, p, tmp);
+                //F[ntheta][nphi] += volume*pol(1.0*sinc,0.0);
+            } else {
+                tmp = volume*rho*2*j1(q*r)/(q*r)*sinc;
+                F.add( index, t, p, tmp);
+              }
+                //F[ntheta][nphi]+=volume*pol(2*j1(Q*r)/(Q*r)*sinc,-r0*Q*cosr0q);
+
+            //printf("%g\n", F[ntheta][nphi] );
+        }
+    }
+}
 
 double Nanodisc::PsiEllipticCylinderWithEndcaps(double q, double Alpha, double Beta, double MajorRadius,
   double MinorRadius, double Height, double ScaleFactorOfEndcaps, double VerticalAxisOfEndcaps)
@@ -530,26 +520,29 @@ void Nanodisc::nanodisc_form_factor( vector<double> exp_q ) {
   alpha.resize_width( dim );
   alpha.initialize(0);
 
+    //cout << radius_major << " " << radius_minor << " " << fabs(hmethyl) << " " << rho_methyl - rho_alkyl << endl;
+
   //clock_t begin = clock();
   for( int i = 0; i < dim; i++ ) {
 
     F.initialize(0);
 
     q = exp_q[i];
-    disc_w_endcaps_form_factor( radius_major, radius_minor, hlipid, rho_head - rho_h2o, q, i);
-    disc_w_endcaps_form_factor( radius_major, radius_minor, hcore, rho_alkyl - rho_head, q, i);
+    //disc_w_endcaps_form_factor( radius_major, radius_minor, hlipid, rho_head - rho_h2o, q, i);
+    //disc_w_endcaps_form_factor( radius_major, radius_minor, hcore, rho_alkyl - rho_head, q, i);
     flat_disc_form_factor( radius_major, radius_minor, fabs(hmethyl), rho_methyl - rho_alkyl, q, i);
+
     flat_disc_form_factor( radius_major, radius_minor, hbelt, rho_h2o - rho_belt, q, i);
     flat_disc_form_factor( radius_major + width_belt, radius_minor + width_belt, hbelt, rho_belt - rho_h2o, q, i);
 
-    // for( unsigned int t = 0; t < ntheta; t++ ) {
-    //   for( unsigned int p = 0; p < nphi; p++ ) {
-    //     cout << F.at(i, t, p) << endl;
-    //  }
-    // }
+    for( unsigned int t = 0; t < ntheta; t++ ) {
+      for( unsigned int p = 0; p < nphi; p++ ) {
+        cout << F.at(i, t, p) << endl;
+     }
+    }
 
     double intensity = expand_sh( i ); //uncomment
-    cout << intensity << endl;
+    //cout << intensity << endl;
   }
   //exit(-1);
   //clock_t end = clock();

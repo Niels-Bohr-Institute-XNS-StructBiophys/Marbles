@@ -44,7 +44,7 @@ BeadModeling::BeadModeling( const string& filename ) {
     rad_file       = parse_line( file, d );           //path to the experimental .rad file
     best_fit       = parse_line( file, d );           //path to the WillItFit results
     sequence_file  = parse_line( file, d );           //path to the file with the protein sequence
-    dmax           = stof( parse_line( file, d ) );   //dmax from fit
+    dmax           = stod( parse_line( file, d ) );   //dmax from fit
     npasses        = stoi( parse_line( file, d ) );   //total number of passes
     loops_per_pass = stoi( parse_line( file, d ) );   //number of performed loops per pass
     outdir         = parse_line( file, d );           //directory where results are saved
@@ -426,7 +426,9 @@ void BeadModeling::expand_sh( double q, int index, int i, int sign ) {
     theta = acos( z / r );
     phi   = acos( x / ( r * sin(theta) ) ) * sgn( y );
 
-    //cout << phi << endl;
+    //cout << x << endl;
+
+    //cout << r << " " << theta << " " << phi << endl;
 
     status = gsl_sf_bessel_jl_array( harmonics_order, q * r, bessel ); // Calculate spherical bessel functions for l=0,..,Nh
 
@@ -447,8 +449,8 @@ void BeadModeling::expand_sh( double q, int index, int i, int sign ) {
           beta.add( index, l, m, tmp );
         } else {
           beta.add( index, l, m, -tmp );
-          //cout << real(beta.at( index, l, m )) << " " << imag(beta.at( index, l, m )) << endl;
         }
+        //cout << real(beta.at( index, l, m )) << " " << imag(beta.at( index, l, m )) << endl;
 
       }
     }
@@ -458,7 +460,7 @@ void BeadModeling::expand_sh( double q, int index, int i, int sign ) {
 
 void BeadModeling::calc_intensity( vector<double> exp_q ) {
 
-  double xr = nd.get_xrough();
+  double xr = 5.014;//nd.get_xrough();
   double r, q, tmp, exponent;
   double e_scattlen = nd.get_e_scatt_len();
   double background = 7.8e-5; //TODO! Load this from WillItFit
@@ -472,16 +474,20 @@ void BeadModeling::calc_intensity( vector<double> exp_q ) {
     exponent = xr * q * xr * q;
     r = exp( - exponent / 2. );
 
+    //cout << r << endl;
+
     for(int l = 0; l <= harmonics_order; l++ ) {
       for(int m = 0; m <= l; m++ ) {
         tmp = abs( r * nd.get_alpha( i, l, m ) + beta.at( i, l, m ) );
         tmp *= tmp;
         intensity[i] += ( (m > 0) + 1. ) * tmp;
-        //cout << r << " " << real( nd.get_alpha( i, l, m ) ) << " " << imag( nd.get_alpha( i, l, m ) ) << " " << real( beta.at( i, l, m ) ) << " " << imag(beta.at( i, l, m )) << endl;
+        //cout << intensity[i] << endl;
+        //cout << xr << " " << q << " " << r << " " << real( nd.get_alpha( i, l, m ) ) << " " << imag( nd.get_alpha( i, l, m ) ) << " " << real( beta.at( i, l, m ) ) << " " << imag(beta.at( i, l, m )) << endl;
       }
     }
 
     intensity[i] = intensity[i] * e_scattlen * e_scattlen * correction_factor + background;
+    //cout << intensity[i] << endl;
   }
 }
 
@@ -812,17 +818,19 @@ void BeadModeling::test_flat() {
   nd.nanodisc_form_factor( exp_q );
   exit(-1);
 
-  for( unsigned int i = 0; i < nresidues; i++ ) {
-    for( unsigned int j = 0; j < nq; j++ ) {
+  for( unsigned int j = 0; j < nq; j++ ) {
+    for( unsigned int i = 0; i < nresidues; i++ ) {
       expand_sh( exp_q[j], j, i, 1 );
     //exit(-1);
     }
   }
+
   cout << "# Compute form factor: done!" << endl;
 
 
   calc_intensity( exp_q );
   cout << "# Compute intensity: done!" << endl;
+  exit(-1);
 
   distance_matrix();
   update_statistics();
