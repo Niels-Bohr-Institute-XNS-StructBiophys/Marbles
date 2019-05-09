@@ -27,7 +27,7 @@ BeadModeling::BeadModeling( const string& filename ) {
 
   sphere_generated = false;
   init_type_penalty = true;
-  init = false;
+  init = true;
   clash_distance = 1.8; //hardcoded because experimented. Might want to leave the choice open for users though.
   sequence = "";
   shift = 50.; //same here: might want to leave this free for the user to choose
@@ -35,7 +35,7 @@ BeadModeling::BeadModeling( const string& filename ) {
   insertion = 14;
   T_strength = 5;
   H_strength = 20;
-  init = true;
+  //init = true;
 
   //load_input();
 
@@ -316,6 +316,86 @@ void BeadModeling::write_xyz() {
 }
 //------------------------------------------------------------------------------
 
+void BeadModeling::test_rho( int i ) {
+
+  double radius_major            = nd.get_radius_major();
+  double radius_minor            = nd.get_radius_minor();
+  double scale_endcaps           = nd.get_scale_endcaps();
+  double vertical_axis_ellipsoid = nd.get_vertical_axis_ellipsoid();
+  double rho_solvent             = nd.get_rho_solvent();
+  double hlipid                  = nd.get_hlipid();
+  double hmethyl                 = nd.get_hmethyl();
+  double hcore                   = nd.get_hcore();
+  double rho_alkyl               = nd.get_rho_alkyl();
+  double rho_methyl              = nd.get_rho_methyl();
+  double rho_head                = nd.get_rho_head();
+  double cvprotein               = nd.get_cvprotein();
+
+  double a_endcaps               = radius_major * scale_endcaps;
+  double a_endcaps_1             = 1. / a_endcaps;
+  double b_endcaps               = radius_minor * scale_endcaps;
+  double b_endcaps_1             = 1. / b_endcaps;
+  double shift_endcaps           = - vertical_axis_ellipsoid / a_endcaps * sqrt( a_endcaps * a_endcaps - radius_major * radius_major );
+  double c_endcaps_1             = 1. / vertical_axis_ellipsoid;
+  double shift_z_core            = ( hcore / 2. + shift_endcaps ) * c_endcaps_1;
+  double shift_z_lipid           = ( hlipid / 2. + shift_endcaps ) * c_endcaps_1;
+
+  //nmethyl = 0;
+  //nalkyl  = 0;
+  //nhead   = 0;
+
+  double x, y, z, fz, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp12, rho_modified;
+  bool cnd1, cnd2, cnd3, cnd4;
+
+  //for( unsigned int i = 0; i < nresidues; i++ ) {
+
+  x = beads[i].x;
+  y = beads[i].y;
+  z = beads[i].z;
+  fz = fabs(z);
+
+  tmp1 = x * a_endcaps_1 * x * a_endcaps_1;
+  tmp2 = y * b_endcaps_1 * y * b_endcaps_1;
+  tmp3 = ( z * c_endcaps_1 - shift_z_core ) * ( z * c_endcaps_1 - shift_z_core );
+  tmp4 = ( z * c_endcaps_1 + shift_z_core ) * ( z * c_endcaps_1 + shift_z_core );
+  tmp5 = ( z * c_endcaps_1 - shift_z_lipid ) * ( z * c_endcaps_1 - shift_z_lipid );
+  tmp6 = ( z * c_endcaps_1 + shift_z_lipid ) * ( z * c_endcaps_1 + shift_z_lipid );
+  tmp12 = tmp1 + tmp2;
+
+  //FOR DEBUGGING ONLY!!!
+  //#####################
+  if( i == 0 ) {
+    beads[i].v = 165.18;
+    beads[i].rho = 71;
+  } else if( i == nresidues - 1 ) {
+    beads[i].v = 147.14;
+    beads[i].rho = 65;
+  }
+  //#####################
+  // FOR DEBUGGING ONLY!!
+
+  if( fz < hmethyl * .5 ) {
+    rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_methyl;
+    nmethyl++;
+  } else if( cnd1 || cnd2 || fz < hcore * .5 ) {
+    rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_alkyl;
+    nalkyl++;
+  } else if( cnd3 || cnd4 || fz < hlipid * .5 ) {
+    rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_head;
+    nhead++;
+  } else {
+    rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_solvent;
+  }
+
+  //pow(xn/aEndcaps,2)+pow(yn/bEndcaps,2)+pow((zn-(disc->Hcore/2.+ShiftOfEndcaps))/cEndcaps,2)
+
+  //printf("%d %lf\n", i, tmp12 + tmp6);
+  //printf("%d %lf %lf\n", x, a_endcaps);
+
+  printf("%lf\n", rho_modified);
+
+}
+
 void BeadModeling::update_rho( int i ) {
 
   double radius_major            = nd.get_radius_major();
@@ -402,7 +482,7 @@ void BeadModeling::update_rho( int i ) {
 }
 //------------------------------------------------------------------------------
 
-void BeadModeling::expand_sh( double q, int index, int i, int sign ) {
+void BeadModeling::expand_sh( double q, int index, int i, int sign, int indice ) {
 
   double x, y, z, r, theta, phi;
   double sqrt_4pi = sqrt( 4. * M_PI );
@@ -427,8 +507,9 @@ void BeadModeling::expand_sh( double q, int index, int i, int sign ) {
     phi   = acos( x / ( r * sin(theta) ) ) * sgn( y );
 
     //cout << x << endl;
+    //if( l == 22 ) printf("%lf %lf %lf\n", r, theta, phi);
 
-    //cout << r << " " << theta << " " << phi << endl;
+    //if( l == 22 ) printf("%lf\n", beads[i].rho_modified );
 
     status = gsl_sf_bessel_jl_array( harmonics_order, q * r, bessel ); // Calculate spherical bessel functions for l=0,..,Nh
 
@@ -450,6 +531,10 @@ void BeadModeling::expand_sh( double q, int index, int i, int sign ) {
         } else {
           beta.add( index, l, m, -tmp );
         }
+
+        // if( indice == 0 ) {
+        //   printf("%lf %lf %lf %lf %lf %lf %lf %lf\n", sqrt_4pi, real(pow(j, l)), imag(pow(j, l)), beads[i].rho_modified, bessel[l], legendre[l], real(p), imag(p) );
+        // }
         //cout << real(beta.at( index, l, m )) << " " << imag(beta.at( index, l, m )) << endl;
 
       }
@@ -539,10 +624,10 @@ void BeadModeling::update_statistics() {
     if( count3 < nnnum ) nnum3[count3-1] += 1. / nresidues;
   }
 
-  for( int i = 0; i < 12; i++ ) {
-    //cout << nnum1[i] << " " << nnum2[i] << " " << nnum3[i] << endl;
-    cout << ndist[i] << endl;
-  }
+  // for( int i = 0; i < 12; i++ ) {
+  //   //cout << nnum1[i] << " " << nnum2[i] << " " << nnum3[i] << endl;
+  //   cout << ndist[i] << endl;
+  // }
 
 }
 
@@ -649,6 +734,9 @@ void BeadModeling::penalty() {
 
   P = 0;
   histogram_penalty();
+  chi_squared();
+  type_penalty();
+  connect_penalty();
 
   if( init ) {
 
@@ -659,21 +747,16 @@ void BeadModeling::penalty() {
      * add 100000 to everything
      */
 
-    double tmp = nalkyl + nmethyl + nhead - insertion;
-    T = 2. * T_strength * tmp * tmp;
-    C = 0;
-    X = 0;
-    P = 200000;
+    // double tmp = nalkyl + nmethyl + nhead - insertion;
+    // T = 2. * T_strength * tmp * tmp;
+    // C = 0;
+    // X = 0;
+    P = 100000;
 
-  } else {
-    chi_squared();
-    type_penalty();
-    connect_penalty();
   }
 
   init = false;
   P += X + H + T + C;
-  init = false;
 }
 
 void BeadModeling::save_old_config() {
@@ -726,7 +809,7 @@ bool BeadModeling::inside_ellipse( int i, double a, double b ) {
   return ( tmp < 1 );
 }
 
-void BeadModeling::move() {
+void BeadModeling::move( int l ) {
 
   int s = 0, i, j;
   bool legal;
@@ -741,46 +824,97 @@ void BeadModeling::move() {
   d2 = rng.in_range2( 1.8, 5.1 ); //5.1 seems quite random
 
   //cout << "d2 " << d2 << endl;
-  z_ref = 14.; //seems wuite random too
+  z_ref = 14; //seems wuite random too
   //END DEBUGGING PURPOSE
 
   //cout << nd.get_radius_major() << " " << nd.get_radius_minor() << endl;
 
   do {
+
     s++;
     legal = true;
     if( s == 1 || s == 1001 ) { /*Try the same set of beads 1000 times*/
       do {
         s = 1;
-        i = (int)( rng.in_range2(0 ,nresidues) ); /*Pick a bead to be moved*/
+        i = (int)( rng.in_range2(0, nresidues) ); /*Pick a bead to be moved*/
         j = (int)( rng.in_range2(0, nresidues) ); /*Pick another bead. n is to be placed in contact with m*/
       } while( i == j );
     }
 
     vec = rng.vector3( d2 );
-    //cout << vec[0] << " " << vec[1] << " " << vec[2] << endl;
+    //cout << l << " " << vec[0] << " " << vec[1] << " " << vec[2] << endl;
     beads[i].assign_position( beads[j].x + vec[0], beads[j].y + vec[1], beads[j].z + vec[2] );
 
     //cout << "#Moving bead " << i << " using bead " << j << ". Assigned x = " << beads[j].x + vec[0] << ", y = " << beads[j].y + vec[1] << ", z = " << beads[j].z + vec[2] << endl;
-    //cout << i << " " << j << endl;
     if( legal ) {
       legal = ( fabs( beads[i].z ) > z_ref || inside_ellipse( i, rmax, rmin ) );
     }
 
     if( legal ) {
-      bead_clash( i );
+      legal = ! bead_clash( i );
     }
+
+    //cout << s << " " << ( fabs( beads[i].z ) > z_ref ) << " " << inside_ellipse( i, rmax, rmin ) << " " << bead_clash(i) << " " << i << " " << j << endl;
+
+    //cout << l << " " << s << " " << legal << " " << i << " " << j << endl;
 
   } while( legal == false );
 
   //cout << "#s = " << s << endl;
 
+  // if( l == 22 ) {
+  //   cout << "#BEFORE: " << beads[i].rho_modified << endl;
+  // }
+
+  for( unsigned int k = 0; k < nq; k++ ) {
+    expand_sh( exp_q[k], k, i, -1, 0 ); //subtract the contribution of the previous position
+    //expand_sh( exp_q[k], k, i, 1, 0 );  //update beta with the new position
+  }
+
   update_rho( i );
 
   for( unsigned int k = 0; k < nq; k++ ) {
-    expand_sh( exp_q[k], k, i, -1 ); //subtract the contribution of the previous position
-    expand_sh( exp_q[k], k, i, 1 );  //update beta with the new position
+    //expand_sh( exp_q[k], k, i, -1, 0 ); //subtract the contribution of the previous position
+    expand_sh( exp_q[k], k, i, 1, 0 );  //update beta with the new position
   }
+
+  // if( l == 0 ) {
+  //
+  //   // for( int i = 0; i < nresidues; i++ ) {
+  //   //   test_rho( i );
+  //   // }
+  //
+  //
+  //
+  //   // for( int i = 0; i < nresidues; i++ ) {
+  //   //   printf("%lf %lf %lf\n", beads[i].x, beads[i].y, beads[i].z);
+  //   // }
+  //
+  //   for( unsigned int k = 0; k < nq; k++ ) {
+  //     expand_sh( exp_q[k], k, i, -1, l ); //subtract the contribution of the previous position
+  //     //expand_sh( exp_q[k], k, i, 1 );  //update beta with the new position
+  //   }
+  //
+  //   // for( int i = 0; i < nq; i++ ) {
+  //   //   for(int l = 0; l <= harmonics_order; l++ ) {
+  //   //     for(int m = 0; m <= l; m++ ) {
+  //   //       printf("%lf %lf\n", real( beta.at( i, l, m) ), imag( beta.at( i, l, m) ) );
+  //   //     }
+  //   //   }
+  //   // }
+  //
+  //   exit(-1);
+  //
+  // }
+
+  // if( l == 22 ) {
+  //   cout << "#AFTER: " << beads[i].rho_modified << endl;
+  // }
+
+  // for( unsigned int k = 0; k < nq; k++ ) {
+  //   expand_sh( exp_q[k], k, i, -1, 0 ); //subtract the contribution of the previous position
+  //   expand_sh( exp_q[k], k, i, 1, 0 );  //update beta with the new position
+  // }
 
   calc_intensity( exp_q );
   distance_matrix();
@@ -830,7 +964,7 @@ void BeadModeling::test_flat() {
 
   for( unsigned int j = 0; j < nq; j++ ) {
     for( unsigned int i = 0; i < nresidues; i++ ) {
-      expand_sh( exp_q[j], j, i, 1 );
+      expand_sh( exp_q[j], j, i, 1, 0 );
     //exit(-1);
     }
   }
@@ -844,7 +978,6 @@ void BeadModeling::test_flat() {
   distance_matrix();
   update_statistics();
 
-  exit(-1);
   cout << "#Update statistics: done!" << endl;
 
   cout << endl;
@@ -859,41 +992,44 @@ void BeadModeling::test_flat() {
   //cout << C << endl;
 
   penalty();
-  chi_squared();
+
+
+  //chi_squared();
+
+  //printf("%lf\n", X);
+  //cout << X << endl;
 
   B = X/10; //effective temperature
-  //cout << "# Chi2: " << X << " Type: " << T << " Histogram: " << H << " Connect: " << C << " Total: " << P << endl;
-
-  // for( int i = 0; i < 20; i++ ) {
-  //   cout << nnum1_ref[i] - nnum1[i] << " " << nnum2_ref[i] - nnum2[i] << " " << nnum3_ref[i] - nnum3[i] << endl;
-  // }
-
 
   for( unsigned int p = 0; p < npasses; p++ ) {
 
+    int c = 0;
+
     cout << "# PASS " << p << endl;
     for( unsigned int l = 0; l < loops_per_pass; l++ ) {
+      //cout << "#LOOP " << l << endl;
       //cout << "# Loops " << l << "/" << loops_per_pass << flush;
       do {
 
-        move();
+        move( l );
+        //printf("#Chi2: %lf Type: %lf Histogram: %lf Connect: %lf Temperature %lf Total: %lf\n", X, T, H, C, B, P);
+        printf("%d %lf %lf %lf %lf %lf %lf\n", l, X, T, H, C, B, P);
 
         decreasing_p = ( P < P_old );
         double tmp = rng.in_range2(0.,1.);
-        //cout << endl << "tmp " << tmp << endl;
         metropolis   = ( exp( - (P - P_old)/B ) > tmp );
         accept = ( decreasing_p || metropolis );
 
-        cout << P - P_old << " " << tmp << " " << accept << endl;
-
         if( !accept ) {
           reject_move();
-          //cout << "# REJECTED" << endl;
         }
+
+        //cout << accept << endl;
 
       } while( accept == false );
       //cout << "Loop done" << endl;
     }
+    exit(-1);
 
     //cout << fixed << setprecision(2) << setfill('0');
     //cout << setw(5)<< "# Chi2: " << X << " Type: " << T << " Histogram: " << H << " Connect: " << C << " Total: " << P << endl;

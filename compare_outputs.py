@@ -38,9 +38,9 @@ for i in range( dim ):
 
     if( ref_f[i] == 0 and mine_f[i] == 0 ):
         rel_err = 0
-    elif( ref_f[i] < tr and mine_f[i] < tm ):
-        rel_err = 0
-        count2 += 1
+    #elif( ref_f[i] < tr and mine_f[i] < tm ):
+    #        rel_err = 0
+    #    count2 += 1
     else:
         rel_err = np.fabs( (mine_f[i] - ref_f[i])/ref_f[i] )
 

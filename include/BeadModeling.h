@@ -105,14 +105,15 @@ class BeadModeling : public Input {
       void load_rad(); /* loads the .rad experiment file */
       void load_statistics(); /* loads the tabulated statistics files */
       void load_FASTA();
-      void expand_sh( double, int, int, int );
+      void expand_sh( double, int, int, int, int );
       void calc_intensity( std::vector<double> );
       void distance_matrix();
       void update_statistics();
       void recursive_connect( int, int, int* );
       void save_old_config();
-      void move();
+      void move( int );
       void reject_move();
+      void test_rho( int );
 
       //penalty functions
       void chi_squared();
