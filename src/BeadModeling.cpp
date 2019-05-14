@@ -51,6 +51,15 @@ BeadModeling::BeadModeling( const string& filename ) {
     lambda         = stoi( parse_line( file, d ) );
     connect        = stoi( parse_line( file, d ) );
 
+    string mkdir = "mkdir " + outdir;
+    system( mkdir.c_str() );
+
+    mkdir = "mkdir " + outdir + "configurations/";
+    system( mkdir.c_str() );
+
+    mkdir = "mkdir " + outdir + "intensities/";
+    system( mkdir.c_str() );
+
     //cout << rad_file << "\t" << best_fit << "\t" << nresidues << "\t" << mass << endl;
     //cout << npasses << "\t" << loops_per_pass << "\t" << outdir << endl;
     //cout << lambda1 << "\t" << lambda2 << "\t" << connect << endl;
@@ -299,11 +308,11 @@ void BeadModeling::initial_configuration() {
 //     fclose(fil);
 // }
 
-void BeadModeling::write_xyz() {
+void BeadModeling::write_xyz( const string& filename ) {
 
   ofstream pdb;
 
-  pdb.open("test_file.xyz");
+  pdb.open(filename);
   if( pdb.is_open() ) {
 
     pdb << nresidues << endl << endl;
@@ -315,6 +324,23 @@ void BeadModeling::write_xyz() {
   }
 }
 //------------------------------------------------------------------------------
+
+void BeadModeling::write_intensity( const string& filename ) {
+
+  ofstream int_file;
+
+  int_file.open(filename);
+  if( int_file.is_open() ) {
+
+    //pdb << nresidues << endl << endl;
+
+    for( unsigned int i = 0; i < nq; i++ ) {
+      int_file << exp_q[i] << "\t" << intensity[i] << endl;
+    }
+
+  }
+
+}
 
 void BeadModeling::test_rho( int i ) {
 
@@ -392,7 +418,7 @@ void BeadModeling::test_rho( int i ) {
   //printf("%d %lf\n", i, tmp12 + tmp6);
   //printf("%d %lf %lf\n", x, a_endcaps);
 
-  printf("%lf\n", rho_modified);
+  //printf("%lf\n", rho_modified);
 
 }
 
@@ -978,7 +1004,7 @@ void BeadModeling::test_flat() {
   distance_matrix();
   update_statistics();
 
-  cout << "#Update statistics: done!" << endl;
+  cout << "# Update statistics: done!" << endl;
 
   cout << endl;
   cout << "# SIMULATED ANNEALING" << endl;
@@ -1001,9 +1027,16 @@ void BeadModeling::test_flat() {
 
   B = X/10; //effective temperature
 
+  ofstream penalty_file;
+
+  penalty_file.open( outdir + "penalty.dat" );
+
+  penalty_file << "#Pass\tTemperature\tChi2\tType\tHistogram\tConnect\tTotal" << endl;
+
   for( unsigned int p = 0; p < npasses; p++ ) {
 
     int c = 0;
+    int attempts = 0;
 
     cout << "# PASS " << p << endl;
     for( unsigned int l = 0; l < loops_per_pass; l++ ) {
@@ -1011,9 +1044,9 @@ void BeadModeling::test_flat() {
       //cout << "# Loops " << l << "/" << loops_per_pass << flush;
       do {
 
+        attempts++;
+
         move( l );
-        //printf("#Chi2: %lf Type: %lf Histogram: %lf Connect: %lf Temperature %lf Total: %lf\n", X, T, H, C, B, P);
-        printf("%d %lf %lf %lf %lf %lf %lf\n", l, X, T, H, C, B, P);
 
         decreasing_p = ( P < P_old );
         double tmp = rng.in_range2(0.,1.);
@@ -1024,31 +1057,34 @@ void BeadModeling::test_flat() {
           reject_move();
         }
 
-        //cout << accept << endl;
-
       } while( accept == false );
       //cout << "Loop done" << endl;
     }
-    exit(-1);
 
-    //cout << fixed << setprecision(2) << setfill('0');
-    //cout << setw(5)<< "# Chi2: " << X << " Type: " << T << " Histogram: " << H << " Connect: " << C << " Total: " << P << endl;
-
-    cout << "# Statistics                   " << endl;
+    //cout << "# Statistics                    " << endl;
     cout << fixed << setprecision(2) << setfill('0');
-    cout << setw(5) << "# Effective temperature:  " << B << endl;
-    //cout << setw(5) << "# Acceptance probability: " << (1. * loops_per_pass)/trials << endl;
-    cout << setw(5) << "# Chi squared:            " << X << endl;
-    cout << setw(5) << "# Type penalty:           " << T << endl;
-    cout << setw(5) << "# Histogram penalty:      " << H << endl;
-    cout << setw(5) << "# Connect penalty:        " << C << endl;
-    cout << setw(5) << "# Total penalty:          " << P << endl;
+    cout << setw(5) << "# Acceptance ratio:  " << (1.*loops_per_pass)/attempts << endl;
+    cout << setw(5) << "# Temperature:       " << B << endl;
+    cout << setw(5) << "# Chi squared:       " << X << endl;
+    cout << setw(5) << "# Type penalty:      " << T << endl;
+    cout << setw(5) << "# Histogram penalty: " << H << endl;
+    cout << setw(5) << "# Connect penalty:   " << C << endl;
+    cout << setw(5) << "# Total penalty:     " << P << endl;
     cout << endl;
+
+    penalty_file << p << "\t" << B << "\t" << X << "\t" << T << "\t" << H << "\t" << C << "\t" << P << endl;
+
+    string xyz = outdir + "configurations/" + to_string(p) + ".xyz";
+    string calc_intensity = outdir + "intensities/" + to_string(p) + ".dat";
+    write_xyz( xyz );
+    write_intensity( calc_intensity );
 
     if( B > 0.0001 ) {
       B *= 0.9;
     }
   }
+
+  penalty_file.close();
 
 }
 

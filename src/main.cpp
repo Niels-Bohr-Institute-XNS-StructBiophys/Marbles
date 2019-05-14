@@ -41,7 +41,7 @@ int main() {
   BD.initial_configuration();
   cout << "# Initial configuration set." << endl;
 
-  BD.write_xyz();
+  BD.write_xyz( "test.xyz" );
   BD.test_flat();
 
   //BD.parse_FASTA();

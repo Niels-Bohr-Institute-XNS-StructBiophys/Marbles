@@ -134,7 +134,8 @@ class BeadModeling : public Input {
       /* PUBLIC UTILITIES */
       void load_input();
       void initial_configuration();
-      void write_xyz();
+      void write_xyz( const std::string& );
+      void write_intensity( const std::string& );
       void test_flat();
       void update_rho( int );
       void penalty();

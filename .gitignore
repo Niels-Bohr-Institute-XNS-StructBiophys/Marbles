@@ -11,3 +11,5 @@ runner
 
 # Ignore temps and generated files
 *.xyz out_check* dictionary* *.txt *.dat *.pdb *.rad *test* *.py *.sh
+
+p450/
