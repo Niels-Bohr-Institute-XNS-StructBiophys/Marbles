@@ -26,7 +26,7 @@ BeadModeling::BeadModeling( const string& filename ) {
   string d = " ";
 
   sphere_generated = false;
-  init_type_penalty = true;
+  //init_type_penalty = true;
   init = true;
   clash_distance = 1.8; //hardcoded because experimented. Might want to leave the choice open for users though.
   sequence = "";
@@ -502,6 +502,14 @@ void BeadModeling::update_rho( int i ) {
       beads[i].rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_solvent;
     }
 
+    if( beads[i].type_old == 3 ) {
+      nmethyl--;
+    } else if( beads[i].type_old == 2  ) {
+      nalkyl--;
+    } else if( beads[i].type_old == 1 ) {
+      nhead--;
+    }
+
     //cout << beads[i].v << " " << beads[i].rho << endl;
 
   //}
@@ -672,18 +680,18 @@ void BeadModeling::chi_squared() {
 
 void BeadModeling::type_penalty() {
 
-  double tmp;
+  int tmp;
   tmp = nalkyl + nmethyl + nhead - insertion;
   //cout << "TEMP " << tmp << endl;
 
   // if( init_type_penalty ) {
   //   T = 2. * T_strength * tmp * tmp;
   // } else {
-    if( tmp > 0 ) {
-      T = 0;
-    } else {
-      T = T_strength * tmp * tmp;
-    }
+  if( tmp > 0 ) {
+    T = 0;
+  } else {
+    T = T_strength * tmp * tmp;
+  }
   //}
 
   //init_type_penalty = false;
@@ -1031,7 +1039,9 @@ void BeadModeling::test_flat() {
 
   penalty_file.open( outdir + "penalty.dat" );
 
-  penalty_file << "#Pass\tTemperature\tChi2\tType\tHistogram\tConnect\tTotal" << endl;
+  penalty_file << "#Iterations\tTemperature\tChi2\tType\tHistogram\tConnect\tTotal" << endl;
+
+  int iterations = 1;
 
   for( unsigned int p = 0; p < npasses; p++ ) {
 
@@ -1059,6 +1069,13 @@ void BeadModeling::test_flat() {
 
       } while( accept == false );
       //cout << "Loop done" << endl;
+
+      int diff = nalkyl + nmethyl + nhead - insertion;
+
+      //penalty_file << nalkyl << " " << nmethyl << " " << nhead << " " << diff << " " << T << endl;
+
+      penalty_file << iterations << "\t" << B << "\t" << X << "\t" << T << "\t" << H << "\t" << C << "\t" << P << endl;
+      iterations++;
     }
 
     //cout << "# Statistics                    " << endl;
@@ -1070,9 +1087,10 @@ void BeadModeling::test_flat() {
     cout << setw(5) << "# Histogram penalty: " << H << endl;
     cout << setw(5) << "# Connect penalty:   " << C << endl;
     cout << setw(5) << "# Total penalty:     " << P << endl;
+    //cout << nalkyl << " " << nmethyl << " " << nhead << endl;
     cout << endl;
 
-    penalty_file << p << "\t" << B << "\t" << X << "\t" << T << "\t" << H << "\t" << C << "\t" << P << endl;
+    //penalty_file << p << "\t" << B << "\t" << X << "\t" << T << "\t" << H << "\t" << C << "\t" << P << endl;
 
     string xyz = outdir + "configurations/" + to_string(p) + ".xyz";
     string calc_intensity = outdir + "intensities/" + to_string(p) + ".dat";

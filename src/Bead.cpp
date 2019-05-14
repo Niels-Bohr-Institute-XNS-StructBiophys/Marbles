@@ -90,6 +90,7 @@ void Bead::save_old_config() {
   y_old    = y;
   z_old    = z;
   rho_mold = rho_modified;
+  type_old = type;
 }
 
 void Bead::recover_old_config() {
@@ -97,6 +98,7 @@ void Bead::recover_old_config() {
   y = y_old;
   z = z_old;
   rho_modified = rho_mold;
+  type = type_old;
 }
 
 // void accept() {
