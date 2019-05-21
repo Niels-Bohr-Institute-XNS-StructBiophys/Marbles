@@ -2,7 +2,7 @@
 #include <complex>
 #include "Input.h"
 #include "Tools.h"
-#include<complex.h>
+#include <complex.h>
 
 #define NH 17 //Order of harmonics
 #define NTHETA ((NH+1)*2)
@@ -105,6 +105,7 @@ class Nanodisc : public Input {
     double get_e_scatt_len();                         /** returns electron scattering length in cm */
 
     std::complex<double> get_alpha( int, int, int );  /** returns the value of the expanded form factor at position i,l,m */
+    std::vector<std::complex<double> > get_alpha_buffer();
 
     int get_harmonics_order();                        /** returns the number of spherical harmonics used in the calculation */
 

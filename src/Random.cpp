@@ -4,24 +4,24 @@
 #include <stdlib.h>
 
 
-#define DEBUG
+//#define DEBUG
 using namespace std;
 
 /** class constructor */
 RandomNumbers::RandomNumbers() {
 
-#ifdef DEBUG /** if the define DEBUG is present fix the seed to 0. Generates a reproducible string of rands */
-  srand(0);
-#else /** otherwise, use the given time as seed */
-  srand(time(NULL));
-#endif
+//#ifdef DEBUG /** if the define DEBUG is present fix the seed to 0. Generates a reproducible string of rands */
+  //srand(0);
+//#else /** otherwise, use the given time as seed */
+  srand(time(0));
+//#endif
 
   /** allocate gsl arrays for rng calculations */
   T = gsl_rng_default;
   r = gsl_rng_alloc(T);
   gsl_rng_set(r, rand());
 
-  srand((unsigned) 1);
+  //srand((unsigned) 1);
 }
 //------------------------------------------------------------------------------
 

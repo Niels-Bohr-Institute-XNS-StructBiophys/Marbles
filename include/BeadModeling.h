@@ -1,7 +1,8 @@
 #include <iostream>
-#include "Nanodisc.h"
+//#include "Nanodisc.h"
 #include "Bead.h"
 #include "Random.h"
+#include "Fit.h"
 
 #define NH 17 //Order of harmonics
 #define NTHETA ((NH+1)*2)
@@ -21,12 +22,14 @@ class BeadModeling : public Input {
       /* CLASSES */
       Nanodisc nd;                 /** Nanodisc class for nanodisc handling */
       RandomNumbers rng;           /** RandomNumbers class for random number generation */
+      Fit fit;                     /** Fit class for fitting routines */
       std::vector<Bead> beads;     /** Vector of Bead classes for protein beads handling */
 
       /* FLAGS */
       bool sphere_generated;       /** Flag for avoiding regereating the initial sphere */
       bool init_type_penalty;      /** True if type_penalty is being called for the first time */
       bool init;                   /** True if penalty is called for the first time */
+      bool compute_scale;        /** compute intensity rescaling factor or not 8/
 
       /* INPUT FILES */
       std::string input_file;      /** Input file with run configurations */
@@ -68,6 +71,7 @@ class BeadModeling : public Input {
       double B;
       double T_strength;           /** strength of the type penalty */
       double H_strength;           /** strength of the histogram penalty */
+      double scale_factor;
 
       const unsigned int harmonics_order = 17;
       const unsigned int ntheta = (harmonics_order + 1) * 2;

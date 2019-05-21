@@ -52,6 +52,10 @@ void Nanodisc::load_input( const string& best_fit ) {
     cvlipid               = stod( parse_line( file, d_ ) );
     cvprotein             = stod( parse_line( file, d_ ) );
 
+    //HARDCODED HERE!!!1
+    cvprotein = 1.;
+    //CHANGE THIS!!
+
     skip_lines( file, 7 );
     cvwater               = stod( parse_line( file, d_ ) );
 
@@ -699,5 +703,8 @@ double Nanodisc::get_e_scatt_len() {
 
 complex<double> Nanodisc::get_alpha( int i, int l, int m ) {
   return alpha.at( i, l, m );
+}
 
+std::vector<complex<double> > Nanodisc::get_alpha_buffer() {
+  return alpha.get_buffer();
 }

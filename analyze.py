@@ -43,20 +43,21 @@ plt.ylabel('Penalty')
 plt.tight_layout()
 plt.savefig('penalty.pdf', format = 'pdf')
 
-# plt.figure(1)
-# cm_subsection = np.linspace(0, 1, npasses)
-#
-# colors = [ cm.coolwarm(x) for x in cm_subsection ]
-#
-# for i, color in enumerate(colors):
-#     intensity = np.loadtxt( f'p450/intensities/{i}.dat' )
-#     plt.loglog( intensity[1:,0], intensity[1:,1], color=color )
-#
-# #plt.colorbar()
-# plt.show()
+plt.figure(1)
+cm_subsection = np.linspace(0, 1, npasses)
+
+colors = [ cm.coolwarm(x) for x in cm_subsection ]
+
+for i, color in enumerate(colors):
+    intensity = np.loadtxt( f'p450/intensities/{i}.dat' )
+    plt.loglog( intensity[1:,0], intensity[1:,1], color=color )
+
+#plt.colorbar()
+plt.show()
 
 plt.figure(2)
 intensity = np.loadtxt( f'p450/intensities/{npasses-1}.dat' )
+
 rad = np.loadtxt('3a4nd2.rad')
 plt.loglog( intensity[1:,0], intensity[1:,1], color='k', label = 'Fit' )
 plt.loglog( rad[1:,0], rad[1:,1], marker = 'o', c = 'tab:red', markersize = 2, linewidth=0, label = 'Experimental data' )

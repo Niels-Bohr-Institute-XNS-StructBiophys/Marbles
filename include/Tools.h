@@ -47,8 +47,8 @@ class Array3D {
 
   public:
     int width        = W; /* number of rows */
-    const int height = H; /* number of columns */
-    const int depth  = D; /* thrid dimension */
+    int height = H; /* number of columns */
+    int depth  = D; /* thrid dimension */
 
     Array3D() : buffer( width * height * depth ) {}
 
@@ -80,6 +80,13 @@ class Array3D {
     //I will need to check the type here!
     void copy_from( Array3D to_copy ) {
       buffer = to_copy.get_buffer();
+    }
+
+    void copy_from_vector( std::vector<T> to_copy, int wi, int he, int de ) {
+      buffer = to_copy;
+      width  = wi;
+      height = he;
+      depth  = de;
     }
 
   private:

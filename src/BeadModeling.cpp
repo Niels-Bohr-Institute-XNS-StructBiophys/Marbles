@@ -26,6 +26,7 @@ BeadModeling::BeadModeling( const string& filename ) {
   string d = " ";
 
   sphere_generated = false;
+  compute_scale = true;
   //init_type_penalty = true;
   init = true;
   clash_distance = 1.8; //hardcoded because experimented. Might want to leave the choice open for users though.
@@ -104,12 +105,13 @@ BeadModeling::BeadModeling( const string& filename ) {
   intensity.resize( nq );
   intensity_old.resize( nq );
 
-  //vector<double> exp_q( dim );
   for( unsigned int i = 0; i < nq; i++ ) {
     exp_q[i] = rad[i][0];
   }
 
   nd.load_input( best_fit );
+
+  fit.fit_background( rad, 5 );
 }
 //------------------------------------------------------------------------------
 
@@ -580,10 +582,10 @@ void BeadModeling::expand_sh( double q, int index, int i, int sign, int indice )
 void BeadModeling::calc_intensity( vector<double> exp_q ) {
 
   double xr = 5.014;//nd.get_xrough();
-  double r, q, tmp, exponent;
+  double r, q, tmp, exponent, I0;
   double e_scattlen = nd.get_e_scatt_len();
   double background = 7.8e-5; //TODO! Load this from WillItFit
-  double correction_factor = 2.409e15; //TODO! Understand how to compute this factor
+  //double correction_factor = 2.409e15; //TODO! Understand how to compute this factor
 
   //intensity.resize( nq );
   fill(intensity.begin(),intensity.end(),0);
@@ -605,9 +607,22 @@ void BeadModeling::calc_intensity( vector<double> exp_q ) {
       }
     }
 
-    intensity[i] = intensity[i] * e_scattlen * e_scattlen * correction_factor + background;
+
+    //insert a check for the value of the correction factor: if it is similar to the value of the numerical density it's fine. Otherwise, suggest the user to proceed at its own risk.
+    if( compute_scale ) {
+      I0 = intensity[0] * e_scattlen * e_scattlen;
+      scale_factor = rad[0][1]/I0; //rescale the computed intensity to the experimental I[0]
+      //cout << "HEI" << endl;
+    }
+    compute_scale = false;
+
+    intensity[i] = intensity[i] * e_scattlen * e_scattlen * scale_factor + background;
     //cout << intensity[i] << endl;
   }
+
+  // cout << "HERE!" << endl;
+  // cout << "Estimated: " << rad[0][1]/I0 << endl;
+  // cout << "Exact " << correction_factor << endl;
 }
 
 void BeadModeling::distance_matrix() {
@@ -1008,6 +1023,11 @@ void BeadModeling::test_flat() {
 
   calc_intensity( exp_q );
   cout << "# Compute intensity: done!" << endl;
+  cout << "# Scale factor (units of 1e15): " << setprecision(3) << scale_factor/1.e15 << endl;
+
+  //hardcoded background 7.8e-5
+  fit.setup_intensity_fit( nd.get_alpha_buffer(), beta.get_buffer(), exp_q, nd.get_e_scatt_len(), scale_factor, 7.8e-5, nq, harmonics_order );
+  exit(-1);
 
   distance_matrix();
   update_statistics();
