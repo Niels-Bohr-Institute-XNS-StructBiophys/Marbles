@@ -16,6 +16,7 @@ typedef struct {
 } bck_data;
 
 typedef struct {
+
   Array3D<std::complex<double>, 0, NH+1, NH+1> alpha;
   Array3D<std::complex<double>, 0, NH+1, NH+1> beta;
   double e_scattlen;
@@ -24,6 +25,7 @@ typedef struct {
   unsigned int nq;
   unsigned int harmonics_order;
   std::vector<double> exp_q;
+  std::vector<double> ref_intensity;
 } int_data;
 
 class Fit {
@@ -33,8 +35,7 @@ class Fit {
         ~Fit();
 
         void fit_background( std::vector<std::vector<double> >, unsigned int );
-        void setup_intensity_fit( std::vector<std::complex<double> >, std::vector<std::complex<double> >, std::vector<double>, double, double, double, unsigned int, unsigned int );
-        void fit_intensity();
+        void fit_intensity( std::vector<std::complex<double> >, std::vector<std::complex<double> >, std::vector<double>, std::vector<double>, double, double, double, unsigned int, unsigned int );
 
     private:
         bool setup;
@@ -42,21 +43,9 @@ class Fit {
         int_data datai;
         std::vector<double> y_bck; //result of background optimization
         std::vector<double> y_int; //result of background optimization
-        std::vector<double> exp_q;
-        std::vector<double> intensity;
-        std::vector<double> ref_intensity;
         double chi2_bck; //chi^2 obtained from the background optimization
         double chi2_int; //chi^2 obtained from the background optimization
 
-        Array3D<std::complex<double>, 0, NH+1, NH+1> beta;
-        Array3D<std::complex<double>, 0, NH+1, NH+1> alpha;
-        double e_scattlen;
-        unsigned int nq;
-        unsigned int harmonics_order;
-        double scale_factor;
-        double background;
-
-        double const_func( double );
         static double chi2_background( const std::vector<double>&, std::vector<double>&, void* ); //without static doesn't work!
         static double chi2_intensity( const std::vector<double>&, std::vector<double>&, void* );
 };

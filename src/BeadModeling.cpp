@@ -617,7 +617,6 @@ void BeadModeling::calc_intensity( vector<double> exp_q ) {
     compute_scale = false;
 
     intensity[i] = intensity[i] * e_scattlen * e_scattlen * scale_factor + background;
-    //cout << intensity[i] << endl;
   }
 
   // cout << "HERE!" << endl;
@@ -1026,7 +1025,7 @@ void BeadModeling::test_flat() {
   cout << "# Scale factor (units of 1e15): " << setprecision(3) << scale_factor/1.e15 << endl;
 
   //hardcoded background 7.8e-5
-  fit.setup_intensity_fit( nd.get_alpha_buffer(), beta.get_buffer(), exp_q, nd.get_e_scatt_len(), scale_factor, 7.8e-5, nq, harmonics_order );
+  fit.fit_intensity( nd.get_alpha_buffer(), beta.get_buffer(), intensity, exp_q, nd.get_e_scatt_len(), scale_factor, 7.8e-5, nq, harmonics_order );
   exit(-1);
 
   distance_matrix();
