@@ -299,16 +299,19 @@ void BeadModeling::initial_configuration() {
 }
 //------------------------------------------------------------------------------
 
-// void BeadModeling::WritePDB()
-// {
-//     FILE * fil;
-//     char* amin="rca";
-//     fil=fopen("porcoddio.pdb","w");
-//     for(int i=0;i<nresidues;i++){
-//         fprintf(fil,"ATOM   %4d  CA  %s   %4d   %8.3lf%8.3lf%8.3lf  1.00 18.20           N\n",i+1,amin,i+1,beads[i].x, beads[i].y,beads[i].z);
-//     }
-//     fclose(fil);
-// }
+void BeadModeling::write_pdb( const string& filename ) {
+
+    FILE *fil;
+    char *amin = "rca";
+
+    fil = fopen( filename.c_str(), "w" );
+
+    for( unsigned int i = 0; i < nresidues; i++ ) {
+        fprintf(fil,"ATOM   %4d  CA  %s   %4d   %8.3lf%8.3lf%8.3lf  1.00 18.20           N\n",i+1,amin,i+1,beads[i].x, beads[i].y,beads[i].z);
+    }
+
+    fclose(fil);
+}
 
 void BeadModeling::write_xyz( const string& filename ) {
 
@@ -584,7 +587,7 @@ void BeadModeling::calc_intensity( vector<double> exp_q ) {
   double xr = 5.014;//nd.get_xrough();
   double r, q, tmp, exponent, I0;
   double e_scattlen = nd.get_e_scatt_len();
-  double background = 7.8e-5; //TODO! Load this from WillItFit
+  double background = fit.get_background();//7.8e-5; //TODO! Load this from WillItFit
   //double correction_factor = 2.409e15; //TODO! Understand how to compute this factor
 
   //intensity.resize( nq );
@@ -1022,11 +1025,10 @@ void BeadModeling::test_flat() {
 
   calc_intensity( exp_q );
   cout << "# Compute intensity: done!" << endl;
-  cout << "# Scale factor (units of 1e15): " << setprecision(3) << scale_factor/1.e15 << endl;
 
   //hardcoded background 7.8e-5
-  fit.fit_intensity( nd.get_alpha_buffer(), beta.get_buffer(), intensity, exp_q, nd.get_e_scatt_len(), scale_factor, 7.8e-5, nq, harmonics_order );
-  exit(-1);
+  //fit.fit_intensity( nd.get_alpha_buffer(), beta.get_buffer(), intensity, exp_q, nd.get_e_scatt_len(), scale_factor, 7.8e-5, nq, harmonics_order );
+  //exit(-1);
 
   distance_matrix();
   update_statistics();
@@ -1097,6 +1099,8 @@ void BeadModeling::test_flat() {
       iterations++;
     }
 
+    double scale_tmp = rad[0][1]/intensity[0];
+
     //cout << "# Statistics                    " << endl;
     cout << fixed << setprecision(2) << setfill('0');
     cout << setw(5) << "# Acceptance ratio:  " << (1.*loops_per_pass)/attempts << endl;
@@ -1106,14 +1110,17 @@ void BeadModeling::test_flat() {
     cout << setw(5) << "# Histogram penalty: " << H << endl;
     cout << setw(5) << "# Connect penalty:   " << C << endl;
     cout << setw(5) << "# Total penalty:     " << P << endl;
-    //cout << nalkyl << " " << nmethyl << " " << nhead << endl;
+    cout << setw(5) << "# Inserted beads:    " << nalkyl << " " << nmethyl << " " << nhead << endl;
+    cout << setw(5) << "# Scale factor:      " << setprecision(3) << scale_tmp << endl;
     cout << endl;
 
     //penalty_file << p << "\t" << B << "\t" << X << "\t" << T << "\t" << H << "\t" << C << "\t" << P << endl;
 
     string xyz = outdir + "configurations/" + to_string(p) + ".xyz";
+    string pdb = outdir + "configurations/" + to_string(p) + ".pdb";
     string calc_intensity = outdir + "intensities/" + to_string(p) + ".dat";
     write_xyz( xyz );
+    write_pdb( pdb );
     write_intensity( calc_intensity );
 
     if( B > 0.0001 ) {

@@ -36,6 +36,7 @@ class Fit {
 
         void fit_background( std::vector<std::vector<double> >, unsigned int );
         void fit_intensity( std::vector<std::complex<double> >, std::vector<std::complex<double> >, std::vector<double>, std::vector<double>, double, double, double, unsigned int, unsigned int );
+        double get_background();
 
     private:
         bool setup;

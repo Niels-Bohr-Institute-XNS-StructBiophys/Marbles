@@ -146,5 +146,5 @@ class BeadModeling : public Input {
 
       /* GET FUNCTIONS */
 
-      //void WritePDB();
+      void write_pdb( const std::string& );
 };

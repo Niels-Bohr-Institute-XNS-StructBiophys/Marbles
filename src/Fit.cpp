@@ -215,5 +215,9 @@ void Fit::fit_intensity( std::vector<std::complex<double> > a, std::vector<std::
     exit(-1);
   }
 
-  std::cout << std::setprecision(5) << "found minimum at X^2(" << y_int[0] << ") = " << chi2_int << std::endl;
+  //std::cout << std::setprecision(5) << "found minimum at X^2(" << y_int[0] << ") = " << chi2_int << std::endl;
+}
+
+double Fit::get_background() {
+  return y_bck[0];
 }
