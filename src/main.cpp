@@ -38,10 +38,10 @@ int main() {
 
   const string filename = "p450.input";
   BeadModeling BD = BeadModeling( filename );
-  BD.initial_configuration();
-  cout << "# Initial configuration set." << endl;
+  //BD.initial_configuration();
+  //cout << "# Initial configuration set." << endl;
 
-  BD.write_xyz( "test.xyz" );
+  //BD.write_xyz( "test.xyz" );
   BD.test_flat();
 
   //BD.parse_FASTA();

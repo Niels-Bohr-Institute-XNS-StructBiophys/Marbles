@@ -16,7 +16,6 @@ typedef struct {
 } bck_data;
 
 typedef struct {
-
   Array3D<std::complex<double>, 0, NH+1, NH+1> alpha;
   Array3D<std::complex<double>, 0, NH+1, NH+1> beta;
   double e_scattlen;
@@ -26,6 +25,7 @@ typedef struct {
   unsigned int harmonics_order;
   std::vector<double> exp_q;
   std::vector<double> ref_intensity;
+  std::vector<double> err;
 } int_data;
 
 class Fit {
@@ -35,8 +35,12 @@ class Fit {
         ~Fit();
 
         void fit_background( std::vector<std::vector<double> >, unsigned int );
-        void fit_intensity( std::vector<std::complex<double> >, std::vector<std::complex<double> >, std::vector<double>, std::vector<double>, double, double, double, unsigned int, unsigned int );
+        void fit_intensity( std::vector<std::complex<double> >, std::vector<std::complex<double> >, std::vector<std::vector<double> >, double, unsigned int );
         double get_background();
+        double get_rough();
+        double get_bck_chi2();
+        double get_rough_chi2();
+        void set_default_roughness( double );
 
     private:
         bool setup;

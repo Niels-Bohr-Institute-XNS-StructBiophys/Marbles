@@ -96,6 +96,8 @@ class BeadModeling : public Input {
       std::vector<double> nnum3_ref;
       std::vector<double> nnum3_old;
 
+      std::vector<double> roughness_chi2;
+
       Array3D<std::complex<double>, 0, NH+1, NH+1> beta;
       Array3D<std::complex<double>, 0, NH+1, NH+1> beta_old;
 
@@ -130,6 +132,9 @@ class BeadModeling : public Input {
 
       bool bead_clash( unsigned const int ); /** checks wether the position of a bead clashes with another one **/
       bool inside_ellipse( int, double, double );
+
+      void setup();
+      void simulated_annealing( bool );
 
     public:
       BeadModeling( const std::string& );

@@ -8,6 +8,7 @@
 #include <gsl/gsl_sf_bessel.h>
 #include <gsl/gsl_sf_legendre.h>
 #include <iomanip>
+#include <numeric>
 #define AV_RESIDUE_MASS 0.1 //average mass of a residue in kDa
 
 using namespace std;
@@ -27,18 +28,14 @@ BeadModeling::BeadModeling( const string& filename ) {
 
   sphere_generated = false;
   compute_scale = true;
-  //init_type_penalty = true;
   init = true;
+
   clash_distance = 1.8; //hardcoded because experimented. Might want to leave the choice open for users though.
   sequence = "";
   shift = 50.; //same here: might want to leave this free for the user to choose
-  //X = std::numeric_limits<float>::max();
   insertion = 14;
   T_strength = 5;
   H_strength = 20;
-  //init = true;
-
-  //load_input();
 
   if( file.is_open() ) {
 
@@ -60,10 +57,6 @@ BeadModeling::BeadModeling( const string& filename ) {
 
     mkdir = "mkdir " + outdir + "intensities/";
     system( mkdir.c_str() );
-
-    //cout << rad_file << "\t" << best_fit << "\t" << nresidues << "\t" << mass << endl;
-    //cout << npasses << "\t" << loops_per_pass << "\t" << outdir << endl;
-    //cout << lambda1 << "\t" << lambda2 << "\t" << connect << endl;
 
   } else {
     cerr << "Cannot open " << input_file << endl;
@@ -104,6 +97,7 @@ BeadModeling::BeadModeling( const string& filename ) {
   distances.initialize(0);
   intensity.resize( nq );
   intensity_old.resize( nq );
+  roughness_chi2.resize( 5 );
 
   for( unsigned int i = 0; i < nq; i++ ) {
     exp_q[i] = rad[i][0];
@@ -112,6 +106,7 @@ BeadModeling::BeadModeling( const string& filename ) {
   nd.load_input( best_fit );
 
   fit.fit_background( rad, 5 );
+  fit.set_default_roughness( 6.335 );
 }
 //------------------------------------------------------------------------------
 
@@ -142,73 +137,6 @@ void BeadModeling::load_statistics() {
   nnum2_old.resize( nnum2_ref.size() );
   nnum3_old.resize( nnum3_ref.size() );
 }
-//------------------------------------------------------------------------------
-
-// void BeadModeling::load_input() {
-//
-//   ifstream file( input_file );
-//   string line;
-//   string d = " ";
-//
-//   if( file.is_open() ) {
-//
-//     rad_file       = parse_line( file, d );            //path to the experimental .rad file
-//     best_fit       = parse_line( file, d );            //path to the WillItFit results
-//     sequence_file  = parse_line( file, d );
-//     //nresidues      = stoi( parse_line( file, d ) );    //number of residues composing the protein
-//
-//     // if( !nresidues ) {
-//     //   mass         = stoi( parse_line( file, d ) );    //molecular mass of the protein
-//     //   nresidues    = (int)( mass/AV_RESIDUE_MASS ); //number of residues computed from the molecular mass
-//     //
-//     //   cout << "# NOTE! You specified Residues: 0. The number of beads will be deduced from the molecular mass." << endl;
-//     //   cout << "# Using " << nresidues << " beads" << endl;
-//     // } else {
-//     //   cout << "# NOTE! You explicitely passed the number of residues: Mass parameter will be ignored." << endl;
-//     // }
-//
-//     //nresidues = 495; //JUST FOR DEBUG!!!
-//
-//     dmax           = stof( parse_line( file, d ) );   //dmax from fit
-//     npasses        = stoi( parse_line( file, d ) );   //total number of passes
-//     loops_per_pass = stoi( parse_line( file, d ) );   //number of performed loops per pass
-//     outdir         = parse_line( file, d );           //directory where results are saved
-//     lambda         = stoi( parse_line( file, d ) );
-//     //lambda2        = stoi( parse_line( file, d ) );
-//     connect        = stoi( parse_line( file, d ) );
-//
-//     //cout << rad_file << "\t" << best_fit << "\t" << nresidues << "\t" << mass << endl;
-//     //cout << npasses << "\t" << loops_per_pass << "\t" << outdir << endl;
-//     //cout << lambda1 << "\t" << lambda2 << "\t" << connect << endl;
-//
-//   } else {
-//     cerr << "Cannot open " << input_file << endl;
-//     exit(-1);
-//   }
-//
-//   cout << "# File '" << input_file << "' loaded" << endl;
-//
-//   load_FASTA(); //load sequence file
-//   cout << "# File '" << sequence_file << "' loaded" << endl;
-//   nresidues = sequence.length();
-//
-//   load_rad(); //experimental file with SAXS or SANS data
-//   cout << "# File '" << rad_file << "' loaded " << endl;
-//
-//   load_statistics(); //statistics needed for penalty function
-//   cout << "# Statistics loaded" << endl;
-//
-//   cout << endl;
-//   cout << "# SUMMARY OF PARAMETERS" << endl;
-//   cout << "# ---------------------" << endl;
-//   cout << "# Number of beads: " << nresidues << endl;
-//   cout << "# Radius of initial sphere: " << 2. * dmax / 3. << endl;
-//   cout << "# Number of passes: " << npasses << endl;
-//   cout << "# Loops per pass: " << loops_per_pass << endl;
-//   cout << "# Storing results in: '" << outdir << "'" << endl;
-//
-//   sanity_check = true;
-// }
 //------------------------------------------------------------------------------
 
 void BeadModeling::load_FASTA() {
@@ -258,7 +186,7 @@ bool BeadModeling::bead_clash( unsigned const int i ) {
 
 void BeadModeling::initial_configuration() {
 
-  if( !sphere_generated ) {
+  //if( !sphere_generated ) {
 
     double x, y, z, r, r2;
     bool clash;
@@ -287,14 +215,9 @@ void BeadModeling::initial_configuration() {
       } while( clash == true );
     }
 
-    //for( unsigned int i = 0; i < nresidues; i++ ) {
-    //  cout << i << " " << beads[i].x << " " << beads[i].y << " " << beads[i].z << " " << beads[i].v << " " << beads[i].rho << endl;
-    //}
-
-
-  } else {
-    cout << "# NOTE! Skipping initial configuration because the the system is already set up.";
-  }
+  //} else {
+  //  cout << "# NOTE! Skipping initial configuration because the the system is already set up.";
+  //}
 
 }
 //------------------------------------------------------------------------------
@@ -312,6 +235,7 @@ void BeadModeling::write_pdb( const string& filename ) {
 
     fclose(fil);
 }
+//------------------------------------------------------------------------------
 
 void BeadModeling::write_xyz( const string& filename ) {
 
@@ -336,96 +260,12 @@ void BeadModeling::write_intensity( const string& filename ) {
 
   int_file.open(filename);
   if( int_file.is_open() ) {
-
-    //pdb << nresidues << endl << endl;
-
     for( unsigned int i = 0; i < nq; i++ ) {
       int_file << exp_q[i] << "\t" << intensity[i] << endl;
     }
-
   }
-
 }
-
-void BeadModeling::test_rho( int i ) {
-
-  double radius_major            = nd.get_radius_major();
-  double radius_minor            = nd.get_radius_minor();
-  double scale_endcaps           = nd.get_scale_endcaps();
-  double vertical_axis_ellipsoid = nd.get_vertical_axis_ellipsoid();
-  double rho_solvent             = nd.get_rho_solvent();
-  double hlipid                  = nd.get_hlipid();
-  double hmethyl                 = nd.get_hmethyl();
-  double hcore                   = nd.get_hcore();
-  double rho_alkyl               = nd.get_rho_alkyl();
-  double rho_methyl              = nd.get_rho_methyl();
-  double rho_head                = nd.get_rho_head();
-  double cvprotein               = nd.get_cvprotein();
-
-  double a_endcaps               = radius_major * scale_endcaps;
-  double a_endcaps_1             = 1. / a_endcaps;
-  double b_endcaps               = radius_minor * scale_endcaps;
-  double b_endcaps_1             = 1. / b_endcaps;
-  double shift_endcaps           = - vertical_axis_ellipsoid / a_endcaps * sqrt( a_endcaps * a_endcaps - radius_major * radius_major );
-  double c_endcaps_1             = 1. / vertical_axis_ellipsoid;
-  double shift_z_core            = ( hcore / 2. + shift_endcaps ) * c_endcaps_1;
-  double shift_z_lipid           = ( hlipid / 2. + shift_endcaps ) * c_endcaps_1;
-
-  //nmethyl = 0;
-  //nalkyl  = 0;
-  //nhead   = 0;
-
-  double x, y, z, fz, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp12, rho_modified;
-  bool cnd1, cnd2, cnd3, cnd4;
-
-  //for( unsigned int i = 0; i < nresidues; i++ ) {
-
-  x = beads[i].x;
-  y = beads[i].y;
-  z = beads[i].z;
-  fz = fabs(z);
-
-  tmp1 = x * a_endcaps_1 * x * a_endcaps_1;
-  tmp2 = y * b_endcaps_1 * y * b_endcaps_1;
-  tmp3 = ( z * c_endcaps_1 - shift_z_core ) * ( z * c_endcaps_1 - shift_z_core );
-  tmp4 = ( z * c_endcaps_1 + shift_z_core ) * ( z * c_endcaps_1 + shift_z_core );
-  tmp5 = ( z * c_endcaps_1 - shift_z_lipid ) * ( z * c_endcaps_1 - shift_z_lipid );
-  tmp6 = ( z * c_endcaps_1 + shift_z_lipid ) * ( z * c_endcaps_1 + shift_z_lipid );
-  tmp12 = tmp1 + tmp2;
-
-  //FOR DEBUGGING ONLY!!!
-  //#####################
-  if( i == 0 ) {
-    beads[i].v = 165.18;
-    beads[i].rho = 71;
-  } else if( i == nresidues - 1 ) {
-    beads[i].v = 147.14;
-    beads[i].rho = 65;
-  }
-  //#####################
-  // FOR DEBUGGING ONLY!!
-
-  if( fz < hmethyl * .5 ) {
-    rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_methyl;
-    nmethyl++;
-  } else if( cnd1 || cnd2 || fz < hcore * .5 ) {
-    rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_alkyl;
-    nalkyl++;
-  } else if( cnd3 || cnd4 || fz < hlipid * .5 ) {
-    rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_head;
-    nhead++;
-  } else {
-    rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_solvent;
-  }
-
-  //pow(xn/aEndcaps,2)+pow(yn/bEndcaps,2)+pow((zn-(disc->Hcore/2.+ShiftOfEndcaps))/cEndcaps,2)
-
-  //printf("%d %lf\n", i, tmp12 + tmp6);
-  //printf("%d %lf %lf\n", x, a_endcaps);
-
-  //printf("%lf\n", rho_modified);
-
-}
+//------------------------------------------------------------------------------
 
 void BeadModeling::update_rho( int i ) {
 
@@ -515,9 +355,6 @@ void BeadModeling::update_rho( int i ) {
       nhead--;
     }
 
-    //cout << beads[i].v << " " << beads[i].rho << endl;
-
-  //}
 }
 //------------------------------------------------------------------------------
 
@@ -530,61 +367,45 @@ void BeadModeling::expand_sh( double q, int index, int i, int sign, int indice )
   vector<double> legendre( harmonics_order + 1 );
   complex<double> j(0,1), tmp, p;
 
-  //for( unsigned int i = 0; i < nresidues; i++ ) {
-    if( sign < 0 ) {
-      x     = beads[i].x_old;
-      y     = beads[i].y_old;
-      z     = beads[i].z_old;
-    } else {
-      x     = beads[i].x;
-      y     = beads[i].y;
-      z     = beads[i].z;
-    }
+  if( sign < 0 ) {
+    x     = beads[i].x_old;
+    y     = beads[i].y_old;
+    z     = beads[i].z_old;
+  } else {
+    x     = beads[i].x;
+    y     = beads[i].y;
+    z     = beads[i].z;
+  }
 
-    r     = sqrt( x*x + y*y + z*z );
-    theta = acos( z / r );
-    phi   = acos( x / ( r * sin(theta) ) ) * sgn( y );
+  r     = sqrt( x*x + y*y + z*z );
+  theta = acos( z / r );
+  phi   = acos( x / ( r * sin(theta) ) ) * sgn( y );
 
-    //cout << x << endl;
-    //if( l == 22 ) printf("%lf %lf %lf\n", r, theta, phi);
+  status = gsl_sf_bessel_jl_array( harmonics_order, q * r, bessel ); // Calculate spherical bessel functions for l=0,..,Nh
 
-    //if( l == 22 ) printf("%lf\n", beads[i].rho_modified );
+  for( int m = 0; m <= harmonics_order; m++ ) {
+    status = gsl_sf_legendre_sphPlm_array( harmonics_order, m, cos(theta), &legendre[m] ); //Calculate legendre polynomials P_l(cos(theta)) of degree l=m,..., up to Nh
+    //Store the values in legendre[m],legendre[m+1],...,legendre[Nh]
 
-    status = gsl_sf_bessel_jl_array( harmonics_order, q * r, bessel ); // Calculate spherical bessel functions for l=0,..,Nh
+    p = pol( 1., -m * phi);
 
-    for( int m = 0; m <= harmonics_order; m++ ) {
-      status = gsl_sf_legendre_sphPlm_array( harmonics_order, m, cos(theta), &legendre[m] ); //Calculate legendre polynomials P_l(cos(theta)) of degree l=m,..., up to Nh
-      //Store the values in legendre[m],legendre[m+1],...,legendre[Nh]
+    for( unsigned int l = m; l <= harmonics_order; l++ ) {
+      tmp = sqrt_4pi * pow(j, l) * beads[i].rho_modified * bessel[l] * legendre[l] * p;
 
-      //for( int b = 0; b <= harmonics_order; b++ ) {
-      //  cout << legendre[b] << endl;
-      //}
-      p = pol( 1., -m * phi);
-      //cout << real(p) << " " << imag(p) << endl; // " " << m << " " << phi << " " << cos(phi) << " " << sin(phi) << endl;
-
-      for( unsigned int l = m; l <= harmonics_order; l++ ) {
-        tmp = sqrt_4pi * pow(j, l) * beads[i].rho_modified * bessel[l] * legendre[l] * p;
-
-        if( sign >= 0 ) {
-          beta.add( index, l, m, tmp );
-        } else {
-          beta.add( index, l, m, -tmp );
-        }
-
-        // if( indice == 0 ) {
-        //   printf("%lf %lf %lf %lf %lf %lf %lf %lf\n", sqrt_4pi, real(pow(j, l)), imag(pow(j, l)), beads[i].rho_modified, bessel[l], legendre[l], real(p), imag(p) );
-        // }
-        //cout << real(beta.at( index, l, m )) << " " << imag(beta.at( index, l, m )) << endl;
-
+      if( sign >= 0 ) {
+        beta.add( index, l, m, tmp );
+      } else {
+        beta.add( index, l, m, -tmp );
       }
     }
-  //}
+  }
 }
+//------------------------------------------------------------------------------
 
 
 void BeadModeling::calc_intensity( vector<double> exp_q ) {
 
-  double xr = 5.014;//nd.get_xrough();
+  double xr = fit.get_rough();//4.6;//5.014;//nd.get_xrough();
   double r, q, tmp, exponent, I0;
   double e_scattlen = nd.get_e_scatt_len();
   double background = fit.get_background();//7.8e-5; //TODO! Load this from WillItFit
@@ -598,34 +419,25 @@ void BeadModeling::calc_intensity( vector<double> exp_q ) {
     exponent = xr * q * xr * q;
     r = exp( - exponent / 2. );
 
-    //cout << r << endl;
-
     for(int l = 0; l <= harmonics_order; l++ ) {
       for(int m = 0; m <= l; m++ ) {
         tmp = abs( r * nd.get_alpha( i, l, m ) + beta.at( i, l, m ) );
         tmp *= tmp;
         intensity[i] += ( (m > 0) + 1. ) * tmp;
-        //cout << intensity[i] << endl;
-        //cout << xr << " " << q << " " << r << " " << real( nd.get_alpha( i, l, m ) ) << " " << imag( nd.get_alpha( i, l, m ) ) << " " << real( beta.at( i, l, m ) ) << " " << imag(beta.at( i, l, m )) << endl;
       }
     }
-
 
     //insert a check for the value of the correction factor: if it is similar to the value of the numerical density it's fine. Otherwise, suggest the user to proceed at its own risk.
     if( compute_scale ) {
       I0 = intensity[0] * e_scattlen * e_scattlen;
       scale_factor = rad[0][1]/I0; //rescale the computed intensity to the experimental I[0]
-      //cout << "HEI" << endl;
     }
     compute_scale = false;
 
     intensity[i] = intensity[i] * e_scattlen * e_scattlen * scale_factor + background;
   }
-
-  // cout << "HERE!" << endl;
-  // cout << "Estimated: " << rad[0][1]/I0 << endl;
-  // cout << "Exact " << correction_factor << endl;
 }
+//------------------------------------------------------------------------------
 
 void BeadModeling::distance_matrix() {
 
@@ -638,14 +450,8 @@ void BeadModeling::distance_matrix() {
       distances.set( j, i, tmp );
     }
   }
-
-  // for( unsigned int i = 0; i < nresidues; i ++ ) {
-  //   for( unsigned int j = 0; j < nresidues; j++ ) {
-  //     cout << distances.at( i, j ) << endl;
-  //   }
-  // }
-
 }
+//------------------------------------------------------------------------------
 
 void BeadModeling::update_statistics() {
 
@@ -675,12 +481,8 @@ void BeadModeling::update_statistics() {
     if( count3 < nnnum ) nnum3[count3-1] += 1. / nresidues;
   }
 
-  // for( int i = 0; i < 12; i++ ) {
-  //   //cout << nnum1[i] << " " << nnum2[i] << " " << nnum3[i] << endl;
-  //   cout << ndist[i] << endl;
-  // }
-
 }
+//------------------------------------------------------------------------------
 
 void BeadModeling::chi_squared() {
 
@@ -713,6 +515,7 @@ void BeadModeling::type_penalty() {
 
   //init_type_penalty = false;
 }
+//------------------------------------------------------------------------------
 
 void BeadModeling::histogram_penalty() {
 
@@ -738,6 +541,7 @@ void BeadModeling::histogram_penalty() {
 
   H *= lambda;
 }
+//------------------------------------------------------------------------------
 
 void BeadModeling::recursive_connect( int i, int s, int *pop ) {
 
@@ -751,6 +555,7 @@ void BeadModeling::recursive_connect( int i, int s, int *pop ) {
     }
   }
 }
+//------------------------------------------------------------------------------
 
 void BeadModeling::connect_penalty() {
 
@@ -780,6 +585,7 @@ void BeadModeling::connect_penalty() {
 
   C = fabs( connect * log( (1. * nresidues) / max ) );
 }
+//------------------------------------------------------------------------------
 
 void BeadModeling::penalty() {
 
@@ -809,6 +615,7 @@ void BeadModeling::penalty() {
   init = false;
   P += X + H + T + C;
 }
+//------------------------------------------------------------------------------
 
 void BeadModeling::save_old_config() {
 
@@ -850,6 +657,7 @@ void BeadModeling::reject_move() {
   beta.copy_from( beta_old );
 
 }
+//------------------------------------------------------------------------------
 
 bool BeadModeling::inside_ellipse( int i, double a, double b ) {
 
@@ -859,6 +667,7 @@ bool BeadModeling::inside_ellipse( int i, double a, double b ) {
 
   return ( tmp < 1 );
 }
+//------------------------------------------------------------------------------
 
 void BeadModeling::move( int l ) {
 
@@ -873,12 +682,8 @@ void BeadModeling::move( int l ) {
   rmax = 42.6;
   rmin = 29.0;
   d2 = rng.in_range2( 1.8, 5.1 ); //5.1 seems quite random
-
-  //cout << "d2 " << d2 << endl;
   z_ref = 14; //seems wuite random too
   //END DEBUGGING PURPOSE
-
-  //cout << nd.get_radius_major() << " " << nd.get_radius_minor() << endl;
 
   do {
 
@@ -893,10 +698,8 @@ void BeadModeling::move( int l ) {
     }
 
     vec = rng.vector3( d2 );
-    //cout << l << " " << vec[0] << " " << vec[1] << " " << vec[2] << endl;
     beads[i].assign_position( beads[j].x + vec[0], beads[j].y + vec[1], beads[j].z + vec[2] );
 
-    //cout << "#Moving bead " << i << " using bead " << j << ". Assigned x = " << beads[j].x + vec[0] << ", y = " << beads[j].y + vec[1] << ", z = " << beads[j].z + vec[2] << endl;
     if( legal ) {
       legal = ( fabs( beads[i].z ) > z_ref || inside_ellipse( i, rmax, rmin ) );
     }
@@ -905,102 +708,37 @@ void BeadModeling::move( int l ) {
       legal = ! bead_clash( i );
     }
 
-    //cout << s << " " << ( fabs( beads[i].z ) > z_ref ) << " " << inside_ellipse( i, rmax, rmin ) << " " << bead_clash(i) << " " << i << " " << j << endl;
-
-    //cout << l << " " << s << " " << legal << " " << i << " " << j << endl;
-
   } while( legal == false );
-
-  //cout << "#s = " << s << endl;
-
-  // if( l == 22 ) {
-  //   cout << "#BEFORE: " << beads[i].rho_modified << endl;
-  // }
 
   for( unsigned int k = 0; k < nq; k++ ) {
     expand_sh( exp_q[k], k, i, -1, 0 ); //subtract the contribution of the previous position
-    //expand_sh( exp_q[k], k, i, 1, 0 );  //update beta with the new position
   }
 
   update_rho( i );
 
   for( unsigned int k = 0; k < nq; k++ ) {
-    //expand_sh( exp_q[k], k, i, -1, 0 ); //subtract the contribution of the previous position
     expand_sh( exp_q[k], k, i, 1, 0 );  //update beta with the new position
   }
 
-  // if( l == 0 ) {
-  //
-  //   // for( int i = 0; i < nresidues; i++ ) {
-  //   //   test_rho( i );
-  //   // }
-  //
-  //
-  //
-  //   // for( int i = 0; i < nresidues; i++ ) {
-  //   //   printf("%lf %lf %lf\n", beads[i].x, beads[i].y, beads[i].z);
-  //   // }
-  //
-  //   for( unsigned int k = 0; k < nq; k++ ) {
-  //     expand_sh( exp_q[k], k, i, -1, l ); //subtract the contribution of the previous position
-  //     //expand_sh( exp_q[k], k, i, 1 );  //update beta with the new position
-  //   }
-  //
-  //   // for( int i = 0; i < nq; i++ ) {
-  //   //   for(int l = 0; l <= harmonics_order; l++ ) {
-  //   //     for(int m = 0; m <= l; m++ ) {
-  //   //       printf("%lf %lf\n", real( beta.at( i, l, m) ), imag( beta.at( i, l, m) ) );
-  //   //     }
-  //   //   }
-  //   // }
-  //
-  //   exit(-1);
-  //
-  // }
-
-  // if( l == 22 ) {
-  //   cout << "#AFTER: " << beads[i].rho_modified << endl;
-  // }
-
-  // for( unsigned int k = 0; k < nq; k++ ) {
-  //   expand_sh( exp_q[k], k, i, -1, 0 ); //subtract the contribution of the previous position
-  //   expand_sh( exp_q[k], k, i, 1, 0 );  //update beta with the new position
-  // }
-
   calc_intensity( exp_q );
   distance_matrix();
-
-  // for( int i = 0; i < nresidues; i++ ) {
-  //   for( int j = 0; j < nresidues; j++ ) {
-  //     cout << distances.at(i,j) << endl;
-  //   }
-  // }
-
   update_statistics();
+
   penalty();
-
-  //cout << "# Chi2: " << X << " Type: " << T << " Histogram: " << H << " Connect: " << C << " Total: " << P << endl;
-
-
-
-  // for( unsigned int i = 0; i < nq; i++ ) {
-  //   cout << intensity[i] << endl;
-  // }
-
 }
-
 
 void BeadModeling::test_flat() {
 
-  //
-  // REMEMBER YOU WERE PLAYING AROUND WITH NDIST AND NNUM
-  //
-
   bool decreasing_p, metropolis, accept;
+  int iterations = 1, rough_counter;
+  double mean, sq_sum, stdev, scale_tmp;
 
   cout << endl;
   cout << "# PRELIMINARIES" << endl;
   cout << "# -------------" << endl;
+
+  initial_configuration();
+  cout << "# Initial configuration set." << endl;
 
   nmethyl = 0;
   nalkyl = 0;
@@ -1026,43 +764,31 @@ void BeadModeling::test_flat() {
   calc_intensity( exp_q );
   cout << "# Compute intensity: done!" << endl;
 
-  //hardcoded background 7.8e-5
-  //fit.fit_intensity( nd.get_alpha_buffer(), beta.get_buffer(), intensity, exp_q, nd.get_e_scatt_len(), scale_factor, 7.8e-5, nq, harmonics_order );
-  //exit(-1);
 
   distance_matrix();
   update_statistics();
 
   cout << "# Update statistics: done!" << endl;
+  cout << "# Background: " << std::setprecision(2) << fit.get_background() << " (X^2_R = " << fit.get_bck_chi2() << ")" << endl;
+  cout << "# Starting roughness: " << fit.get_rough() << endl;
+  cout << "# Scale factor (/1e15): " << scale_factor/1.e15 << endl;
 
   cout << endl;
   cout << "# SIMULATED ANNEALING" << endl;
   cout << "# -------------------" << endl;
   cout << endl;
 
-  //chi_squared();
-  //type_penalty();
-  //histogram_penalty();
-  //connect_penalty();
-  //cout << C << endl;
+  bool fit_rough = true;
+  //fit.set_default_roughness( 6.335 );
 
   penalty();
-
-
-  //chi_squared();
-
-  //printf("%lf\n", X);
-  //cout << X << endl;
 
   B = X/10; //effective temperature
 
   ofstream penalty_file;
 
   penalty_file.open( outdir + "penalty.dat" );
-
   penalty_file << "#Iterations\tTemperature\tChi2\tType\tHistogram\tConnect\tTotal" << endl;
-
-  int iterations = 1;
 
   for( unsigned int p = 0; p < npasses; p++ ) {
 
@@ -1097,9 +823,20 @@ void BeadModeling::test_flat() {
 
       penalty_file << iterations << "\t" << B << "\t" << X << "\t" << T << "\t" << H << "\t" << C << "\t" << P << endl;
       iterations++;
+
+      fit.fit_intensity( nd.get_alpha_buffer(), beta.get_buffer(), rad, scale_factor, harmonics_order );
     }
 
-    double scale_tmp = rad[0][1]/intensity[0];
+    scale_tmp = rad[0][1]/intensity[0];
+    scale_factor *= scale_tmp;
+
+    if( fit_rough ) {
+      fit.fit_intensity( nd.get_alpha_buffer(), beta.get_buffer(), rad, scale_factor, harmonics_order );
+    }
+
+    if( fit.get_rough_chi2() <= 1. ) {
+      fit_rough = false;
+    }
 
     //cout << "# Statistics                    " << endl;
     cout << fixed << setprecision(2) << setfill('0');
@@ -1110,11 +847,16 @@ void BeadModeling::test_flat() {
     cout << setw(5) << "# Histogram penalty: " << H << endl;
     cout << setw(5) << "# Connect penalty:   " << C << endl;
     cout << setw(5) << "# Total penalty:     " << P << endl;
-    cout << setw(5) << "# Inserted beads:    " << nalkyl << " " << nmethyl << " " << nhead << endl;
-    cout << setw(5) << "# Scale factor:      " << setprecision(3) << scale_tmp << endl;
-    cout << endl;
+    cout << setw(5) << "# Inserted beads:    " << nhead << " " << nalkyl << " " << nmethyl << endl;
+    cout << setw(5) << "# I_exp[0]/I[0]:     " << setprecision(3) << scale_tmp << endl;
 
-    //penalty_file << p << "\t" << B << "\t" << X << "\t" << T << "\t" << H << "\t" << C << "\t" << P << endl;
+    if( fit_rough ) {
+      cout << setw(5) << "# Fitted roughness:  " << fit.get_rough() << " (X^2_R = " << fit.get_rough_chi2() << ")" << endl;
+    } else {
+      cout << setw(5) << "# Fitted roughness:  " << fit.get_rough() << endl;
+    }
+    cout << setw(5) << scientific << "# Scale factor:      " << scale_factor << endl;
+    cout << endl;
 
     string xyz = outdir + "configurations/" + to_string(p) + ".xyz";
     string pdb = outdir + "configurations/" + to_string(p) + ".pdb";
@@ -1131,8 +873,6 @@ void BeadModeling::test_flat() {
   penalty_file.close();
 
 }
-
-
 
 BeadModeling::~BeadModeling() {
 }

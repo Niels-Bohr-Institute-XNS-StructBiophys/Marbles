@@ -10,10 +10,20 @@
 
 Fit::Fit() {
   setup = false;
+  chi2_int = -1;
+  chi2_bck = -1;
 }
+//------------------------------------------------------------------------------
 
 Fit::~Fit() {
 }
+//------------------------------------------------------------------------------
+
+void Fit::set_default_roughness( double dflt ) {
+  y_int.resize(1);
+  y_int[0] = dflt;
+}
+//------------------------------------------------------------------------------
 
 double Fit::chi2_background( const std::vector<double> &x, std::vector<double> &grad, void *data ) {
 
@@ -32,6 +42,7 @@ double Fit::chi2_background( const std::vector<double> &x, std::vector<double> &
 
   return sum_squares / ( len - 1 );
 }
+//------------------------------------------------------------------------------
 
 double Fit::chi2_intensity( const std::vector<double> &x, std::vector<double> &grad, void *data ) {
 
@@ -56,84 +67,16 @@ double Fit::chi2_intensity( const std::vector<double> &x, std::vector<double> &g
     }
 
     intensity[i] = intensity[i] * d->e_scattlen * d->e_scattlen * d->scale_factor + d->background;
-    tmp2 = intensity[i] - d->ref_intensity[i];
+    tmp2 = ( intensity[i] - d->ref_intensity[i] ) / d->err[i];
     sum_squares += tmp2 * tmp2;
 
     //std::cout << sum_squares << std::endl;
 
   }
 
-  return sum_squares;
+  return sum_squares / ( d->nq - 1 );
 }
-
-// void Fit::setup_intensity_fit( std::vector<std::complex<double> > a, std::vector<std::complex<double> > b, std::vector<double> intens, std::vector<double> q, double escatt, double scale, double bck, unsigned int num_q, unsigned int ho  ) {
-//
-//   unsigned int harmonics_order;
-//   std::vector<double> exp_q;
-//   std::vector<double> ref_intensity;
-//
-//   datai.nq = num_q;
-//   datai.harmonics_order = ho;
-//   datai.e_scattlen = escatt;
-//   datai.background = bck;
-//   datai.scale_factor = scale;
-//   datai.exp_q = q;
-//   datai.ref_intensity = intens;
-//   datai.alpha.resize_width( datai.nq );
-//   datai.beta.resize_width( datai.nq );
-//
-//   datai.alpha.copy_from_vector( a, datai.nq, datai.harmonics_order + 1, datai.harmonics_order + 1 );
-//   datai.beta.copy_from_vector( b, datai.nq, datai.harmonics_order + 1, datai.harmonics_order + 1 );
-
-  // if( !setup ) {
-  //   harmonics_order = ho;
-  //   nq              = num_q;
-  //   e_scattlen      = escatt;
-  //   scale_factor    = scale;
-  //   background      = bck;
-  //
-  //   alpha.resize_width( nq );
-  //   beta.resize_width( nq );
-  //   exp_q.resize( nq );
-  //   intensity.resize( nq );
-  //   ref_intensity.resize(nq);
-  //
-  //   ref_intensity = intens;
-  //   exp_q = q;
-  //
-  //   alpha.copy_from_vector( a, nq, harmonics_order + 1, harmonics_order + 1 );
-  //   beta.copy_from_vector( b, nq, harmonics_order + 1, harmonics_order + 1 );
-  // }
-  //
-  // setup = true;
-//}
-
-// void Fit::parametrized_intensity( double xr ) {
-//
-//   double r, q, tmp, exponent;
-//   std::vector<double> intensity( nq );
-//
-//   fill(intensity.begin(),intensity.end(),0);
-//
-//   for( int i = 0; i < nq; i++ ) {
-//     q = exp_q[i];
-//     exponent = xr * q * xr * q;
-//     r = exp( - exponent / 2. );
-//
-//     for(int l = 0; l <= harmonics_order; l++ ) {
-//       for(int m = 0; m <= l; m++ ) {
-//         tmp = abs( r * alpha.at( i, l, m ) + beta.at( i, l, m ) );
-//         tmp *= tmp;
-//         intensity[i] += ( (m > 0) + 1. ) * tmp;
-//       }
-//     }
-//
-//     intensity[i] = intensity[i] * e_scattlen * e_scattlen * scale_factor + background;
-//
-//     std::cout << intensity[i] - ref_intensity[i] << std::endl;
-//
-//   }
-// }
+//------------------------------------------------------------------------------
 
 void Fit::fit_background( std::vector<std::vector<double> > rad, unsigned int bck_npoints_to_fit ) {
 
@@ -175,23 +118,36 @@ void Fit::fit_background( std::vector<std::vector<double> > rad, unsigned int bc
     exit(-1);
   }
 
-  std::cout << "found minimum at X^2(" << y_bck[0] << ") = " << chi2_bck << std::endl;
+  //std::cout << "found minimum at X^2(" << y_bck[0] << ") = " << chi2_bck << std::endl;
 }
+//------------------------------------------------------------------------------
 
-void Fit::fit_intensity( std::vector<std::complex<double> > a, std::vector<std::complex<double> > b, std::vector<double> intens, std::vector<double> q, double escatt, double scale, double bck, unsigned int num_q, unsigned int ho ) {
+void Fit::fit_intensity( std::vector<std::complex<double> > a, std::vector<std::complex<double> > b, std::vector<std::vector<double> > rad, double scale, unsigned int ho ) {
 
   unsigned int opt_dimension = 1; //number of parameters passed to the optimizer
 
   std::vector<double> lb(opt_dimension);
   y_int.resize(opt_dimension);
 
-  datai.nq = num_q;
+  datai.nq = rad.size();
+
+  std::vector<double> exper(datai.nq), err(datai.nq), q(datai.nq);
+
+  //load scattering data from file
+  //in the main code this will be not necessary and data will be passed by BeadModeling
+  for( unsigned int i = 0; i < datai.nq; i++ ) {
+    exper[i] = rad[i][1];
+    err[i]   = rad[i][2];
+    q[i]     = rad[i][0];
+  }
+
   datai.harmonics_order = ho;
-  datai.e_scattlen = escatt;
-  datai.background = bck;
+  datai.e_scattlen = 2.82e-13;
+  datai.background = y_bck[0];
   datai.scale_factor = scale;
   datai.exp_q = q;
-  datai.ref_intensity = intens;
+  datai.ref_intensity = exper;
+  datai.err = err;
   datai.alpha.resize_width( datai.nq );
   datai.beta.resize_width( datai.nq );
   datai.alpha.copy_from_vector( a, datai.nq, datai.harmonics_order + 1, datai.harmonics_order + 1 );
@@ -217,7 +173,24 @@ void Fit::fit_intensity( std::vector<std::complex<double> > a, std::vector<std::
 
   //std::cout << std::setprecision(5) << "found minimum at X^2(" << y_int[0] << ") = " << chi2_int << std::endl;
 }
+//------------------------------------------------------------------------------
 
 double Fit::get_background() {
   return y_bck[0];
 }
+//------------------------------------------------------------------------------
+
+double Fit::get_bck_chi2() {
+  return chi2_bck;
+}
+//------------------------------------------------------------------------------
+
+double Fit::get_rough() {
+  return y_int[0];
+}
+//------------------------------------------------------------------------------
+
+double Fit::get_rough_chi2() {
+  return chi2_int;
+}
+//------------------------------------------------------------------------------

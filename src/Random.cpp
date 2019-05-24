@@ -11,7 +11,7 @@ using namespace std;
 RandomNumbers::RandomNumbers() {
 
 //#ifdef DEBUG /** if the define DEBUG is present fix the seed to 0. Generates a reproducible string of rands */
-  //srand(0);
+  //srand(7);
 //#else /** otherwise, use the given time as seed */
   srand(time(0));
 //#endif

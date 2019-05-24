@@ -4,6 +4,6 @@ Sequence: 3a4h.FASTA.txt
 Dmax: 60
 NPasses: 80
 LoopsPerPass: 490
-OutDir: ../RUNS_NEW/p450_1/
+OutDir: ../RUNS_NEW/p450_2/
 LambdaPro1: 100
 ConnectPro: 30000
