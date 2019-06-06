@@ -2,7 +2,7 @@
 #include <cmath>
 #include <boost/math/special_functions/sinc.hpp>
 #include <boost/math/special_functions/bessel.hpp>
-#include<gsl/gsl_sf_legendre.h>
+#include <gsl/gsl_sf_legendre.h>
 #include <stdio.h>
 #define pi 3.141593
 
@@ -43,8 +43,13 @@ void Nanodisc::load_input( const string& best_fit ) {
     hbelt                 = stod( parse_line( file, d_ ) );
     nlipids               = stod( parse_line( file, d_ ) );
 
+    hbelt = 24;
+    nlipids = 126.65951;
+
     skip_lines( file, 1 );
     wathead               = stod( parse_line( file, d_ ) );
+
+    wathead = 0.;
 
     skip_lines( file, 2 );
     xrough                = stod( parse_line( file, d_ ) );
@@ -52,12 +57,23 @@ void Nanodisc::load_input( const string& best_fit ) {
     cvlipid               = stod( parse_line( file, d_ ) );
     cvprotein             = stod( parse_line( file, d_ ) );
 
+    xrough = 4.609096;
+    cvbelt = 0.906671;
+    cvlipid = 1.034406;
+
+    printf("%.5f\n", nlipids);
+
+    cout << nlipids << " " << nlipids << " " << wathead << endl;
+    cout << xrough << " " << cvbelt << " " << cvlipid << endl;
+
     //HARDCODED HERE!!!1
-    cvprotein = 1.;
+    //cvprotein = 1.;
     //CHANGE THIS!!
 
     skip_lines( file, 7 );
     cvwater               = stod( parse_line( file, d_ ) );
+
+    cvwater = 1.;
 
     skip_lines( file, 1 );
     vertical_axis_endcaps = stod( parse_line( file, d_ ) );
@@ -68,12 +84,23 @@ void Nanodisc::load_input( const string& best_fit ) {
     hcore                 = stod( parse_line( file, d ) );
     hmethyl               = stod( parse_line( file, d ) );
 
+    hlipid = 40.1603;
+    hcore = 29.8818;
+    hmethyl = 3.4992;
+
+    //cout << hlipid << " " << hcore << " " << hmethyl << endl;
+
     skip_lines( file, 7 );
     radius_major          = stod( parse_line( file, d ) );
     radius_minor          = stod( parse_line( file, d ) );
 
+    radius_major = 43.3604;
+    radius_minor = 29.8501;
+
     skip_lines( file, 2 );
     width_belt            = stod( parse_line( file, d ) );
+
+    width_belt = 8.1721;
 
     skip_lines( file, 3 );
     rho_h2o               = stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
@@ -82,6 +109,9 @@ void Nanodisc::load_input( const string& best_fit ) {
     rho_alkyl             = stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
     rho_methyl            = stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
     rho_belt              = stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
+
+    rho_head = 4.62e-11 / e_scatt_len;
+    rho_belt = 3.31e-9 / e_scatt_len;
 
     skip_lines( file, 1 );
     rho_protein           = stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
@@ -638,7 +668,7 @@ void Nanodisc::nanodisc_form_factor( vector<double> exp_q ) {
     // }
 
     double intensity = expand_sh2( i ); //uncomment
-    cout << intensity << endl;
+    //cout << exp_q[i] << " " << intensity << endl;
   }
   //exit(-1);
   //clock_t end = clock();

@@ -405,25 +405,25 @@ void BeadModeling::expand_sh( double q, int index, int i, int sign, int indice )
 
 void BeadModeling::calc_intensity( vector<double> exp_q ) {
 
-  double xr = fit.get_rough();//4.6;//5.014;//nd.get_xrough();
+  double xr = 4.609096;//fit.get_rough();//4.6;//5.014;//nd.get_xrough();
   //double xr = 5.014;
   double r, q, tmp, exponent, I0;
   double e_scattlen = nd.get_e_scatt_len();
-  double background = fit.get_background();//7.8e-5; //TODO! Load this from WillItFit
+  double background = 0.000346;//fit.get_background();//7.8e-5; //TODO! Load this from WillItFit
   //double background = 7.8e-5;
   //double correction_factor = 2.409e15; //TODO! Understand how to compute this factor
 
   //intensity.resize( nq );
   fill(intensity.begin(),intensity.end(),0);
 
-  for( int i = 0; i < nq; i++ ) {
+  for( int i = 1; i < nq; i++ ) {
     q = exp_q[i];
     exponent = xr * q * xr * q;
     r = exp( - exponent / 2. );
 
     for(int l = 0; l <= harmonics_order; l++ ) {
       for(int m = 0; m <= l; m++ ) {
-        tmp = abs( r * nd.get_alpha( i, l, m ) + beta.at( i, l, m ) );
+        tmp = abs( r * nd.get_alpha( i, l, m ) ); //+ beta.at( i, l, m ) );
         tmp *= tmp;
         intensity[i] += ( (m > 0) + 1. ) * tmp;
       }
@@ -431,10 +431,15 @@ void BeadModeling::calc_intensity( vector<double> exp_q ) {
 
     //insert a check for the value of the correction factor: if it is similar to the value of the numerical density it's fine. Otherwise, suggest the user to proceed at its own risk.
     if( compute_scale ) {
-      I0 = intensity[0] * e_scattlen * e_scattlen;
-      scale_factor = rad[0][1]/I0; //rescale the computed intensity to the experimental I[0]
+      I0 = intensity[1] * e_scattlen * e_scattlen;
+      //scale_factor = rad[0][1]/I0; //rescale the computed intensity to the experimental I[0]
+      scale_factor = 0.0358436 / I0;
     }
     compute_scale = false;
+
+    //scale_factor = 4e+16;
+
+    //cout << "SCALE " << scale_factor << endl;
 
     intensity[i] = intensity[i] * e_scattlen * e_scattlen * scale_factor + background;
     //intensity[i] = intensity[i] * e_scattlen * e_scattlen * correction_factor + background;
@@ -769,6 +774,11 @@ void BeadModeling::test_flat() {
 
   calc_intensity( exp_q );
   cout << "# Compute intensity: done!" << endl;
+
+  for( int i = 0; i < nq; i++ ) {
+    cout << exp_q[i] << " " << intensity[i] << endl;
+  }
+  exit(-1);
 
 
   distance_matrix();
