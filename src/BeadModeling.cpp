@@ -106,7 +106,7 @@ BeadModeling::BeadModeling( const string& filename ) {
   nd.load_input( best_fit );
 
   fit.fit_background( rad, 5 );
-  fit.set_default_roughness( 6.335 );
+  fit.set_default_roughness( 4.6 );
 }
 //------------------------------------------------------------------------------
 
@@ -406,9 +406,11 @@ void BeadModeling::expand_sh( double q, int index, int i, int sign, int indice )
 void BeadModeling::calc_intensity( vector<double> exp_q ) {
 
   double xr = fit.get_rough();//4.6;//5.014;//nd.get_xrough();
+  //double xr = 5.014;
   double r, q, tmp, exponent, I0;
   double e_scattlen = nd.get_e_scatt_len();
   double background = fit.get_background();//7.8e-5; //TODO! Load this from WillItFit
+  //double background = 7.8e-5;
   //double correction_factor = 2.409e15; //TODO! Understand how to compute this factor
 
   //intensity.resize( nq );
@@ -435,6 +437,7 @@ void BeadModeling::calc_intensity( vector<double> exp_q ) {
     compute_scale = false;
 
     intensity[i] = intensity[i] * e_scattlen * e_scattlen * scale_factor + background;
+    //intensity[i] = intensity[i] * e_scattlen * e_scattlen * correction_factor + background;
   }
 }
 //------------------------------------------------------------------------------
@@ -744,10 +747,13 @@ void BeadModeling::test_flat() {
   nalkyl = 0;
   nhead = 0;
 
-  for( unsigned int i = 0; i < nresidues; i++ ) {
-    update_rho( i );
-  }
-    cout << "# Update scattering lengths: done!" << endl;
+  //############################
+  //REMEMBER TO UNCOMMENT!!!!!!
+  //############################
+  // for( unsigned int i = 0; i < nresidues; i++ ) {
+  //   update_rho( i );
+  // }
+  cout << "# Update scattering lengths: done!" << endl;
 
   nd.nanodisc_form_factor( exp_q );
 
@@ -779,6 +785,7 @@ void BeadModeling::test_flat() {
   cout << endl;
 
   bool fit_rough = true;
+  int skip_passes = 10;
   //fit.set_default_roughness( 6.335 );
 
   penalty();
@@ -824,19 +831,21 @@ void BeadModeling::test_flat() {
       penalty_file << iterations << "\t" << B << "\t" << X << "\t" << T << "\t" << H << "\t" << C << "\t" << P << endl;
       iterations++;
 
-      fit.fit_intensity( nd.get_alpha_buffer(), beta.get_buffer(), rad, scale_factor, harmonics_order );
+      //fit.fit_intensity( nd.get_alpha_buffer(), beta.get_buffer(), rad, scale_factor, harmonics_order );
     }
 
     scale_tmp = rad[0][1]/intensity[0];
     scale_factor *= scale_tmp;
 
-    if( fit_rough ) {
+    //cout << fit_rough << " " << (fit_rough == true && (p > skip_passes)) << endl;
+    //
+    if( fit_rough && p%skip_passes == 0 && p != 0 ) {
       fit.fit_intensity( nd.get_alpha_buffer(), beta.get_buffer(), rad, scale_factor, harmonics_order );
     }
-
-    if( fit.get_rough_chi2() <= 1. ) {
-      fit_rough = false;
-    }
+    //
+    // if( fit.get_rough_chi2() <= 1. && fit.get_rough_chi2() != -1 ) {
+    //   fit_rough = false;
+    // }
 
     //cout << "# Statistics                    " << endl;
     cout << fixed << setprecision(2) << setfill('0');
@@ -850,7 +859,7 @@ void BeadModeling::test_flat() {
     cout << setw(5) << "# Inserted beads:    " << nhead << " " << nalkyl << " " << nmethyl << endl;
     cout << setw(5) << "# I_exp[0]/I[0]:     " << setprecision(3) << scale_tmp << endl;
 
-    if( fit_rough ) {
+    if( fit_rough && p%skip_passes == 0 && p != 0 ) {
       cout << setw(5) << "# Fitted roughness:  " << fit.get_rough() << " (X^2_R = " << fit.get_rough_chi2() << ")" << endl;
     } else {
       cout << setw(5) << "# Fitted roughness:  " << fit.get_rough() << endl;

@@ -10,10 +10,14 @@ using namespace std;
 /** class constructor */
 RandomNumbers::RandomNumbers() {
 
+  cout << "HEI THERE" << endl;
+
 //#ifdef DEBUG /** if the define DEBUG is present fix the seed to 0. Generates a reproducible string of rands */
-  //srand(7);
+  //srand(-37);
 //#else /** otherwise, use the given time as seed */
-  srand(time(0));
+int tmp = 1559051515;//time(NULL);
+//cout << tmp << endl;
+srand(tmp);
 //#endif
 
   /** allocate gsl arrays for rng calculations */

@@ -48,8 +48,11 @@ class Fit {
         int_data datai;
         std::vector<double> y_bck; //result of background optimization
         std::vector<double> y_int; //result of background optimization
+        std::vector<double> y_int_old; //result of background optimization
         double chi2_bck; //chi^2 obtained from the background optimization
         double chi2_int; //chi^2 obtained from the background optimization
+        double chi2_int_old;
+
 
         static double chi2_background( const std::vector<double>&, std::vector<double>&, void* ); //without static doesn't work!
         static double chi2_intensity( const std::vector<double>&, std::vector<double>&, void* );

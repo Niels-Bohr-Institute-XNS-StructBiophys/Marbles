@@ -12,6 +12,9 @@ Fit::Fit() {
   setup = false;
   chi2_int = -1;
   chi2_bck = -1;
+  //chi2_int_old = -0.9;
+  y_int_old.resize(1);
+  //y_int_old[0] = -1;
 }
 //------------------------------------------------------------------------------
 
@@ -22,6 +25,7 @@ Fit::~Fit() {
 void Fit::set_default_roughness( double dflt ) {
   y_int.resize(1);
   y_int[0] = dflt;
+  y_int_old[0] = dflt;
 }
 //------------------------------------------------------------------------------
 
@@ -126,6 +130,8 @@ void Fit::fit_intensity( std::vector<std::complex<double> > a, std::vector<std::
 
   unsigned int opt_dimension = 1; //number of parameters passed to the optimizer
 
+  //chi2_int_old = chi2_int;
+
   std::vector<double> lb(opt_dimension);
   y_int.resize(opt_dimension);
 
@@ -170,6 +176,14 @@ void Fit::fit_intensity( std::vector<std::complex<double> > a, std::vector<std::
     std::cout << "nlopt failed: " << e.what() << std::endl;
     exit(-1);
   }
+
+  //if( chi2_int > chi2_int_old ) {
+  //  y_int[0] = y_int_old[0];
+    //std::cout << "# REJECTED! Falling back to previous value" << std::endl;
+    //std::cout << y_int[0] << " " << y_int_old[0] << std::endl;
+  //} else {
+  //  y_int_old[0] = y_int[0];
+  //}
 
   //std::cout << std::setprecision(5) << "found minimum at X^2(" << y_int[0] << ") = " << chi2_int << std::endl;
 }
