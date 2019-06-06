@@ -84,6 +84,7 @@ class Nanodisc : public Input {
 
     /* PUBLIC UTILITIES */
     void load_input( const std::string& );            /** reads the output of WillItFit to obtain info on the nanodisc */
+    void load_input_flat( const std::string& );       /** reads the output of WillItFit to obtain info on the nanodisc */
     void nanodisc_form_factor( std::vector<double> ); /** computes the form factor of the nanodisc */
     void test_nanodisc_flat( std::vector<double> );
 

@@ -103,7 +103,7 @@ BeadModeling::BeadModeling( const string& filename ) {
     exp_q[i] = rad[i][0];
   }
 
-  nd.load_input( best_fit );
+  nd.load_input_flat( best_fit );
 
   fit.fit_background( rad, 5 );
   fit.set_default_roughness( 4.6 );

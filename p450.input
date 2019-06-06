@@ -1,5 +1,5 @@
 Datafile: 3a4nd2.rad
-Fit: 3a4nd2_bf.dat
+Fit: Results.wif
 Sequence: 3a4h.FASTA.txt
 Dmax: 60
 NPasses: 80
