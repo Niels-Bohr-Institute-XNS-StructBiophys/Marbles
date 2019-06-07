@@ -1,0 +1,9 @@
+Datafile: toy_int.dat
+Fit: Results.wif
+Sequence: ub_CA.FASTA.txt
+Dmax: 40
+NPasses: 80
+LoopsPerPass: 80
+OutDir: ../BENCHMARKS/only_prot_noise/
+LambdaPro1: 10
+ConnectPro: 3000

@@ -15,9 +15,9 @@ RandomNumbers::RandomNumbers() {
 //#ifdef DEBUG /** if the define DEBUG is present fix the seed to 0. Generates a reproducible string of rands */
   //srand(-37);
 //#else /** otherwise, use the given time as seed */
-int tmp = 1559051515;//time(NULL);
+//int tmp = 1559051515;//time(NULL);
 //cout << tmp << endl;
-srand(tmp);
+srand(time(NULL));
 //#endif
 
   /** allocate gsl arrays for rng calculations */

@@ -36,16 +36,13 @@ int main() {
   cout << "#########################" << endl;
   cout << endl;
 
-  const string filename = "p450.input";
+  const string filename = "ub.input";
   BeadModeling BD = BeadModeling( filename );
-  //BD.initial_configuration();
-  //cout << "# Initial configuration set." << endl;
 
-  //BD.write_xyz( "test.xyz" );
-  BD.test_flat();
+  //BD.generate_toy_model( "ub_CA_1.pdb" );
+  BD.SA_only_protein();
 
-  //BD.parse_FASTA();
-  //BD.WritePDB();
+  //BD.test_flat();
 
   cout << endl;
   return 0;

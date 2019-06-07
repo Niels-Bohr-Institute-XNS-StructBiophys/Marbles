@@ -118,6 +118,7 @@ class BeadModeling : public Input {
       void recursive_connect( int, int, int* );
       void save_old_config();
       void move( int );
+      void move_only_protein();
       void reject_move();
       void test_rho( int );
 
@@ -136,18 +137,24 @@ class BeadModeling : public Input {
       void setup();
       void simulated_annealing( bool );
 
+      void only_prot_intensity();
+
     public:
       BeadModeling( const std::string& );
       ~BeadModeling();
 
       /* PUBLIC UTILITIES */
       void load_input();
+      void load_initial_configuration( const std::string& );
       void initial_configuration();
       void write_xyz( const std::string& );
       void write_intensity( const std::string& );
+      void write_toy_intensity( const std::string&, std::vector<double> );
       void test_flat();
       void update_rho( int );
       void penalty();
+      void generate_toy_model( const std::string& );
+      void SA_only_protein();
 
       /* GET FUNCTIONS */
 
