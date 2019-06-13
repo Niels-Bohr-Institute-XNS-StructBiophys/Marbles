@@ -12,4 +12,4 @@ runner
 # Ignore temps and generated files
 *.xyz out* dictionary* *.txt *.dat *.pdb *.rad *test* *.py *.sh
 
-p450*/* *.pdf *.pdb *.log *.py penalty* *out* *.wif 
+p450*/* *.pdf *.pdb *.log *.py penalty* *out* *.wif *.fir *.fit

@@ -36,10 +36,10 @@ int main() {
   cout << "#########################" << endl;
   cout << endl;
 
-  const string filename = "ub.input";
+  const string filename = "BSA.input";
   BeadModeling BD = BeadModeling( filename );
 
-  //BD.generate_toy_model( "ub_CA_1.pdb" );
+  //BD.generate_toy_model( "ub_CA_1.pdb", 0.1 );
   BD.SA_only_protein();
 
   //BD.test_flat();

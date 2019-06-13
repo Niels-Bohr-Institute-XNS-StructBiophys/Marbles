@@ -107,7 +107,7 @@ BeadModeling::BeadModeling( const string& filename ) {
 
   nd.load_input_flat( best_fit );
 
-  fit.fit_background( rad, 5 );
+  fit.fit_background( rad, 20 );
   fit.set_default_roughness( 4.6 );
 }
 //------------------------------------------------------------------------------
@@ -498,11 +498,11 @@ void BeadModeling::expand_sh( double q, int index, int i, int sign, int indice )
 }
 //------------------------------------------------------------------------------
 
-void BeadModeling::only_prot_intensity() {
+void BeadModeling::only_prot_intensity( bool toy_model ) {
 
   double r, q, tmp, exponent, I0;
   double e_scattlen = nd.get_e_scatt_len();
-  //double background = fit.get_background();//0.00045;
+  double background = fit.get_background();//0.00045;
 
   fill(intensity.begin(),intensity.end(),0);
 
@@ -519,12 +519,14 @@ void BeadModeling::only_prot_intensity() {
     //insert a check for the value of the correction factor: if it is similar to the value of the numerical density it's fine. Otherwise, suggest the user to proceed at its own risk.
     if( compute_scale ) {
       I0 = intensity[0] * e_scattlen * e_scattlen;
-      scale_factor = rad[0][1]/I0;
-      //scale_factor = 1. / I0;
+
+      if( toy_model ) scale_factor = 1000. / I0; //default normalization
+      else scale_factor = rad[0][1]/I0;
+
     }
     compute_scale = false;
 
-    intensity[i] = intensity[i] * e_scattlen * e_scattlen * scale_factor;// + background;
+    intensity[i] = intensity[i] * e_scattlen * e_scattlen * scale_factor + background;
   }
 
 }
@@ -852,13 +854,14 @@ void BeadModeling::move_only_protein() {
   //   expand_sh( exp_q[k], k, i, 1, 0 );  //update beta with the new position
   // }
 
-  only_prot_intensity();
+  only_prot_intensity( false );
   distance_matrix();
   update_statistics();
 
   penalty();
 
 }
+//------------------------------------------------------------------------------
 
 void BeadModeling::move( int l ) {
 
@@ -919,12 +922,13 @@ void BeadModeling::move( int l ) {
 }
 //------------------------------------------------------------------------------
 
-void BeadModeling::generate_toy_model( const string& pdb ) {
+void BeadModeling::generate_toy_model( const string& pdb, double eta ) {
 
   string toy_intensity = "toy_intensity.dat";
   double rho_solvent = nd.get_rho_solvent();
   double av, std, gauss_err;
   vector<double> toy_err(nq);
+  bool toy_model = true;
 
   cout << endl;
   cout << "# GENERATING TOY MODEL FROM PDB" << endl;
@@ -939,7 +943,6 @@ void BeadModeling::generate_toy_model( const string& pdb ) {
   for( unsigned int i = 0; i < nresidues; i++ ) {
     beads[i].type = 0;
     beads[i].rho_modified = beads[i].rho - beads[i].v * rho_solvent;
-    //cout << beads[i].rho_modified << endl;
   }
 
   for( unsigned int j = 0; j < nq; j++ ) {
@@ -950,20 +953,31 @@ void BeadModeling::generate_toy_model( const string& pdb ) {
 
   cout << "# Compute form factor: done!" << endl;
 
-  only_prot_intensity();
+  only_prot_intensity( toy_model );
   cout << "# Compute intensity: done!" << endl;
 
   for( int i = 0; i < nq; i++ ) {
-    //av = intensity[i];
-    //std = 0.2 * av;
+    av = intensity[i];
+    std = sqrt( av ) * eta;
+    intensity[i] = av + rng.gaussian( std );
+    toy_err[i] = std;
+
+    cout << intensity[i] << endl;
 
     //if( i > int(90./100 * nq) ) {
     //  std = av * 2;
     //}
-    toy_err[i] = 0.02;//fabs(std * rng.gaussian( std ));
-
-
+    //toy_err[i] = 0.02;//fabs(std * rng.gaussian( std ));
   }
+
+  // double scale = 0.1/intensity[0];
+  //
+  // for( int i = 0; i < nq; i++ ) {
+  //
+  //   intensity[i] *= scale;
+  //   toy_err[i] *= scale;
+  //   //cout << av << " " << sqrt(av) << " " << std << endl;
+  // }
 
   write_toy_intensity( toy_intensity, toy_err );
 
@@ -976,6 +990,7 @@ void BeadModeling::SA_only_protein() {
   bool decreasing_p, metropolis, accept;
   int iterations = 1, rough_counter;
   double mean, sq_sum, stdev, scale_tmp;
+  bool toy_model = false;
 
   double rho_solvent = nd.get_rho_solvent();
 
@@ -1004,13 +1019,13 @@ void BeadModeling::SA_only_protein() {
   }
 
   cout << "# Compute form factor: done!" << endl;
-  only_prot_intensity();
+  only_prot_intensity( toy_model );
 
   distance_matrix();
   update_statistics();
 
   cout << "# Update statistics: done!" << endl;
-  //cout << "# Background: " << std::setprecision(2) << fit.get_background() << " (X^2_R = " << fit.get_bck_chi2() << ")" << endl;
+  cout << "# Background: " << std::setprecision(2) << fit.get_background() << " (X^2_R = " << fit.get_bck_chi2() << ")" << endl;
   //cout << "# Starting roughness: " << fit.get_rough() << endl;
   cout << "# Scale factor (/1e15): " << scale_factor/1.e15 << ", " << intensity[1] << endl;
 
@@ -1023,6 +1038,9 @@ void BeadModeling::SA_only_protein() {
 
   //B = X/10; //effective temperature
   B = X / 10;
+  // if( B > 10000 ) {
+  //   B = 10000;
+  // }
   ofstream penalty_file;
 
   penalty_file.open( outdir + "penalty.dat" );
@@ -1094,6 +1112,11 @@ void BeadModeling::SA_only_protein() {
 
     if( B > 0.0001 ) {
       B *= 0.9;
+    }
+
+    if( (1.*loops_per_pass)/attempts < 0.011 ) {
+      cout << "\n # Acceptance has reached the lower limit. Execution will be stopped." << endl;
+      exit(0);
     }
   }
 
@@ -1253,6 +1276,11 @@ void BeadModeling::test_flat() {
 
     if( B > 0.0001 ) {
       B *= 0.9;
+    }
+
+    if( (1.*loops_per_pass)/attempts < 0.011 ) {
+      cout << "\n # Acceptance has reached the lower limit. Execution will be stopped." << endl;
+      exit(0);
     }
   }
 

@@ -1,0 +1,9 @@
+Datafile: BSA.dat
+Fit: Results.wif
+Sequence: BSA.FASTA.txt
+Dmax: 90
+NPasses: 150
+LoopsPerPass: 581
+OutDir: ../BSA/new_1/
+LambdaPro1: 10
+ConnectPro: 3000

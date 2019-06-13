@@ -137,7 +137,7 @@ class BeadModeling : public Input {
       void setup();
       void simulated_annealing( bool );
 
-      void only_prot_intensity();
+      void only_prot_intensity( bool );
 
     public:
       BeadModeling( const std::string& );
@@ -153,7 +153,7 @@ class BeadModeling : public Input {
       void test_flat();
       void update_rho( int );
       void penalty();
-      void generate_toy_model( const std::string& );
+      void generate_toy_model( const std::string&, double );
       void SA_only_protein();
 
       /* GET FUNCTIONS */
