@@ -36,8 +36,8 @@ int main() {
   cout << "#########################" << endl;
   cout << endl;
 
-  //const string filename = "/Users/simone/Desktop/NBI/BM/LYS_BENCHMARK/lys.input";
-  const string filename = "ub.input";
+  const string filename = "/Users/simone/Desktop/NBI/BM/UBI_BENCHMARK/ubi.input";
+  //const string filename = "BSA.input";
   BeadModeling BD = BeadModeling( filename );
 
   //BD.generate_toy_model( "ub_CA_1.pdb", 0.1 );
