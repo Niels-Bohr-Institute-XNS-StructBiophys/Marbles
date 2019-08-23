@@ -22,6 +22,7 @@ using namespace std;
 BeadModeling::BeadModeling( const string& filename ) {
 
   input_file = filename;
+  cout << input_file << endl;
 
   ifstream file( input_file );
   string line;
@@ -33,7 +34,7 @@ BeadModeling::BeadModeling( const string& filename ) {
 
   clash_distance = 1.8; //hardcoded because experimented. Might want to leave the choice open for users though.
   sequence = "";
-  shift = 0.;//50.; //same here: might want to leave this free for the user to choose
+  shift = 0.; //50.; //same here: might want to leave this free for the user to choose
   insertion = 14;
   T_strength = 5;
   H_strength = 20;
@@ -107,7 +108,7 @@ BeadModeling::BeadModeling( const string& filename ) {
 
   nd.load_input_flat( best_fit );
 
-  fit.fit_background( rad, 20 );
+  fit.fit_background( rad, 10 );
   fit.set_default_roughness( 4.6 );
 }
 //------------------------------------------------------------------------------
@@ -123,6 +124,11 @@ void BeadModeling::load_statistics() {
   string nnum1_file = "include/statistics/nnum_5.3.dat";
   string nnum2_file = "include/statistics/nnum_6.8.dat";
   string nnum3_file = "include/statistics/nnum_8.3.dat";
+
+  // string ndist_file = "include/statistics/ndist_a04.dat";
+  // string nnum1_file = "include/statistics/nnum1_a04.dat";
+  // string nnum2_file = "include/statistics/nnum2_a04.dat";
+  // string nnum3_file = "include/statistics/nnum3_a04.dat";
 
   ndist_ref = load_vector_from_matrix( ndist_file, 1, 2 );
   nnum1_ref = load_vector_from_matrix( nnum1_file, 1, 3 );
@@ -186,13 +192,7 @@ bool BeadModeling::bead_clash( unsigned const int i ) {
 }
 //------------------------------------------------------------------------------
 
-//####################################################
-//I REMOVED THE SHIFT!!!!!!! REMEMBER TO PUT IT BACK!!!
-//####################################################
-
 void BeadModeling::initial_configuration() {
-
-  //if( !sphere_generated ) {
 
     double x, y, z, r, r2;
     double u, x1, x2, x3, norm;
@@ -208,7 +208,7 @@ void BeadModeling::initial_configuration() {
 
           clash = false;
 
-          u = cbrt( rng.uniform() ) * r;//rng.in_range2(0, 1);
+          u = cbrt( rng.uniform() ) * r;
           x = rng.gaussian( 1. );
           y = rng.gaussian( 1. );
           z = rng.gaussian( 1. );
@@ -218,23 +218,10 @@ void BeadModeling::initial_configuration() {
 
           beads[i].assign_position( u * x, u * y, u * z + shift );
 
-          // do {
-          //
-          //   x = rng.in_range2( -r, r );
-          //   y = rng.in_range2( -r, r );
-          //   z = rng.in_range2( -r, r );
-          //   beads[i].assign_position( x, y, z /*+ shift*/ );
-          //
-          // } while( x*x +  y*y + z*z > r2 ); // condition that defines a sphere
-
           clash = bead_clash( i );
 
       } while( clash == true );
     }
-
-  //} else {
-  //  cout << "# NOTE! Skipping initial configuration because the the system is already set up.";
-  //}
 
 }
 //------------------------------------------------------------------------------
@@ -289,11 +276,8 @@ void BeadModeling::write_pdb( const string& filename ) {
     fil = fopen( filename.c_str(), "w" );
 
     for( unsigned int i = 0; i < nresidues; i++ ) {
-        //fprintf( fil, "ATOM   %4d  CA  %3c   %4d   %8.3lf%8.3lf%8.3lf  1.00 18.20           N\n", i + 1, beads[i].res.c_str(), i + 1, beads[i].x, beads[i].y, beads[i].z );
       fprintf( fil, "ATOM   %4d  CA  %s A %4d   %8.3lf%8.3lf%8.3lf  1.00 18.20           C\n", i + 1, beads[i].res.c_str(), i + 1, beads[i].x, beads[i].y, beads[i].z );
     }
-    //fprintf(fil, "END");
-
     fclose(fil);
 }
 //------------------------------------------------------------------------------
@@ -523,16 +507,17 @@ void BeadModeling::only_prot_intensity( bool toy_model ) {
     }
 
     //insert a check for the value of the correction factor: if it is similar to the value of the numerical density it's fine. Otherwise, suggest the user to proceed at its own risk.
-    if( compute_scale ) {
-      I0 = intensity[0] * e_scattlen * e_scattlen;
+    //if( compute_scale ) {
+    I0 = intensity[0] * e_scattlen * e_scattlen;
+    scale_factor = rad[0][1]/I0;
+    //if( toy_model ) scale_factor = 1000. / I0; //default normalization
+    //else scale_factor = rad[0][1]/I0;
+    //cout << "rad0 = " << rad[0][1] << " I0 " << I0 << endl;
+      //else scale_factor = 1.2302e+19;
+    //}
+    //compute_scale = false;
 
-      if( toy_model ) scale_factor = 1000. / I0; //default normalization
-      //else scale_factor = rad[0][1]/I0;
-      else scale_factor = 1.2302e+19;
-    }
-    compute_scale = false;
-
-    intensity[i] = intensity[i] * e_scattlen * e_scattlen * scale_factor + background;
+    intensity[i] *= e_scattlen * e_scattlen * scale_factor + background;
   }
 
 }
@@ -643,6 +628,8 @@ void BeadModeling::chi_squared() {
     err = rad[i][2];
     X += tmp * tmp / (err * err);
   }
+
+  X /= (nq - 1);
 }
 //------------------------------------------------------------------------------
 
@@ -879,7 +866,8 @@ void BeadModeling::move_only_protein2() {
   double d2;
   vector<double> vec(3);
 
-  d2 = rng.in_range2( 1.8, 3.8 ); //allow more flexibility than GASBOR (5.1 might be too much)
+  d2 = rng.in_range2( 1.8, 5.1 ); //5.1 seems quite random
+  //d2 = rng.in_range2( 1.8, 3.8 ); //allow more flexibility than GASBOR (5.1 might be too much)
   save_old_config();
 
   do {
@@ -1095,7 +1083,7 @@ void BeadModeling::SA_only_protein() {
   cout << "# Update statistics: done!" << endl;
 
   //report on background fit, that happened in the constructor
-  cout << "# Background: " << std::setprecision(2) << fit.get_background() << " (X^2_R = " << fit.get_bck_chi2() << ")" << endl;
+  cout << "# Background: " << std::setprecision(2) << fit.get_background() << endl; // << " (X^2_R = " << fit.get_bck_chi2() << ")" << endl;
   cout << "# Scale factor (/1e15): " << scale_factor/1.e15 << ", " << intensity[1] << endl;
 
   cout << endl;
@@ -1259,7 +1247,7 @@ void BeadModeling::test_flat() {
   cout << "# -------------------" << endl;
   cout << endl;
 
-  bool fit_rough = true;
+  bool fit_rough = false;
   int skip_passes = 10;
   //fit.set_default_roughness( 6.335 );
 
@@ -1310,7 +1298,7 @@ void BeadModeling::test_flat() {
     }
 
     scale_tmp = rad[0][1]/intensity[0];
-    scale_factor *= scale_tmp;
+    //scale_factor *= scale_tmp;
 
     //cout << fit_rough << " " << (fit_rough == true && (p > skip_passes)) << endl;
     //
