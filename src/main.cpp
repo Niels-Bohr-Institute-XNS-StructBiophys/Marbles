@@ -42,6 +42,8 @@ int main() {
   //BD.generate_toy_model( "ub_CA_1.pdb", 0.1 );
   BD.SA_only_protein();
 
+  //BD.pruned_model( "../BSA/new_3/configurations/107.pdb" );
+
   //BD.test_flat();
 
   cout << endl;

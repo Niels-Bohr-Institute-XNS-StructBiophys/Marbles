@@ -10,8 +10,6 @@ using namespace std;
 /** class constructor */
 RandomNumbers::RandomNumbers() {
 
-  cout << "HEI THERE" << endl;
-
 //#ifdef DEBUG /** if the define DEBUG is present fix the seed to 0. Generates a reproducible string of rands */
   //srand(-37);
 //#else /** otherwise, use the given time as seed */

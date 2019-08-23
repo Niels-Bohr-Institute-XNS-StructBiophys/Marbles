@@ -107,6 +107,10 @@ class BeadModeling : public Input {
       std::vector<double> intensity;
       std::vector<double> intensity_old;
 
+      std::vector<int> pruned;
+      std::vector<int> far_beads;
+      std::vector<int> collection;
+
       /* PRIVATE FUNCTIONS */
       void load_rad(); /* loads the .rad experiment file */
       void load_statistics(); /* loads the tabulated statistics files */
@@ -119,6 +123,7 @@ class BeadModeling : public Input {
       void save_old_config();
       void move( int );
       void move_only_protein();
+      void move_only_protein2();
       void reject_move();
       void test_rho( int );
 
@@ -138,6 +143,10 @@ class BeadModeling : public Input {
       void simulated_annealing( bool );
 
       void only_prot_intensity( bool );
+      void drifting_beads( double );
+
+      void subtract_contribution( int );
+      void include_contribution( int );
 
     public:
       BeadModeling( const std::string& );
@@ -155,6 +164,9 @@ class BeadModeling : public Input {
       void penalty();
       void generate_toy_model( const std::string&, double );
       void SA_only_protein();
+      void prune( bool );
+      void pruned_model( const std::string& );
+      void attempt_drift_pruning( double );
 
       /* GET FUNCTIONS */
 
