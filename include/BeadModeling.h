@@ -81,19 +81,19 @@ class BeadModeling : public Input {
       std::vector<double> exp_q;
 
       std::vector<double> ndist;
-      std::vector<double> ndist_ref;
+      std::vector<std::vector<double> > ndist_ref;
       std::vector<double> ndist_old;
 
       std::vector<double> nnum1;
-      std::vector<double> nnum1_ref;
+      std::vector<std::vector<double> > nnum1_ref;
       std::vector<double> nnum1_old;
 
       std::vector<double> nnum2;
-      std::vector<double> nnum2_ref;
+      std::vector<std::vector<double> > nnum2_ref;
       std::vector<double> nnum2_old;
 
       std::vector<double> nnum3;
-      std::vector<double> nnum3_ref;
+      std::vector<std::vector<double> > nnum3_ref;
       std::vector<double> nnum3_old;
 
       std::vector<double> roughness_chi2;
