@@ -1,9 +1,0 @@
-Datafile: 3a4nd2.rad
-Fit: Results.wif
-Sequence: 3a4h.FASTA.txt
-Dmax: 60
-NPasses: 80
-LoopsPerPass: 490
-OutDir: ../RUNS_NEW/fit_skip_10/
-LambdaPro1: 100
-ConnectPro: 30000

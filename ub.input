@@ -1,9 +1,0 @@
-Datafile: toy_intensity_noise5.dat
-Fit: Results.wif
-Sequence: ub_CA.FASTA.txt
-Dmax: 40
-NPasses: 80
-LoopsPerPass: 80
-OutDir: ../BENCHMARKS/ubiquitin_noise5_5/
-LambdaPro1: 10
-ConnectPro: 3000
