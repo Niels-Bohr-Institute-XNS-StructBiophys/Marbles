@@ -1,7 +1,7 @@
 #include "Nanodisc.h"
 #include <cmath>
-#include <boost/math/special_functions/sinc.hpp>
-#include <boost/math/special_functions/bessel.hpp>
+//#include <boost/math/special_functions/sinc.hpp>
+//#include <boost/math/special_functions/bessel.hpp>
 #include <gsl/gsl_sf_legendre.h>
 #include <stdio.h>
 #define pi 3.141593
@@ -302,6 +302,15 @@ void Nanodisc::load_input( const string& best_fit ) {
   file.close();
 }
 
+double sinc( double x ) {
+    double result;
+    if(x==0)
+        result=1.0;
+    else
+        result=sin(x)/x;
+    return result;
+}
+
 void Nanodisc::flat_disc_form_factor( double a, double b, double L, double rho, double q, int index ) {
 
   /** Computes the orientationally averaged form factor of a disc for different values of the momentum:
@@ -321,7 +330,7 @@ void Nanodisc::flat_disc_form_factor( double a, double b, double L, double rho, 
     * int index:  index on the momentum mesh
     */
 
-  double sinc, sin_t, theta, phi, a_phi, b_phi, qr;
+  double sincq, sin_t, theta, phi, a_phi, b_phi, qr;
   vector<double> r( nphi );
 
   double theta_step = M_PI / ntheta;
@@ -339,28 +348,21 @@ void Nanodisc::flat_disc_form_factor( double a, double b, double L, double rho, 
   for( unsigned int t = 0; t < ntheta; t++ ) {
 
     theta = ( t + 0.5 ) * theta_step;
-    sinc  = boost::math::sinc_pi( L/2. * q * cos(theta) );
+    //sinc  = boost::math::sinc_pi( L/2. * q * cos(theta) );
+    sincq = sinc( L/2. * q * cos(theta) );
     sin_t = sin(theta);
 
     for( unsigned int p = 0; p < nphi; p++ ) {
       qr = q * r[p] * sin_t;
 
       if( qr == 0 ) {
-        F.add( index, t, p, v_rho * sinc );
+        F.add( index, t, p, v_rho * sincq );
       } else {
-        F.add( index, t, p, 2. * v_rho * boost::math::cyl_bessel_j( 1, qr ) / qr * sinc );
+        //F.add( index, t, p, 2. * v_rho * boost::math::cyl_bessel_j( 1, qr ) / qr * sinc );
+        F.add( index, t, p, 2. * v_rho * j1( qr ) / qr * sincq );
       }
     }
   }
-}
-
-double Sinc(double x){
-    double result;
-    if(x==0)
-        result=1.0;
-    else
-        result=sin(x)/x;
-    return result;
 }
 
 void Nanodisc::flat_disc_form_factor2( double a, double b, double L, double rho, double q, int index ) {
@@ -375,7 +377,7 @@ void Nanodisc::flat_disc_form_factor2( double a, double b, double L, double rho,
     double r;
     double cosr0q=0;
     //int ntheta,nphi;
-    double sinc,theta,phi,tmp;
+    double sincq,theta,phi,tmp;
     double thetastep = M_PI/ntheta, phistep = 2. * M_PI / nphi;
     double volume=a*b*L*M_PI;
 
@@ -399,10 +401,10 @@ void Nanodisc::flat_disc_form_factor2( double a, double b, double L, double rho,
 
     for(int t =0; t < ntheta; t++){
         theta=(t+.5)*thetastep;
-    //printf("P: %g, %g, %g, %g, %g, %g, %g\n",Q,a,b,rho,L,theta,sinc);
+    //printf("P: %g, %g, %g, %g, %g, %g, %g\n",Q,a,b,rho,L,theta,sincq);
         //sinc=gsl_sf_bessel_j0( L/2.*Q*cos(theta) );
-        sinc=Sinc( L/2.*q*cos(theta) );
-        //printf("%d %g %g\n", ntheta, sinc, sin(theta) );
+        sincq = sinc( L/2.*q*cos(theta) );
+        //printf("%d %g %g\n", ntheta, sincq, sin(theta) );
         for(int p=0; p<nphi; p++){
             phi=(p+.5)*phistep;
 
@@ -412,11 +414,11 @@ void Nanodisc::flat_disc_form_factor2( double a, double b, double L, double rho,
 
             //printf("%g\n", Q*r);
             if(q*r==0) {
-                tmp = volume*rho*sinc;
+                tmp = volume*rho*sincq;
                 F.add(index, t, p, tmp);
                 //F[ntheta][nphi] += volume*pol(1.0*sinc,0.0);
             } else {
-                tmp = volume*rho*2*j1(q*r)/(q*r)*sinc;
+                tmp = volume*rho*2*j1(q*r)/(q*r)*sincq;
                 F.add( index, t, p, tmp);
               }
                 //F[ntheta][nphi]+=volume*pol(2*j1(Q*r)/(Q*r)*sinc,-r0*Q*cosr0q);

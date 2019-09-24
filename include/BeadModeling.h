@@ -57,18 +57,25 @@ class BeadModeling : public Input {
       unsigned int nnnum;          /** Length of the nnum files */
 
       double lambda;              /** TO BE CLEARED */
-      //double lambda2;              /** TO BE CLEARED */
       double connect;              /** TO BE CLEARED */
       double dmax;                 /** maximum length detected from P(r) */
       double shift;                /** z shift of the initial sphere with respect to the nanodisc */
       double clash_distance;       /** distance below which a bead clash is called */
+      double max_distance;         /** maximum distance allowed for bead MC move */
+      double conn_distance;
+      double t_ratio;
+      double schedule;
+      double convergence_temp;
       double X;                    /** chi squared of SAXS intensity */
       double T;                    /** value of the type penalty */
       double H;                    /** value of the histogram penalty */
       double C;                    /** value of the connect penalty */
       double P;                    /** value of the total penalty */
+      double S;                       /** surface penalty */
+      double M;                    /** MDist penalty */
       double P_old;
       double B;
+      double T0;
       double T_strength;           /** strength of the type penalty */
       double H_strength;           /** strength of the histogram penalty */
       double scale_factor;
@@ -79,6 +86,7 @@ class BeadModeling : public Input {
 
       std::vector<std::vector<double> > rad;   /* experimental SAXS value for different values of q */
       std::vector<double> exp_q;
+      std::vector<int> surface_beads;
 
       std::vector<double> ndist;
       std::vector<std::vector<double> > ndist_ref;
@@ -111,6 +119,7 @@ class BeadModeling : public Input {
       void load_rad(); /* loads the .rad experiment file */
       void load_statistics(); /* loads the tabulated statistics files */
       void load_FASTA();
+      void logfile();
       void expand_sh( double, int, int, int, int );
       void calc_intensity( std::vector<double> );
       void distance_matrix();
@@ -121,12 +130,15 @@ class BeadModeling : public Input {
       void move_only_protein();
       void reject_move();
       void test_rho( int );
+      void set_T0();
 
       //penalty functions
       void chi_squared();
       void type_penalty();
       void histogram_penalty();
       void connect_penalty();
+      void mdist_penalty();
+      void surface_penalty();
 
       double distance( unsigned const int, unsigned const int ); /** measures the distance between beads **/
       double bead_distance( Bead, Bead );
@@ -150,11 +162,14 @@ class BeadModeling : public Input {
       void write_xyz( const std::string& );
       void write_intensity( const std::string& );
       void write_toy_intensity( const std::string&, std::vector<double> );
+      void write_statistics( std::vector<double>, const std::string& );
+      void write_surface_beads( const std::string&, int );
       void test_flat();
       void update_rho( int );
       void penalty();
-      void generate_toy_model( const std::string& );
+      //void generate_toy_model( const std::string& );
       void SA_only_protein();
+      void test();
 
       /* GET FUNCTIONS */
 

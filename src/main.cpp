@@ -36,9 +36,12 @@ int main() {
   cout << "#########################" << endl;
   cout << endl;
 
-  const string filename = "/Users/simone/Desktop/NBI/BM/UBI_BENCHMARK/ubi.input";
+  const string filename = "/Users/simone/Desktop/NBI/BM/bsa/bsa.input";
   //const string filename = "BSA.input";
   BeadModeling BD = BeadModeling( filename );
+
+  BD.load_initial_configuration("/Users/simone/Desktop/NBI/BM/bsa/test/3/configurations/3.pdb");
+  //BD.test();
 
   //BD.generate_toy_model( "ub_CA_1.pdb", 0.1 );
   BD.SA_only_protein();
