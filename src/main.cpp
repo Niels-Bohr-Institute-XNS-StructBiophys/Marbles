@@ -40,7 +40,7 @@ int main() {
   //const string filename = "BSA.input";
   BeadModeling BD = BeadModeling( filename );
 
-  BD.load_initial_configuration("/Users/simone/Desktop/NBI/BM/bsa/test/3/configurations/3.pdb");
+  //BD.load_initial_configuration("/Users/simone/Desktop/NBI/BM/bsa/test/3/configurations/3.pdb");
   //BD.test();
 
   //BD.generate_toy_model( "ub_CA_1.pdb", 0.1 );

@@ -36,7 +36,7 @@ BeadModeling::BeadModeling( const string& filename ) {
   max_distance = 5.1;
   conn_distance = 5.81;
   t_ratio = 8.;
-  schedule = 0.95;
+  schedule = 0.9;
   convergence_temp = 0.1;
   sequence = "";
   shift = 50.; //same here: might want to leave this free for the user to choose
@@ -203,9 +203,17 @@ void BeadModeling::load_FASTA() {
 
 double BeadModeling::distance( unsigned const int i, unsigned const int j ) {
 
-  double x = beads[i].x - beads[j].x;
-  double y = beads[i].y - beads[j].y;
-  double z = beads[i].z - beads[j].z;
+  double x, y, z;
+
+  if( j == -1 ) {
+    x = beads[i].x;
+    y = beads[i].y;
+    z = beads[i].z;
+  } else {
+    x = beads[i].x - beads[j].x;
+    y = beads[i].y - beads[j].y;
+    z = beads[i].z - beads[j].z;
+  }
 
   return sqrt( x * x + y * y + z * z );
 }
@@ -658,8 +666,6 @@ void BeadModeling::update_statistics() {
   fill( nnum2.begin(), nnum2.end(), 0.);
   fill( nnum3.begin(), nnum3.end(), 0.);
 
-  cout << nnnum << endl;
-
   for( unsigned int i = 0; i < nresidues; i++ ) {
 
     count1 = 0;
@@ -742,7 +748,7 @@ void BeadModeling::histogram_penalty() {
       tmp4 = 0.;
     }
 
-    H += ( 20. * (tmp1 * tmp1 + tmp2 * tmp2 + tmp3 * tmp3) + tmp4 * tmp4 );
+    H += ( tmp1 * tmp1 + tmp2 * tmp2 + tmp3 * tmp3 + tmp4 * tmp4 );
   }
 
   H *= lambda;
@@ -968,6 +974,7 @@ void BeadModeling::move_only_protein() {
 
   double rmax, rmin, d2, z_ref;
   vector<double> vec(3);
+  //d2 = conn_distance + rng.gaussian(0.5);
   d2 = rng.in_range( clash_distance, max_distance ); //5.1 seems quite random
 
   do {
@@ -984,6 +991,10 @@ void BeadModeling::move_only_protein() {
 
     vec = rng.vector( d2 );
     beads[i].assign_position( beads[j].x + vec[0], beads[j].y + vec[1], beads[j].z + vec[2] );
+
+    if( distance(i,-1) > dmax/2. ) {
+      legal = false;
+    }
 
     if( legal ) {
       legal = ! bead_clash( i );
@@ -1164,13 +1175,14 @@ void BeadModeling::SA_only_protein() {
   update_statistics();
   penalty();
 
-  cout << "# Optimization of initial temperature ..." << endl;
+  //cout << "# Optimization of initial temperature ..." << endl;
 
-  set_T0();
-  cout << "# Initial temperature: " << T0 << endl;
+  //set_T0();
+  //cout << "# Initial temperature: " << T0 << endl;
 
-  npasses = ceil( std::log( convergence_temp / T0 ) / std::log( schedule ) ) + 10;
-  cout << "# Convergence expected in " <<  npasses - 10 << " passes" << endl;
+  T0 = X/10.;
+  npasses = 100.;//ceil( std::log( convergence_temp / T0 ) / std::log( schedule ) ) + 10;
+  //cout << "# Convergence expected in " <<  npasses - 10 << " passes" << endl;
 
   cout << endl;
   cout << "# SIMULATED ANNEALING" << endl;
