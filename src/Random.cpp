@@ -11,7 +11,7 @@ using namespace std;
 RandomNumbers::RandomNumbers() {
 
 //#ifdef DEBUG /** if the define DEBUG is present fix the seed to 0. Generates a reproducible string of rands */
-  //srand(-37);
+// srand(0);
 //#else /** otherwise, use the given time as seed */
 //int tmp = 1559051515;//time(NULL);
 //cout << tmp << endl;
@@ -22,6 +22,7 @@ srand(time(NULL));
   T = gsl_rng_default;
   r = gsl_rng_alloc(T);
   gsl_rng_set(r, rand());
+  //gsl_rng_set(r, -3.);
 
   //srand((unsigned) 1);
 }

@@ -112,8 +112,8 @@ BeadModeling::BeadModeling( const string& filename ) {
 
   nd.load_input_flat( best_fit );
 
-  fit.fit_background( rad, 10 );
-  fit.set_default_roughness( 4.6 );
+  //fit.fit_background( rad, 10 );
+  //fit.set_default_roughness( 4.6 );
 
   //cout << "# Background: " << fit.get_background() << endl;
   logfile();
@@ -139,7 +139,7 @@ void BeadModeling::logfile() {
   log << "# Connect distance:         " << conn_distance << endl;
   log << "# Connectivity strength:    " << connect << endl;
   log << "# Distributions strength:   " << lambda << endl;
-  log << "# Initial temperature:      " << "autodetermined" << endl;
+  log << "# Initial temperature:      " << "X2/10" << endl;
   log << "# SA scheduling:            " << schedule << endl;
   log << "# Storing results in:       " << outdir << endl;
   log << "# Convergence at:           " << convergence_temp << endl;
@@ -150,15 +150,15 @@ void BeadModeling::logfile() {
 
 void BeadModeling::load_statistics() {
 
-  // string ndist_file = "include/statistics/ndist.dat";
-  // string nnum1_file = "include/statistics/nnum_5.3.dat";
-  // string nnum2_file = "include/statistics/nnum_6.8.dat";
-  // string nnum3_file = "include/statistics/nnum_8.3.dat";
+  string ndist_file = "include/statistics/ndist.dat";
+  string nnum1_file = "include/statistics/nnum_5.3.dat";
+  string nnum2_file = "include/statistics/nnum_6.8.dat";
+  string nnum3_file = "include/statistics/nnum_8.3.dat";
 
-  string ndist_file = "include/statistics/ndist_a08.dat";
-  string nnum1_file = "include/statistics/nnum1_a08.dat";
-  string nnum2_file = "include/statistics/nnum2_a08.dat";
-  string nnum3_file = "include/statistics/nnum3_a08.dat";
+  // string ndist_file = "include/statistics/ndist_a08.dat";
+  // string nnum1_file = "include/statistics/nnum1_a08.dat";
+  // string nnum2_file = "include/statistics/nnum2_a08.dat";
+  // string nnum3_file = "include/statistics/nnum3_a08.dat";
 
   // ndist_ref = load_vector_from_matrix( ndist_file, 1, 2 );
   // nnum1_ref = load_vector_from_matrix( nnum1_file, 1, 3 );
@@ -244,7 +244,7 @@ void BeadModeling::initial_configuration() {
     double x, y, z, r, r2;
     bool clash;
 
-    r = dmax / 2.; /** radius of the sphere **/
+    r = 47.;//dmax / 2.; /** radius of the sphere **/
     r2 = r * r;
 
     for( unsigned int i = 0; i < nresidues; i++ ) {
@@ -256,9 +256,9 @@ void BeadModeling::initial_configuration() {
 
           do {
 
-            x = rng.in_range( -r, r );
-            y = rng.in_range( -r, r );
-            z = rng.in_range( -r, r );
+            x = rng.in_range2( -r, r );
+            y = rng.in_range2( -r, r );
+            z = rng.in_range2( -r, r );
             beads[i].assign_position( x, y, z /*+ shift*/ );
 
           } while( x*x +  y*y + z*z > r2 ); // condition that defines a sphere
@@ -584,11 +584,14 @@ void BeadModeling::only_prot_intensity() {
     if( compute_scale ) {
       I0 = intensity[0] * e_scattlen * e_scattlen;
 
-      double mean = 0;
-      for( int i = 0; i < 10; i++ ) {
-        mean += rad[i][1]/10;
-      }
-      scale_factor = mean/I0;
+      //REMOVED ONLY FOR DEBUGGING!
+      // double mean = 0;
+      // for( int i = 0; i < 10; i++ ) {
+      //   mean += rad[i][1]/10;
+      // }
+
+      scale_factor = rad[0][1]/I0;
+      //cout << scale_factor << " " << I0 << " " << rad[0][1] << endl;
     }
     compute_scale = false;
 
@@ -676,8 +679,8 @@ void BeadModeling::update_statistics() {
 
       d = distances.at(i,j);
       //cout << i << " " << j << " " << d << endl;
-      if( d < 10. && i != j ) {
-        ndist[ ceil(d) ] += 1. / nresidues;
+      if( d < 12 ) {
+        ndist[ int(d) ] += 1. / nresidues;
         //cout << i << " " << j << " " << d << " " << ceil(d) << endl;
       }
 
@@ -686,13 +689,52 @@ void BeadModeling::update_statistics() {
       if( d < 8.3 ) count3++;
     }
 
-    if( count1 < nnnum ) nnum1[count1] += 1. / nresidues;
-    if( count2 < nnnum ) nnum2[count2] += 1. / nresidues;
-    if( count3 < nnnum ) nnum3[count3] += 1. / nresidues;
+    if( count1 < nnnum ) nnum1[count1-1] += 1. / nresidues;
+    if( count2 < nnnum ) nnum2[count2-1] += 1. / nresidues;
+    if( count3 < nnnum ) nnum3[count3-1] += 1. / nresidues;
   }
 
 }
 //------------------------------------------------------------------------------
+
+//COMMENTED FOR DEBUGGING PURPOSES
+// void BeadModeling::update_statistics() {
+//
+//   int count1, count2, count3;
+//   double d;
+//
+//   fill( ndist.begin(), ndist.end(), 0.);
+//   fill( nnum1.begin(), nnum1.end(), 0.);
+//   fill( nnum2.begin(), nnum2.end(), 0.);
+//   fill( nnum3.begin(), nnum3.end(), 0.);
+//
+//   for( unsigned int i = 0; i < nresidues; i++ ) {
+//
+//     count1 = 0;
+//     count2 = 0;
+//     count3 = 0;
+//
+//     for( unsigned int j = 0; j < nresidues; j++ ) {
+//
+//       d = distances.at(i,j);
+//       //cout << i << " " << j << " " << d << endl;
+//       if( d < 10. && i != j ) {
+//         ndist[ ceil(d) ] += 1. / nresidues;
+//         //cout << i << " " << j << " " << d << " " << ceil(d) << endl;
+//       }
+//
+//       if( d < 5.3 ) count1++;
+//       if( d < 6.8 ) count2++;
+//       if( d < 8.3 ) count3++;
+//     }
+//
+//     if( count1 < nnnum ) nnum1[count1] += 1. / nresidues;
+//     if( count2 < nnnum ) nnum2[count2] += 1. / nresidues;
+//     if( count3 < nnnum ) nnum3[count3] += 1. / nresidues;
+//   }
+//
+// }
+// //------------------------------------------------------------------------------
 
 void BeadModeling::chi_squared() {
 
@@ -705,7 +747,7 @@ void BeadModeling::chi_squared() {
     X += tmp * tmp / (err * err);
   }
 
-  X /= (nq - 1);
+  //X /= (nq - 1);
 }
 //------------------------------------------------------------------------------
 
@@ -974,8 +1016,7 @@ void BeadModeling::move_only_protein() {
 
   double rmax, rmin, d2, z_ref;
   vector<double> vec(3);
-  //d2 = conn_distance + rng.gaussian(0.5);
-  d2 = rng.in_range( clash_distance, max_distance ); //5.1 seems quite random
+  d2 = rng.in_range2( clash_distance, max_distance ); //5.1 seems quite random
 
   do {
 
@@ -984,17 +1025,17 @@ void BeadModeling::move_only_protein() {
     if( s == 1 || s == 1001 ) { /*Try the same set of beads 1000 times*/
       do {
         s = 1;
-        i = (int)( rng.in_range(0, nresidues) ); /*Pick a bead to be moved*/
-        j = (int)( rng.in_range(0, nresidues) ); /*Pick another bead. n is to be placed in contact with m*/
+        i = (int)( rng.in_range2(0, nresidues) ); /*Pick a bead to be moved*/
+        j = (int)( rng.in_range2(0, nresidues) ); /*Pick another bead. n is to be placed in contact with m*/
       } while( i == j );
     }
 
-    vec = rng.vector( d2 );
+    vec = rng.vector3( d2 );
     beads[i].assign_position( beads[j].x + vec[0], beads[j].y + vec[1], beads[j].z + vec[2] );
 
-    if( distance(i,-1) > dmax/2. ) {
-      legal = false;
-    }
+    // if( distance(i,-1) > dmax/2. ) {
+    //   legal = false;
+    // }
 
     if( legal ) {
       legal = ! bead_clash( i );
@@ -1160,8 +1201,16 @@ void BeadModeling::SA_only_protein() {
   nhead = 0;
 
   for( unsigned int i = 0; i < nresidues; i++ ) {
+
     beads[i].type = 0;
     beads[i].rho_modified = beads[i].rho - beads[i].v * rho_solvent;
+
+    //ONLY FOR DEBUGGING!!!!
+    // if( i == 0 ) {
+    //   beads[i].rho_modified = 14.8162;
+    // } else if( i == nresidues -1 ) {
+    //   beads[i].rho_modified = 14.9523;
+    // }
   }
 
   for( unsigned int j = 0; j < nq; j++ ) {
@@ -1181,7 +1230,7 @@ void BeadModeling::SA_only_protein() {
   //cout << "# Initial temperature: " << T0 << endl;
 
   T0 = X/10.;
-  npasses = 100.;//ceil( std::log( convergence_temp / T0 ) / std::log( schedule ) ) + 10;
+  npasses = 200.;//ceil( std::log( convergence_temp / T0 ) / std::log( schedule ) ) + 10;
   //cout << "# Convergence expected in " <<  npasses - 10 << " passes" << endl;
 
   cout << endl;
@@ -1194,7 +1243,6 @@ void BeadModeling::SA_only_protein() {
 
   penalty_file.open( outdir + "penalty.dat" );
   penalty_file << "#Iterations\tTemperature\tChi2\tType\tHistogram\tConnect\tTotal" << endl;
-
 
   for( unsigned int p = 0; p < npasses; p++ ) {
 
@@ -1211,7 +1259,8 @@ void BeadModeling::SA_only_protein() {
         move_only_protein();
 
         decreasing_p = ( P < P_old );
-        double tmp = rng.in_range(0.,1.);
+        double tmp = rng.in_range2(0.,1.);
+
         metropolis   = ( exp( - (P - P_old)/B ) > tmp );
         accept = ( decreasing_p || metropolis );
 
@@ -1224,12 +1273,15 @@ void BeadModeling::SA_only_protein() {
       penalty_file << iterations << "\t" << B << "\t" << X << "\t" << T << "\t" << H << "\t" << C << "\t" << P << endl;
       iterations++;
     }
+    //exit(-1);
 
-    double mean = 0;
-    for( int i = 0; i < 10; i++ ) {
-      mean += rad[i][1]/10;
-    }
-    scale_tmp = mean/intensity[0];
+    // double mean = 0;
+    // for( int i = 0; i < 10; i++ ) {
+    //   mean += rad[i][1]/10;
+    // }
+    //scale_tmp = mean/intensity[0];
+
+    scale_tmp = rad[0][1]/intensity[0];
     scale_factor *= scale_tmp;
 
     acc_ratio = (1.*loops_per_pass)/attempts;
@@ -1237,6 +1289,7 @@ void BeadModeling::SA_only_protein() {
     cout << fixed << setprecision(2) << setfill('0');
     cout << setw(5) << "# Acceptance ratio:  " << acc_ratio << endl;
     cout << setw(5) << "# Temperature:       " << B << endl;
+      cout << setw(5) << "# Reduced X2:        " << X / (nq - 1) << endl;
     cout << setw(5) << "# Chi squared:       " << X << endl;
     cout << setw(5) << "# Histogram penalty: " << H << endl;
     cout << setw(5) << "# Connect penalty:   " << C << endl;
