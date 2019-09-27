@@ -36,7 +36,7 @@ int main() {
   cout << "#########################" << endl;
   cout << endl;
 
-  const string filename = "/Users/simone/Desktop/NBI/BM/bsa/bsa.input";
+  const string filename = "/Users/simone/Desktop/NBI/BM/kinase/kinase.input";
   //const string filename = "BSA.input";
   BeadModeling BD = BeadModeling( filename );
 
@@ -45,6 +45,7 @@ int main() {
 
   //BD.generate_toy_model( "ub_CA_1.pdb", 0.1 );
   BD.SA_only_protein();
+  //BD.relaxation_run();
 
   //BD.pruned_model( "../BSA/new_3/configurations/107.pdb" );
 

@@ -87,11 +87,11 @@ BeadModeling::BeadModeling( const string& filename ) {
   cout << endl;
   cout << "# SUMMARY OF PARAMETERS" << endl;
   cout << "# ---------------------" << endl;
-  cout << "# Number of beads: " << nresidues << endl;
+  cout << "# Number of beads:          " << nresidues << endl;
   cout << "# Radius of initial sphere: " << dmax / 2. << endl;
-  //cout << "# Number of passes: " << npasses << endl;
-  cout << "# Loops per pass: " << loops_per_pass << endl;
-  cout << "# Storing results in: '" << outdir << "'" << endl;
+  cout << "# Max number of passes:     " << npasses << endl;
+  cout << "# Loops per pass:           " << loops_per_pass << endl;
+  cout << "# Storing results in:      '" << outdir << "'" << endl;
 
   nq = rad.size();
   beads.resize( nresidues );
@@ -104,7 +104,7 @@ BeadModeling::BeadModeling( const string& filename ) {
   distances.initialize(0);
   intensity.resize( nq );
   intensity_old.resize( nq );
-  roughness_chi2.resize( 5 );
+  //roughness_chi2.resize( 5 );
 
   for( unsigned int i = 0; i < nq; i++ ) {
     exp_q[i] = rad[i][0];
@@ -244,7 +244,7 @@ void BeadModeling::initial_configuration() {
     double x, y, z, r, r2;
     bool clash;
 
-    r = 47.;//dmax / 2.; /** radius of the sphere **/
+    r = dmax / 2.; /** radius of the sphere **/
     r2 = r * r;
 
     for( unsigned int i = 0; i < nresidues; i++ ) {
@@ -268,6 +268,33 @@ void BeadModeling::initial_configuration() {
       } while( clash == true );
     }
 
+}
+//------------------------------------------------------------------------------
+
+void BeadModeling::initial_cylinder() {
+
+    double x, y, z, theta, r;
+    bool clash;
+
+    r = dmax / 10.;
+
+    for( unsigned int i = 0; i < nresidues; i++ ) {
+      beads[i].assign_volume_and_scattlen( string(1, sequence[i]) );
+
+      do {
+
+          clash = false;
+
+          theta = rng.in_range2( 0, 2. * M_PI );
+          x = rng.in_range2( 0, r ) * cos( theta );
+          y = rng.in_range2( 0, r ) * sin( theta );
+          z = rng.in_range2( -dmax, dmax );
+          beads[i].assign_position( x, y, z /*+ shift*/ );
+
+          clash = bead_clash( i );
+
+      } while( clash == true );
+    }
 }
 //------------------------------------------------------------------------------
 
@@ -747,7 +774,7 @@ void BeadModeling::chi_squared() {
     X += tmp * tmp / (err * err);
   }
 
-  //X /= (nq - 1);
+  X /= (nq - 1);
 }
 //------------------------------------------------------------------------------
 
@@ -794,7 +821,6 @@ void BeadModeling::histogram_penalty() {
   }
 
   H *= lambda;
-  //cout << H << endl;
 }
 //------------------------------------------------------------------------------
 
@@ -934,6 +960,18 @@ void BeadModeling::penalty() {
 }
 //------------------------------------------------------------------------------
 
+void BeadModeling::penalty_relax() {
+
+  P = 0;
+  surface_beads.clear();
+
+  histogram_penalty();
+  connect_penalty();
+
+  P += H + C;
+}
+//------------------------------------------------------------------------------
+
 void BeadModeling::save_old_config() {
 
   for( unsigned int i = 0; i < nresidues; i++ ) {
@@ -1033,9 +1071,9 @@ void BeadModeling::move_only_protein() {
     vec = rng.vector3( d2 );
     beads[i].assign_position( beads[j].x + vec[0], beads[j].y + vec[1], beads[j].z + vec[2] );
 
-    // if( distance(i,-1) > dmax/2. ) {
-    //   legal = false;
-    // }
+    if( distance(i,-1) > dmax/2. ) {
+      legal = false;
+    }
 
     if( legal ) {
       legal = ! bead_clash( i );
@@ -1053,6 +1091,48 @@ void BeadModeling::move_only_protein() {
   update_statistics();
 
   penalty();
+
+}
+//------------------------------------------------------------------------------
+
+void BeadModeling::move_relax() {
+
+  int s = 0, i, j;
+  bool legal;
+  save_old_config();
+
+  double rmax, rmin, d2, z_ref;
+  vector<double> vec(3);
+  d2 = rng.in_range2( clash_distance, max_distance ); //5.1 seems quite random
+
+  do {
+
+    s++;
+    legal = true;
+    if( s == 1 || s == 1001 ) { /*Try the same set of beads 1000 times*/
+      do {
+        s = 1;
+        i = (int)( rng.in_range2(0, nresidues) ); /*Pick a bead to be moved*/
+        j = (int)( rng.in_range2(0, nresidues) ); /*Pick another bead. n is to be placed in contact with m*/
+      } while( i == j );
+    }
+
+    vec = rng.vector3( d2 );
+    beads[i].assign_position( beads[j].x + vec[0], beads[j].y + vec[1], beads[j].z + vec[2] );
+
+    // if( distance(i,-1) > dmax/2. ) {
+    //   legal = false;
+    // }
+
+    if( legal ) {
+      legal = ! bead_clash( i );
+    }
+
+  } while( legal == false );
+
+  distance_matrix();
+  update_statistics();
+  penalty_relax();
 
 }
 //------------------------------------------------------------------------------
@@ -1181,11 +1261,96 @@ void BeadModeling::test() {
 }
 //------------------------------------------------------------------------------
 
+void BeadModeling::relaxation_run() {
+
+  bool decreasing_p, metropolis, accept;
+  int iterations = 1, rough_counter;
+  double mean, sq_sum, stdev, scale_tmp, acc_ratio;
+
+  double rho_solvent = nd.get_rho_solvent();
+
+  distance_matrix();
+  update_statistics();
+  penalty_relax();
+
+  //T0 = P/10.;
+  npasses = 50.;
+
+  cout << endl;
+  cout << "# RELAXATION RUN" << endl;
+  cout << "# --------------" << endl;
+  cout << endl;
+
+  B = P/10.; //effective temperature
+  ofstream penalty_file;
+
+  penalty_file.open( outdir + "penalty.dat" );
+  penalty_file << "#Iterations\tTemperature\tChi2\tType\tHistogram\tConnect\tTotal" << endl;
+
+  for( unsigned int p = 0; p < npasses; p++ ) {
+
+    int c = 0;
+    int attempts = 0;
+
+    cout << "# PASS " << p << endl;
+    for( unsigned int l = 0; l < loops_per_pass; l++ ) {
+
+      do {
+
+        attempts++;
+
+        move_relax();
+
+        decreasing_p = ( P < P_old );
+        double tmp = rng.in_range2(0.,1.);
+
+        metropolis   = ( exp( - (P - P_old)/B ) > tmp );
+        accept = ( decreasing_p || metropolis );
+
+        if( !accept ) {
+          reject_move();
+        }
+
+      } while( accept == false );
+
+      penalty_file << iterations << "\t" << B << "\t" << X << "\t" << T << "\t" << H << "\t" << C << "\t" << P << endl;
+      iterations++;
+    }
+
+    acc_ratio = (1.*loops_per_pass)/attempts;
+
+    cout << fixed << setprecision(2) << setfill('0');
+    cout << setw(5) << "# Acceptance ratio:  " << acc_ratio << endl;
+    cout << setw(5) << "# Temperature:       " << B << endl;
+    cout << setw(5) << "# Histogram penalty: " << H << endl;
+    cout << setw(5) << "# Connect penalty:   " << C << endl;
+    cout << setw(5) << "# Total penalty:     " << P << endl;
+    cout << endl;
+
+    // string pdb = outdir + "configurations/" + to_string(p) + ".pdb";
+    // write_pdb( pdb );
+    // write_statistics( ndist, outdir + "ndist.dat" );
+    // write_statistics( nnum1, outdir + "nnum1.dat" );
+    // write_statistics( nnum2, outdir + "nnum2.dat" );
+    // write_statistics( nnum3, outdir + "nnum3.dat" );
+    //
+    //
+    B *= schedule;
+    //
+    // if( B < convergence_temp ) {
+    //   cout << endl << "# CONVERGENCE!" << endl;
+    //   exit(0);
+    // }
+  }
+}
+//------------------------------------------------------------------------------
+
 void BeadModeling::SA_only_protein() {
 
   bool decreasing_p, metropolis, accept;
   int iterations = 1, rough_counter;
   double mean, sq_sum, stdev, scale_tmp, acc_ratio;
+  bool relaxation = true;
 
   double rho_solvent = nd.get_rho_solvent();
 
@@ -1213,6 +1378,8 @@ void BeadModeling::SA_only_protein() {
     // }
   }
 
+  //relaxation_run();
+
   for( unsigned int j = 0; j < nq; j++ ) {
     for( unsigned int i = 0; i < nresidues; i++ ) {
       expand_sh( exp_q[j], j, i, 1, 0 );
@@ -1230,7 +1397,7 @@ void BeadModeling::SA_only_protein() {
   //cout << "# Initial temperature: " << T0 << endl;
 
   T0 = X/10.;
-  npasses = 200.;//ceil( std::log( convergence_temp / T0 ) / std::log( schedule ) ) + 10;
+  //npasses = 100.;//ceil( std::log( convergence_temp / T0 ) / std::log( schedule ) ) + 10;
   //cout << "# Convergence expected in " <<  npasses - 10 << " passes" << endl;
 
   cout << endl;
@@ -1289,7 +1456,7 @@ void BeadModeling::SA_only_protein() {
     cout << fixed << setprecision(2) << setfill('0');
     cout << setw(5) << "# Acceptance ratio:  " << acc_ratio << endl;
     cout << setw(5) << "# Temperature:       " << B << endl;
-      cout << setw(5) << "# Reduced X2:        " << X / (nq - 1) << endl;
+      // cout << setw(5) << "# Reduced X2:        " << X / (nq - 1) << endl;
     cout << setw(5) << "# Chi squared:       " << X << endl;
     cout << setw(5) << "# Histogram penalty: " << H << endl;
     cout << setw(5) << "# Connect penalty:   " << C << endl;

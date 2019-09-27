@@ -128,6 +128,7 @@ class BeadModeling : public Input {
       void save_old_config();
       void move( int );
       void move_only_protein();
+      void move_relax();
       void reject_move();
       void test_rho( int );
       void set_T0();
@@ -159,6 +160,7 @@ class BeadModeling : public Input {
       void load_input();
       void load_initial_configuration( const std::string& );
       void initial_configuration();
+      void initial_cylinder();
       void write_xyz( const std::string& );
       void write_intensity( const std::string& );
       void write_toy_intensity( const std::string&, std::vector<double> );
@@ -167,8 +169,10 @@ class BeadModeling : public Input {
       void test_flat();
       void update_rho( int );
       void penalty();
+      void penalty_relax();
       //void generate_toy_model( const std::string& );
       void SA_only_protein();
+      void relaxation_run();
       void test();
 
       /* GET FUNCTIONS */
