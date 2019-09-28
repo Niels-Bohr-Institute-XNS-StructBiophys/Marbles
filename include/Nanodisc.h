@@ -60,9 +60,9 @@ class Nanodisc : public Input {
     double vprotein;                /** volume of the membrane protein */
 
     /* DETAILS OF THE CALCULATION */
-    const unsigned int harmonics_order = 17;               /** Number of spherical harmonics used in the calculations */
-    const unsigned int ntheta = (harmonics_order + 1) * 2; /** Number of points in theta for the angular integration */
-    const unsigned int nphi   = (harmonics_order + 1) * 2; /** Number of points in phi for the angular integration */
+    const int harmonics_order = 17;               /** Number of spherical harmonics used in the calculations */
+    const int ntheta = (harmonics_order + 1) * 2; /** Number of points in theta for the angular integration */
+    const int nphi   = (harmonics_order + 1) * 2; /** Number of points in phi for the angular integration */
 
     Array3D<double, 0, NTHETA, NPHI> F;                    /** temporarily stores the values of the form factor during calculation */
     Array3D<std::complex<double>, 0, NH+1, NH+1> alpha;    /** form factor of the nanodisc expanded on the basis of spherical harmonics */
@@ -74,7 +74,7 @@ class Nanodisc : public Input {
 
     double PsiEllipticCylinderWithEndcaps( double, double, double, double, double, double, double, double ); /** will get rid of this in flat version! */
     double expand_sh( int );                                                        /** expands the form factor in the basis of spherical harmonics */
-    double expand_sh2( int );
+    void expand_sh2( int );
 
     int Discflat( double _Complex**, double, double, double, double, double, double, double, double);
 

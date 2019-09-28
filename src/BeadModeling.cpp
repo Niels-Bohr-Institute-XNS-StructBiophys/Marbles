@@ -9,16 +9,85 @@
 #include <gsl/gsl_sf_legendre.h>
 #include <iomanip>
 #include <numeric>
-//#include <boost/algorithm/string.hpp>
 #include <algorithm>
-#define AV_RESIDUE_MASS 0.1 //average mass of a residue in kDa
 
 using namespace std;
 
-/*
- * TODO:
- * find better way to do update_statistics(). In particular, I don't like the fact that you have to pre-compute the distance matrix.
- */
+BeadModeling::BeadModeling( const string& seq, const string& data, const string& out, int passes, int loops, double dm, double conn,
+                            double lm, double sched, double clash, double maxd, double connd, double tr ) {
+
+  rad_file          = data;           //path to the experimental .rad file
+  sequence_file     = seq;           //path to the file with the protein sequence
+  dmax              = dm;   //dmax from fit
+  npasses           = passes;   //total number of passes
+  loops_per_pass    = loops;   //number of performed loops per pass
+  outdir            = out;           //directory where results are saved
+  lambda            = lm;
+  connect           = conn;
+  clash_distance    = clash; //hardcoded because experimented. Might want to leave the choice open for users though.
+  max_distance      = maxd;
+  conn_distance     = connd;
+  t_ratio           = tr;
+  schedule          = sched;
+  convergence_temp  = 0.1;
+  sequence          = "";
+  shift             = 50.; //same here: might want to leave this free for the user to choose
+  insertion         = 14;
+  T_strength        = 5;
+  H_strength        = 1;
+  sphere_generated  = false;
+  compute_scale     = true;
+  init              = true;
+
+  string mkdir = "mkdir " + outdir;
+  system( mkdir.c_str() );
+
+  mkdir = "mkdir " + outdir + "configurations/";
+  system( mkdir.c_str() );
+
+  mkdir = "mkdir " + outdir + "intensities/";
+  system( mkdir.c_str() );
+
+  load_FASTA(); //load sequence file
+  cout << "# File '" << sequence_file << "' loaded" << endl;
+  nresidues = sequence.length();
+
+  load_rad(); //experimental file with SAXS or SANS data
+  cout << "# File '" << rad_file << "' loaded " << endl;
+
+  load_statistics(); //statistics needed for penalty function
+  cout << "# Statistics loaded" << endl;
+
+  cout << endl;
+  cout << "# SUMMARY OF PARAMETERS" << endl;
+  cout << "# ---------------------" << endl;
+  cout << "# Number of beads:          " << nresidues << endl;
+  cout << "# Radius of initial sphere: " << dmax / 2. << endl;
+  cout << "# Max number of passes:     " << npasses << endl;
+  cout << "# Loops per pass:           " << loops_per_pass << endl;
+  cout << "# Storing results in:      '" << outdir << "'" << endl;
+
+  nq = rad.size();
+  nnnum = nnum1_ref.size();
+
+  beads.resize( nresidues );
+  exp_q.resize( nq );
+  beta.resize_width( nq );
+  beta.initialize(0);
+  beta_old.resize_width( nq );
+  distances.resize( nresidues, nresidues );
+  distances_old.resize( nresidues, nresidues );
+  distances.initialize(0);
+  intensity.resize( nq );
+  intensity_old.resize( nq );
+
+  for( unsigned int i = 0; i < nq; i++ ) {
+    exp_q[i] = rad[i][0];
+  }
+
+  logfile();
+}
+//------------------------------------------------------------------------------
 
 BeadModeling::BeadModeling( const string& filename ) {
 
@@ -1352,7 +1421,7 @@ void BeadModeling::SA_only_protein() {
   double mean, sq_sum, stdev, scale_tmp, acc_ratio;
   bool relaxation = true;
 
-  double rho_solvent = nd.get_rho_solvent();
+  double rho_solvent = 1./3.;//nd.get_rho_solvent();
 
   cout << endl;
   cout << "# PRELIMINARIES" << endl;

@@ -32,6 +32,4 @@ class RandomNumbers {
          */
         const gsl_rng_type *T; /** holds static information about each type of generator */
         gsl_rng *r; /** describes an instance of a generator created from a given gsl_rng_type */
-
-        bool ready; /** true if the gaussian random generator has already a number ready **/
 };

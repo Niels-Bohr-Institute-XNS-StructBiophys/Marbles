@@ -35,7 +35,6 @@ void Nanodisc::load_input_flat( const string& best_fit ) {
   ifstream file( best_fit );
   string line;
   string d = "=", d_ = " ", d__ = ","; //possible delimiters
-  double tmp;
 
   if( file.is_open() ) {
 
@@ -338,21 +337,21 @@ void Nanodisc::flat_disc_form_factor( double a, double b, double L, double rho, 
   double v_rho = rho * a * b * M_PI * L;
 
   //precompute values for phi to avoid over-computation
-  for( unsigned int p = 0; p < nphi; p++ ) {
+  for( int p = 0; p < nphi; p++ ) {
     phi    = ( p + 0.5 ) * phi_step;
     a_phi  = a * cos(phi);
     b_phi  = b * sin(phi);
     r[p]   = sqrt( a_phi * a_phi + b_phi * b_phi );
   }
 
-  for( unsigned int t = 0; t < ntheta; t++ ) {
+  for( int t = 0; t < ntheta; t++ ) {
 
     theta = ( t + 0.5 ) * theta_step;
     //sinc  = boost::math::sinc_pi( L/2. * q * cos(theta) );
     sincq = sinc( L/2. * q * cos(theta) );
     sin_t = sin(theta);
 
-    for( unsigned int p = 0; p < nphi; p++ ) {
+    for( int p = 0; p < nphi; p++ ) {
       qr = q * r[p] * sin_t;
 
       if( qr == 0 ) {
@@ -367,7 +366,6 @@ void Nanodisc::flat_disc_form_factor( double a, double b, double L, double rho, 
 
 void Nanodisc::flat_disc_form_factor2( double a, double b, double L, double rho, double q, int index ) {
 
-    //cout << "# FORM FACTOR SHIT DIOCANE" << endl;
     //Søren Kynde 2012
     //This function calculates the form factor F(Q,theta,phi) of a cylinder
     //with elliptical cross-section with half axes a and b and height L. The
@@ -375,7 +373,7 @@ void Nanodisc::flat_disc_form_factor2( double a, double b, double L, double rho,
     //(r0, theta0, phi0).
 
     double r;
-    double cosr0q=0;
+    //double cosr0q=0;
     //int ntheta,nphi;
     double sincq,theta,phi,tmp;
     double thetastep = M_PI/ntheta, phistep = 2. * M_PI / nphi;
@@ -508,10 +506,10 @@ void Nanodisc::disc_w_endcaps_form_factor( double a, double b, double L, double 
     double theta_step = M_PI / ntheta;
     double phi_step = 2 * M_PI / nphi;
 
-    for( unsigned int t = 0; t < ntheta; t++ ) {
+    for( int t = 0; t < ntheta; t++ ) {
         theta = ( t + 0.5 ) * theta_step;
 
-        for( unsigned int p = 0; p < nphi; p++ ) {
+        for( int p = 0; p < nphi; p++ ) {
             phi = ( p + 0.5 ) * phi_step;
 
             tmp = rho * PsiEllipticCylinderWithEndcaps(q, theta, phi, a, b, L, scale_endcaps, vertical_axis_ellipsoid);
@@ -609,7 +607,7 @@ double Nanodisc::expand_sh( int index ) {
   }
 
 
-  for( unsigned int t = 0; t < ntheta; t++ ) {
+  for( int t = 0; t < ntheta; t++ ) {
       w[t]  = 0.;
       theta = ( t + 0.5 ) * theta_step;
       sin_t[t] = sin(theta);
@@ -666,7 +664,7 @@ complex<double> pol2(double r, double phi)
     return { r * cos(phi), r * sin(phi) };
 }
 
-double Nanodisc::expand_sh2( int index ) {
+void Nanodisc::expand_sh2( int index ) {
 //Søren Kynde 2011
 //This function calculates the coefficients Alm of the spherical harmonics
 //expansion of an analytical form factor F(theta,phi) (phi is the azimuthal angle)
@@ -741,7 +739,7 @@ double Nanodisc::expand_sh2( int index ) {
     //     }
     //   }
 
-    return Int;
+    //return Int;
 }
 
 //compatible with previous version within 5e-4 relative error.
@@ -778,7 +776,7 @@ void Nanodisc::nanodisc_form_factor( vector<double> exp_q ) {
     //  }
     // }
 
-    double intensity = expand_sh2( i ); //uncomment
+    expand_sh2( i ); //uncomment
     //cout << exp_q[i] << " " << intensity << endl;
   }
 
