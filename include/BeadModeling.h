@@ -75,6 +75,7 @@ class BeadModeling : public Input {
       double M;                    /** MDist penalty */
       double P_old;
       double B;
+      double H0;
       double T0;
       double T_strength;           /** strength of the type penalty */
       double H_strength;           /** strength of the histogram penalty */
@@ -155,7 +156,7 @@ class BeadModeling : public Input {
     public:
       BeadModeling( const std::string& );
       BeadModeling( const std::string&, const std::string&, const std::string&, int, int,
-                    double, double, double, double, double, double, double, double );
+                    double, double, double, double, double, double, double, double, double );
       ~BeadModeling();
 
       /* PUBLIC UTILITIES */
@@ -172,7 +173,6 @@ class BeadModeling : public Input {
       void update_rho( int );
       void penalty();
       void penalty_relax();
-      //void generate_toy_model( const std::string& );
       void SA_only_protein();
       void relaxation_run();
       void test();
