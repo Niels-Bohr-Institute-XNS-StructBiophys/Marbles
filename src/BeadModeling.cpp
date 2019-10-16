@@ -14,7 +14,7 @@
 using namespace std;
 
 BeadModeling::BeadModeling( const string& seq, const string& data, const string& out, int passes, int loops, double dm, double conn,
-                            double lm, double h, double sched, double clash, double maxd, double connd, double tr ) {
+                            double lm, double sched, double clash, double maxd, double connd, double tr ) {
 
   rad_file          = data;           //path to the experimental .rad file
   sequence_file     = seq;           //path to the file with the protein sequence
@@ -24,7 +24,6 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
   outdir            = out;           //directory where results are saved
   lambda            = lm;
   connect           = conn;
-  H0                = h;
   clash_distance    = clash; //hardcoded because experimented. Might want to leave the choice open for users though.
   max_distance      = maxd;
   conn_distance     = connd;
@@ -39,21 +38,6 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
   sphere_generated  = false;
   compute_scale     = true;
   init              = true;
-
-  // cout << "Sequence " << sequence_file << endl;
-  // cout << "Data " << rad_file << endl;
-  // cout << "Out dir " << outdir << endl;
-  // cout << "npasses " << npasses << endl;
-  // cout << "nloops " << loops_per_pass << endl;
-  // cout << "dmax " << dmax << endl;
-  // cout << "C " << connect << endl;
-  // cout << "H " << lambda << endl;
-  // cout << "H0 " << H0 << endl;
-  // cout << "schedule " << schedule << endl;
-  // cout << "clash " << clash_distance << endl;
-  // cout << "max dist " << max_distance << endl;
-  // cout << "conn dist " << conn_distance << endl;
-  // cout << "temp fact " << t_ratio << endl;
 
   string mkdir = "mkdir " + outdir;
   system( mkdir.c_str() );
@@ -224,8 +208,7 @@ void BeadModeling::logfile() {
   log << "# Connect distance:         " << conn_distance << endl;
   log << "# Connectivity strength:    " << connect << endl;
   log << "# Distributions strength:   " << lambda << endl;
-  log << "# Distributions strength 2: " << H0 << endl;
-  log << "# Initial temperature:      " << "X2/" << t_ratio << endl;
+  log << "# Initial temperature:      " << "X2/10" << endl;
   log << "# SA scheduling:            " << schedule << endl;
   log << "# Storing results in:       " << outdir << endl;
   log << "# Convergence at:           " << convergence_temp << endl;
@@ -903,7 +886,7 @@ void BeadModeling::histogram_penalty() {
       tmp4 = 0.;
     }
 
-    H += ( H0 * ( tmp1 * tmp1 + tmp2 * tmp2 + tmp3 * tmp3 ) + tmp4 * tmp4 );
+    H += ( tmp1 * tmp1 + tmp2 * tmp2 + tmp3 * tmp3 + tmp4 * tmp4 );
   }
 
   H *= lambda;

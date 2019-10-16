@@ -55,6 +55,7 @@ using namespace std;
        w_nanodisc = true;
      } else {
        w_nanodisc = false;
+       //cout << "no nano biatch" << endl;
      }
 
      string data( argv[3] );
@@ -65,12 +66,11 @@ using namespace std;
      int nloops  = stoi( argv[7] );
      double conn = stod( argv[8] );
      double neig = stod( argv[9] );
-     double hstr = stod( argv[10] );
-     double sche = stod( argv[11] );
-     int tm_fact = stoi( argv[12] );
-     double clas = stod( argv[13] );
-     double maxd = stod( argv[14] );
-     double cond = stod( argv[15] );
+     double sche = stod( argv[10] );
+     int tm_fact = stoi( argv[11] );
+     double clas = stod( argv[12] );
+     double maxd = stod( argv[13] );
+     double cond = stod( argv[14] );
 
      // cout << "Sequence " << sequence << endl;
      // cout << "Data " << data << endl;
@@ -81,7 +81,6 @@ using namespace std;
      //
      // cout << "C " << conn << endl;
      // cout << "H " << neig << endl;
-     // cout << "H0 " << hstr << endl;
      // cout << "schedule " << sche << endl;
      // cout << "clash " << clas << endl;
      // cout << "max dist " << maxd << endl;
@@ -89,7 +88,7 @@ using namespace std;
      // cout << "temp fact " << tm_fact << endl;
 
      BeadModeling BD = BeadModeling( sequence, data, out, npasses, nloops, dmax,
-                                   conn, neig, hstr, sche, clas, maxd, cond, tm_fact );
+                                   conn, neig, sche, clas, maxd, cond, tm_fact );
      BD.SA_only_protein();
 
    }
