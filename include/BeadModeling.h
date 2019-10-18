@@ -87,7 +87,7 @@ class BeadModeling : public Input {
 
       std::vector<std::vector<double> > rad;   /* experimental SAXS value for different values of q */
       std::vector<double> exp_q;
-      std::vector<int> surface_beads;
+      std::vector<double> com; //protein center of mass
 
       std::vector<double> ndist;
       std::vector<std::vector<double> > ndist_ref;
@@ -144,6 +144,8 @@ class BeadModeling : public Input {
 
       bool bead_clash( unsigned const int ); /** checks wether the position of a bead clashes with another one **/
       bool inside_ellipse( int, double, double );
+      //bool inside_ellipse( double, double );
+      void compute_com();
 
       void setup();
       void simulated_annealing( bool );

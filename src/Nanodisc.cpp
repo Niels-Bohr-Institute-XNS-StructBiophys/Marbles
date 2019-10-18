@@ -114,6 +114,7 @@ void Nanodisc::load_input_flat( const string& best_fit ) {
     rho_belt    /= ( vbelt * cvbelt );
     //rho_protein /= ( vprotein * cvprotein );
     rho_h2o     /= ( vh2o * cvwater );
+    cvprotein   = 1.;
 
     /** Three checks on volumes are ran to verify the consistency of the quantities loaded from the WillItFit output. */
     if( volume_tests ) {
