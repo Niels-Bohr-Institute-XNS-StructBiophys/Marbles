@@ -29,7 +29,8 @@ class BeadModeling : public Input {
       bool sphere_generated;       /** Flag for avoiding regereating the initial sphere */
       bool init_type_penalty;      /** True if type_penalty is being called for the first time */
       bool init;                   /** True if penalty is called for the first time */
-      bool compute_scale;        /** compute intensity rescaling factor or not 8/
+      bool compute_scale;          /** compute intensity rescaling factor or not */
+      bool with_nanodisc;          /** true is simulated annealing is carried out in the presence of a nanodisc */
 
       /* INPUT FILES */
       std::string input_file;      /** Input file with run configurations */
@@ -37,6 +38,7 @@ class BeadModeling : public Input {
       std::string outdir;          /** Directory where to store results */
       std::string best_fit;        /** Report file from WillItFit */
       std::string sequence_file;   /** FASTA sequence file of the protein */
+      std::string nano_model;      /** type of nanodisc model employed (with endcaps or flat) */
 
       /* INFO VARIABLES */
 
@@ -56,7 +58,7 @@ class BeadModeling : public Input {
       unsigned int nq;             /** Length of the rad file, i.e. number of experimental q points */
       unsigned int nnnum;          /** Length of the nnum files */
 
-      double lambda;              /** TO BE CLEARED */
+      double lambda;               /** TO BE CLEARED */
       double connect;              /** TO BE CLEARED */
       double dmax;                 /** maximum length detected from P(r) */
       double shift;                /** z shift of the initial sphere with respect to the nanodisc */
@@ -71,13 +73,12 @@ class BeadModeling : public Input {
       double H;                    /** value of the histogram penalty */
       double C;                    /** value of the connect penalty */
       double P;                    /** value of the total penalty */
-      double S;                       /** surface penalty */
+      double S;                    /** surface penalty */
       double M;                    /** MDist penalty */
       double P_old;
       double B;
       double T0;
       double T_strength;           /** strength of the type penalty */
-      double H_strength;           /** strength of the histogram penalty */
       double scale_factor;
 
       const unsigned int harmonics_order = 17;
@@ -153,6 +154,8 @@ class BeadModeling : public Input {
       BeadModeling( const std::string& );
       BeadModeling( const std::string&, const std::string&, const std::string&, int, int,
                     double, double, double, double, double, double, double, double );
+      BeadModeling( const std::string&, const std::string&, const std::string&, const std::string&,
+                    int, int, double, double, double, double, int, double, double, double, double, double );
       ~BeadModeling();
 
       /* PUBLIC UTILITIES */

@@ -4,30 +4,6 @@
 #include "RigidBody.h"
 using namespace std;
 
-/*! \mainpage Drawing Shapes
- *
- * This project helps user to draw shapes.
- * Currently two types of shapes can be drawn:
- * - \subpage drawingRectanglePage "How to draw rectangle?"
- *
- * - \subpage drawingCirclePage "How to draw circle?"
- *
- */
-
-/*! \page drawingRectanglePage How to draw rectangle?
- *
- * Lorem ipsum dolor sit amet
- *
- */
-
-/*! \page drawingCirclePage How to draw circle?
- *
- * This page is about how to draw a circle.
- * Following sections describe circle:
- * - \ref groupCircleDefinition "Definition of Circle"
- * - \ref groupCircleClass "Circle Class"
- */
-
  int main( int argc, char *argv[] ) {
 
    cout << endl;
@@ -40,27 +16,17 @@ using namespace std;
    //
    // exit(-1);
 
-   if( argc == 2 ) {
-     string filename( argv[1] );
-
-     BeadModeling BD = BeadModeling( filename );
-     BD.SA_only_protein();
+   if( argc < 2 ) {
 
      cout << endl;
+     cout << "Usage: python beads.py --help" << endl;
+     cout << endl;
+     exit(-1);
 
-   } else if( argc > 2 ) {
+   } else {
 
      string sequence( argv[1] );
      string str_nano( argv[2] );
-
-     bool w_nanodisc;
-
-     if( str_nano == "True" ) {
-       w_nanodisc = true;
-     } else {
-       w_nanodisc = false;
-       //cout << "no nano biatch" << endl;
-     }
 
      string data( argv[3] );
      string out( argv[4] );
@@ -76,31 +42,41 @@ using namespace std;
      double maxd = stod( argv[13] );
      double cond = stod( argv[14] );
 
-     // cout << "Sequence " << sequence << endl;
-     // cout << "Data " << data << endl;
-     // cout << "Out dir " << out << endl;
-     // cout << "npasses " << npasses << endl;
-     // cout << "nloops " << nloops << endl;
-     // cout << "dmax " << dmax << endl;
-     //
-     // cout << "C " << conn << endl;
-     // cout << "H " << neig << endl;
-     // cout << "schedule " << sche << endl;
-     // cout << "clash " << clas << endl;
-     // cout << "max dist " << maxd << endl;
-     // cout << "conn dist " << cond << endl;
-     // cout << "temp fact " << tm_fact << endl;
+     if( str_nano == "True" ) {
 
-     BeadModeling BD = BeadModeling( sequence, data, out, npasses, nloops, dmax,
-                                   conn, neig, sche, clas, maxd, cond, tm_fact );
-     BD.SA_only_protein();
+       string fit( argv[15] );
+       int ins_res = stoi( argv[16] );
+       double t_str = stod( argv[17] );
+
+       // cout << "Sequence  " << sequence << endl;
+       // cout << "Data      " << data << endl;
+       // cout << "Out dir   " << out << endl;
+       // cout << "npasses   " << npasses << endl;
+       // cout << "nloops    " << nloops << endl;
+       // cout << "dmax      " << dmax << endl;
+       // cout << "C         " << conn << endl;
+       // cout << "H         " << neig << endl;
+       // cout << "schedule  " << sche << endl;
+       // cout << "clash     " << clas << endl;
+       // cout << "max dist  " << maxd << endl;
+       // cout << "conn dist " << cond << endl;
+       // cout << "temp fact " << tm_fact << endl;
+       // cout << "fit       " << fit << endl;
+       // cout << "residues  " << ins_res << endl;
+       // cout << "insertion " << t_str << endl;
+       // exit(-1);
+
+       BeadModeling BD = BeadModeling( sequence, data, fit, out, npasses, nloops, dmax,
+                                     conn, neig, t_str, ins_res, sche, clas, maxd, cond, tm_fact );
+       BD.SA_nanodisc();
+
+     } else {
+       BeadModeling BD = BeadModeling( sequence, data, out, npasses, nloops, dmax,
+                                     conn, neig, sche, clas, maxd, cond, tm_fact );
+       BD.SA_protein();
+     }
 
    }
-
-  //const string filename = "/Users/simone/Desktop/NBI/BM/kinase/kinase.input";
-  //BeadModeling BD = BeadModeling( filename );
-  //BD.SA_only_protein();
-  //cout << endl;
 
   return 0;
 }

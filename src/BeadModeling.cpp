@@ -31,10 +31,9 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
   schedule          = sched;
   convergence_temp  = 0.1;
   sequence          = "";
-  shift             = 50.; //same here: might want to leave this free for the user to choose
-  insertion         = 14;
-  T_strength        = 5;
-  H_strength        = 1;
+  shift             = 0.;
+  //insertion         = 14;
+  //T_strength        = 0.;
   sphere_generated  = false;
   compute_scale     = true;
   init              = true;
@@ -89,69 +88,55 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
 }
 //------------------------------------------------------------------------------
 
-BeadModeling::BeadModeling( const string& filename ) {
+BeadModeling::BeadModeling( const string& seq, const string& data, const string& ft, const string& out, int passes, int loops, double dm, double conn,
+                            double lm, double tm, int ins, double sched, double clash, double maxd, double connd, double tr ) {
 
-  input_file = filename;
+  rad_file          = data;           //path to the experimental .rad file
+  sequence_file     = seq;           //path to the file with the protein sequence
+  best_fit          = ft;
+  dmax              = dm;   //dmax from fit
+  npasses           = passes;   //total number of passes
+  loops_per_pass    = loops;   //number of performed loops per pass
+  outdir            = out;           //directory where results are saved
+  lambda            = lm;
+  connect           = conn;
+  insertion         = ins;
+  T_strength        = tm;
+  clash_distance    = clash;
+  max_distance      = maxd;
+  conn_distance     = connd;
+  t_ratio           = tr;
+  schedule          = sched;
+  convergence_temp  = 0.1;
+  sequence          = "";
+  shift             = 50.;
+  sphere_generated  = false;
+  compute_scale     = true;
+  init              = true;
+  with_nanodisc     = true;
+  nano_model        = "flat";
 
-  ifstream file( input_file );
-  string line;
-  string d = " ";
+  string mkdir = "mkdir " + outdir;
+  system( mkdir.c_str() );
 
-  sphere_generated = false;
-  compute_scale = true;
-  init = true;
+  mkdir = "mkdir " + outdir + "configurations/";
+  system( mkdir.c_str() );
 
-  clash_distance = 1.8; //hardcoded because experimented. Might want to leave the choice open for users though.
-  max_distance = 5.1;
-  conn_distance = 5.81;
-  t_ratio = 8.;
-  schedule = 0.9;
-  convergence_temp = 0.1;
-  sequence = "";
-  shift = 50.; //same here: might want to leave this free for the user to choose
-  insertion = 14;
-  T_strength = 5;
-  H_strength = 1;
-
-  if( file.is_open() ) {
-
-    rad_file       = parse_line( file, d );           //path to the experimental .rad file
-    best_fit       = parse_line( file, d );           //path to the WillItFit results
-    sequence_file  = parse_line( file, d );           //path to the file with the protein sequence
-    dmax           = stod( parse_line( file, d ) );   //dmax from fit
-    npasses        = stoi( parse_line( file, d ) );   //total number of passes
-    loops_per_pass = stoi( parse_line( file, d ) );   //number of performed loops per pass
-    outdir         = parse_line( file, d );           //directory where results are saved
-    lambda         = stof( parse_line( file, d ) );
-    connect        = stof( parse_line( file, d ) );
-
-    string mkdir = "mkdir " + outdir;
-    system( mkdir.c_str() );
-
-    mkdir = "mkdir " + outdir + "configurations/";
-    system( mkdir.c_str() );
-
-    mkdir = "mkdir " + outdir + "intensities/";
-    system( mkdir.c_str() );
-
-  } else {
-    cerr << "Cannot open " << input_file << endl;
-    exit(-1);
-  }
-
-  cout << "# File '" << input_file << "' loaded" << endl;
+  mkdir = "mkdir " + outdir + "intensities/";
+  system( mkdir.c_str() );
 
   load_FASTA(); //load sequence file
   cout << "# File '" << sequence_file << "' loaded" << endl;
   nresidues = sequence.length();
+
+  nd.load_input_flat( best_fit );
+  cout << "# File '" << best_fit << "' loaded" << endl;
 
   load_rad(); //experimental file with SAXS or SANS data
   cout << "# File '" << rad_file << "' loaded " << endl;
 
   load_statistics(); //statistics needed for penalty function
   cout << "# Statistics loaded" << endl;
-
-  nnnum = nnum1_ref.size();
 
   cout << endl;
   cout << "# SUMMARY OF PARAMETERS" << endl;
@@ -163,6 +148,8 @@ BeadModeling::BeadModeling( const string& filename ) {
   cout << "# Storing results in:      '" << outdir << "'" << endl;
 
   nq = rad.size();
+  nnnum = nnum1_ref.size();
+
   beads.resize( nresidues );
   exp_q.resize( nq );
   beta.resize_width( nq );
@@ -173,18 +160,16 @@ BeadModeling::BeadModeling( const string& filename ) {
   distances.initialize(0);
   intensity.resize( nq );
   intensity_old.resize( nq );
-  //roughness_chi2.resize( 5 );
 
   for( unsigned int i = 0; i < nq; i++ ) {
     exp_q[i] = rad[i][0];
   }
 
-  nd.load_input_flat( best_fit );
+  fit.fit_background( rad, 10 );
+  fit.set_default_roughness( 4.6 );
 
-  //fit.fit_background( rad, 10 );
-  //fit.set_default_roughness( 4.6 );
+  cout << "# Background: " << fit.get_background() << endl;
 
-  //cout << "# Background: " << fit.get_background() << endl;
   logfile();
 }
 //------------------------------------------------------------------------------
@@ -1095,7 +1080,7 @@ void BeadModeling::SA_protein() {
     write_statistics( nnum1, outdir + "nnum1.dat" );
     write_statistics( nnum2, outdir + "nnum2.dat" );
     write_statistics( nnum3, outdir + "nnum3.dat" );
-    write_surface_beads( outdir + "surface_beads.dat", p );
+    //write_surface_beads( outdir + "surface_beads.dat", p );
 
 
     B *= schedule;
@@ -1254,7 +1239,7 @@ void BeadModeling::SA_nanodisc() {
     string xyz = outdir + "configurations/" + to_string(p) + ".xyz";
     string pdb = outdir + "configurations/" + to_string(p) + ".pdb";
     string calc_intensity = outdir + "intensities/" + to_string(p) + ".dat";
-    write_xyz( xyz );
+    //write_xyz( xyz );
     write_pdb( pdb );
     write_intensity( calc_intensity );
 
