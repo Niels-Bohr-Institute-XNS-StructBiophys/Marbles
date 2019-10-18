@@ -55,7 +55,6 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
   cout << "# File '" << rad_file << "' loaded " << endl;
 
   load_statistics(); //statistics needed for penalty function
-  cout << "# Statistics loaded" << endl;
 
   cout << endl;
   cout << "# SUMMARY OF PARAMETERS" << endl;
@@ -136,7 +135,6 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
   cout << "# File '" << rad_file << "' loaded " << endl;
 
   load_statistics(); //statistics needed for penalty function
-  cout << "# Statistics loaded" << endl;
 
   cout << endl;
   cout << "# SUMMARY OF PARAMETERS" << endl;
@@ -145,7 +143,6 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
   cout << "# Radius of initial sphere: " << dmax / 2. << endl;
   cout << "# Max number of passes:     " << npasses << endl;
   cout << "# Loops per pass:           " << loops_per_pass << endl;
-  cout << "# Storing results in:      '" << outdir << "'" << endl;
 
   nq = rad.size();
   nnnum = nnum1_ref.size();
@@ -168,7 +165,8 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
   fit.fit_background( rad, 10 );
   fit.set_default_roughness( 4.6 );
 
-  cout << "# Background: " << fit.get_background() << endl;
+  cout << "# Background:               " << fit.get_background() << endl;
+  cout << "# Storing results in:      '" << outdir << "'" << endl;
 
   logfile();
 }
@@ -182,24 +180,56 @@ void BeadModeling::load_rad() {
 void BeadModeling::logfile() {
 
   ofstream log;
-  log.open(outdir + "parameters.log");
+  log.open(outdir + "summary.log");
 
-  log << "# Number of beads:          " << nresidues << endl;
-  log << "# Radius of initial sphere: " << dmax / 2. << endl;
-  log << "# Number of passes:         " << npasses << endl;
-  log << "# Loops per pass:           " << loops_per_pass << endl;
-  log << "# Bead clash distance:      " << clash_distance << endl;
-  log << "# Maximum move distance:    " << max_distance << endl;
-  log << "# Connect distance:         " << conn_distance << endl;
-  log << "# Connectivity strength:    " << connect << endl;
-  log << "# Distributions strength:   " << lambda << endl;
-  log << "# Initial temperature:      " << "X2/10" << endl;
-  log << "# SA scheduling:            " << schedule << endl;
-  log << "# Storing results in:       " << outdir << endl;
-  log << "# Convergence at:           " << convergence_temp << endl;
+  log << "# INPUT/OUTPUT" << endl;
+  log << "#-------------" << endl;
+  log << "# Protein sequence:            " << sequence_file << endl;
+  log << "# Experimental SAXS intensity: " << rad_file << endl;
+
+  if( with_nanodisc ) {
+    log << "# Nanodisc best fit file:      " << best_fit << endl;
+  }
+
+  log << "# Storing results in:          " << outdir << endl;
+
+  log << endl;
+  log << "# PROTEIN OPTIONS" << endl;
+  log << "#----------------" << endl;
+  log << "# Number of beads:             " << nresidues << endl;
+  log << "# Radius of initial sphere:    " << dmax / 2. << endl;
+  log << "# Bead clash distance:         " << clash_distance << endl;
+
+  log << endl;
+  if( with_nanodisc ) {
+    log << "# NANODISC OPTIONS" << endl;
+    log << "#----------------" << endl;
+    log << "# Nanodisc model:              " << nano_model << endl;
+    log << "# Inserted residues:           " << insertion << endl;
+  }
+
+  log << endl;
+  log << "# PENALTY FUNCTION" << endl;
+  log << "#-----------------" << endl;
+  log << "# Connect distance:            " << conn_distance << endl;
+  log << "# Connectivity strength:       " << connect << endl;
+  log << "# Neighbour strength:          " << lambda << endl;
+
+  if( with_nanodisc ) {
+    log << "# Insertion strength:          " << T_strength << endl;
+  }
+
+  log << endl;
+  log << "# MONTE CARLO OPTIONS" << endl;
+  log << "#--------------------" << endl;
+  log << "# Number of passes:            " << npasses << endl;
+  log << "# Loops per pass:              " << loops_per_pass << endl;
+  log << "# Maximum move length:         " << max_distance << endl;
+  log << "# Initial temperature:         " << "X2/" << t_ratio << endl;
+  log << "# Scheduling:                  " << schedule << endl;
+  log << "# Convergence temperature:     " << convergence_temp << endl;
 
   log.close();
-
 }
 //------------------------------------------------------------------------------
 
@@ -304,7 +334,7 @@ void BeadModeling::initial_configuration() {
             x = rng.in_range2( -r, r );
             y = rng.in_range2( -r, r );
             z = rng.in_range2( -r, r );
-            beads[i].assign_position( x, y, z /*+ shift*/ );
+            beads[i].assign_position( x, y, z + shift );
 
           } while( x*x +  y*y + z*z > r2 ); // condition that defines a sphere
 
@@ -359,8 +389,6 @@ void BeadModeling::write_statistics( vector<double> stat, const string& filename
 
 void BeadModeling::update_rho( int i ) {
 
-  string model = "endcaps";
-
   double radius_major            = nd.get_radius_major();
   double radius_minor            = nd.get_radius_minor();
   double scale_endcaps           = nd.get_scale_endcaps();
@@ -381,7 +409,7 @@ void BeadModeling::update_rho( int i ) {
   z = beads[i].z;
   fz = fabs(z);
 
-  if( model == "endcaps" ) {
+  if( nano_model == "endcaps" ) {
     double a_endcaps               = radius_major * scale_endcaps;
     double a_endcaps_1             = 1. / a_endcaps;
     double b_endcaps               = radius_minor * scale_endcaps;
@@ -440,7 +468,7 @@ void BeadModeling::update_rho( int i ) {
       beads[i].rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_solvent;
     }
 
-  } else if( model == "flat" ) {
+  } else if( nano_model == "flat" ) {
 
     //the nanodisc is symmetric with respect the horizontal axis of the methyl layer
 
@@ -522,12 +550,10 @@ void BeadModeling::only_prot_intensity() {
 
   double r, q, tmp, exponent, I0;
   double e_scattlen = nd.get_e_scatt_len();
-  //double background = fit.get_background();//0.00045;
 
   fill(intensity.begin(),intensity.end(),0);
 
   for( int i = 0; i < nq; i++ ) {
-
     for(int l = 0; l <= harmonics_order; l++ ) {
       for(int m = 0; m <= l; m++ ) {
         tmp = abs( beta.at( i, l, m ) );
@@ -536,22 +562,12 @@ void BeadModeling::only_prot_intensity() {
       }
     }
 
-    //insert a check for the value of the correction factor: if it is similar to the value of the numerical density it's fine. Otherwise, suggest the user to proceed at its own risk.
     if( compute_scale ) {
       I0 = intensity[0] * e_scattlen * e_scattlen;
-
-      //REMOVED ONLY FOR DEBUGGING!
-      // double mean = 0;
-      // for( int i = 0; i < 10; i++ ) {
-      //   mean += rad[i][1]/10;
-      // }
-
       scale_factor = rad[0][1]/I0;
-      //cout << scale_factor << " " << I0 << " " << rad[0][1] << endl;
     }
     compute_scale = false;
-
-    intensity[i] = intensity[i] * e_scattlen * e_scattlen * scale_factor;// + background;
+    intensity[i] = intensity[i] * e_scattlen * e_scattlen * scale_factor;
   }
 
 }
@@ -559,44 +575,34 @@ void BeadModeling::only_prot_intensity() {
 
 void BeadModeling::calc_intensity( vector<double> exp_q ) {
 
-  double xr = 4.609096;//fit.get_rough();//4.6;//5.014;//nd.get_xrough();
-  //double xr = 5.014;
+  double xr = 4.609096; //fit.get_rough();
+  double background = 0.000346; //fit.get_background();
   double r, q, tmp, exponent, I0;
   double e_scattlen = nd.get_e_scatt_len();
-  double background = 0.000346;//fit.get_background();//7.8e-5; //TODO! Load this from WillItFit
-  //double background = 7.8e-5;
-  //double correction_factor = 2.409e15; //TODO! Understand how to compute this factor
 
-  //intensity.resize( nq );
   fill(intensity.begin(),intensity.end(),0);
 
-  for( int i = 1; i < nq; i++ ) {
+  for( int i = 0; i < nq; i++ ) {
     q = exp_q[i];
     exponent = xr * q * xr * q;
     r = exp( - exponent / 2. );
 
     for(int l = 0; l <= harmonics_order; l++ ) {
       for(int m = 0; m <= l; m++ ) {
-        tmp = abs( r * nd.get_alpha( i, l, m ) ); //+ beta.at( i, l, m ) );
+        tmp = abs( r * nd.get_alpha( i, l, m ) );// + beta.at( i, l, m ) );
         tmp *= tmp;
         intensity[i] += ( (m > 0) + 1. ) * tmp;
       }
     }
 
-    //insert a check for the value of the correction factor: if it is similar to the value of the numerical density it's fine. Otherwise, suggest the user to proceed at its own risk.
     if( compute_scale ) {
-      I0 = intensity[1] * e_scattlen * e_scattlen;
-      //scale_factor = rad[0][1]/I0; //rescale the computed intensity to the experimental I[0]
-      scale_factor = 0.0358436 / I0;
+      I0 = intensity[0] * e_scattlen * e_scattlen;
+      //scale_factor = rad[0][1]/I0;
+      scale_factor = 3.65282370*1e-2 / I0;
     }
+    cout << scale_factor << " " << I0 << endl;
     compute_scale = false;
-
-    //scale_factor = 4e+16;
-
-    //cout << "SCALE " << scale_factor << endl;
-
     intensity[i] = intensity[i] * e_scattlen * e_scattlen * scale_factor + background;
-    //intensity[i] = intensity[i] * e_scattlen * e_scattlen * correction_factor + background;
   }
 }
 //------------------------------------------------------------------------------
@@ -668,19 +674,8 @@ void BeadModeling::type_penalty() {
 
   int tmp;
   tmp = nalkyl + nmethyl + nhead - insertion;
-  //cout << "TEMP " << tmp << endl;
 
-  // if( init_type_penalty ) {
-  //   T = 2. * T_strength * tmp * tmp;
-  // } else {
-  if( tmp > 0 ) {
-    T = 0;
-  } else {
-    T = T_strength * tmp * tmp;
-  }
-  //}
-
-  //init_type_penalty = false;
+  T = T_strength * tmp * tmp;
 }
 //------------------------------------------------------------------------------
 
@@ -726,7 +721,7 @@ void BeadModeling::recursive_connect( int i, int s, int *pop ) {
 
 void BeadModeling::connect_penalty() {
 
-  int pop[nresidues];// = {0};
+  int pop[nresidues];
   int i, s = 0, max;
 
   for( unsigned int i = 0; i < nresidues; i++ ) {
@@ -757,15 +752,14 @@ void BeadModeling::connect_penalty() {
 void BeadModeling::penalty() {
 
   P = 0;
-  surface_beads.clear();
+  T = 0;
 
   histogram_penalty();
   chi_squared();
-  //type_penalty();
   connect_penalty();
-  //surface_penalty();
+  if( with_nanodisc ) type_penalty();
 
-  P += X + H + C;// + S;
+  P += X + H + C + T;
 }
 //------------------------------------------------------------------------------
 
@@ -825,7 +819,6 @@ void BeadModeling::set_T0() {
 
   double P0 = P, P_av = 0.;
   int nincreases = 0;
-  //B = 1000.; //needed to kill the surface term in the initial estimation of the temperature
 
   for( unsigned int l = 0; l < loops_per_pass; l++ ) {
       move_only_protein();
@@ -851,7 +844,7 @@ void BeadModeling::move_only_protein() {
 
   double rmax, rmin, d2, z_ref;
   vector<double> vec(3);
-  d2 = rng.in_range2( clash_distance, max_distance ); //5.1 seems quite random
+  d2 = rng.in_range2( clash_distance, max_distance );
 
   do {
 
@@ -898,15 +891,14 @@ void BeadModeling::move( int l ) {
   bool legal;
   save_old_config();
 
-  //JUST FOR DEBUGGING PURPOSE
   double rmax, rmin, d2, z_ref;
   vector<double> vec(3);
-  // I would expect these to be radius_minor and radius_major
+  d2 = rng.in_range2( clash_distance, max_distance );
+
+  // These parameters need to be better investigated!!
   rmax = 42.6;
   rmin = 29.0;
-  d2 = rng.in_range2( 1.8, 4. ); //5.1 seems quite random
-  z_ref = 14; //seems wuite random too
-  //END DEBUGGING PURPOSE
+  z_ref = 14;
 
   do {
 
@@ -958,7 +950,7 @@ void BeadModeling::SA_protein() {
   double mean, sq_sum, stdev, scale_tmp, acc_ratio;
   bool relaxation = true;
 
-  double rho_solvent = 1./3.;//nd.get_rho_solvent();
+  double rho_solvent = 1./3.;
 
   cout << endl;
   cout << "# PRELIMINARIES" << endl;
@@ -972,19 +964,9 @@ void BeadModeling::SA_protein() {
   nhead = 0;
 
   for( unsigned int i = 0; i < nresidues; i++ ) {
-
     beads[i].type = 0;
     beads[i].rho_modified = beads[i].rho - beads[i].v * rho_solvent;
-
-    //ONLY FOR DEBUGGING!!!!
-    // if( i == 0 ) {
-    //   beads[i].rho_modified = 14.8162;
-    // } else if( i == nresidues -1 ) {
-    //   beads[i].rho_modified = 14.9523;
-    // }
   }
-
-  //relaxation_run();
 
   for( unsigned int j = 0; j < nq; j++ ) {
     for( unsigned int i = 0; i < nresidues; i++ ) {
@@ -997,14 +979,7 @@ void BeadModeling::SA_protein() {
   update_statistics();
   penalty();
 
-  //cout << "# Optimization of initial temperature ..." << endl;
-
-  //set_T0();
-  //cout << "# Initial temperature: " << T0 << endl;
-
   T0 = X/10.;
-  //npasses = 100.;//ceil( std::log( convergence_temp / T0 ) / std::log( schedule ) ) + 10;
-  //cout << "# Convergence expected in " <<  npasses - 10 << " passes" << endl;
 
   cout << endl;
   cout << "# SIMULATED ANNEALING" << endl;
@@ -1046,13 +1021,6 @@ void BeadModeling::SA_protein() {
       penalty_file << iterations << "\t" << B << "\t" << X << "\t" << T << "\t" << H << "\t" << C << "\t" << P << endl;
       iterations++;
     }
-    //exit(-1);
-
-    // double mean = 0;
-    // for( int i = 0; i < 10; i++ ) {
-    //   mean += rad[i][1]/10;
-    // }
-    //scale_tmp = mean/intensity[0];
 
     scale_tmp = rad[0][1]/intensity[0];
     scale_factor *= scale_tmp;
@@ -1062,11 +1030,9 @@ void BeadModeling::SA_protein() {
     cout << fixed << setprecision(2) << setfill('0');
     cout << setw(5) << "# Acceptance ratio:  " << acc_ratio << endl;
     cout << setw(5) << "# Temperature:       " << B << endl;
-      // cout << setw(5) << "# Reduced X2:        " << X / (nq - 1) << endl;
     cout << setw(5) << "# Chi squared:       " << X << endl;
     cout << setw(5) << "# Histogram penalty: " << H << endl;
     cout << setw(5) << "# Connect penalty:   " << C << endl;
-    //cout << setw(5) << "# Surface penalty:   " << S << " " << surface_beads.size() << endl;
     cout << setw(5) << "# Total penalty:     " << P << endl;
     cout << setw(5) << "# I_exp[0]/I[0]:     " << setprecision(3) << scale_tmp << endl;
     cout << setw(5) << scientific << "# Scale factor:      " << scale_factor << endl;
@@ -1080,8 +1046,6 @@ void BeadModeling::SA_protein() {
     write_statistics( nnum1, outdir + "nnum1.dat" );
     write_statistics( nnum2, outdir + "nnum2.dat" );
     write_statistics( nnum3, outdir + "nnum3.dat" );
-    //write_surface_beads( outdir + "surface_beads.dat", p );
-
 
     B *= schedule;
 
@@ -1131,13 +1095,10 @@ void BeadModeling::SA_nanodisc() {
 
   cout << "# Compute form factor: done!" << endl;
 
-
   calc_intensity( exp_q );
   cout << "# Compute intensity: done!" << endl;
-
-  for( int i = 0; i < nq; i++ ) {
-    cout << exp_q[i] << " " << intensity[i] << endl;
-  }
+  string intens = outdir + "only_nano.dat";
+  write_intensity( intens );
   exit(-1);
 
 

@@ -45,7 +45,7 @@ using namespace std;
      if( str_nano == "True" ) {
 
        string fit( argv[15] );
-       int ins_res = stoi( argv[16] );
+       int ins_res  = stoi( argv[16] );
        double t_str = stod( argv[17] );
 
        // cout << "Sequence  " << sequence << endl;
