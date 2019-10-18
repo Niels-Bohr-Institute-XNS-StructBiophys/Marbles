@@ -128,7 +128,6 @@ class BeadModeling : public Input {
       void save_old_config();
       void move( int );
       void move_only_protein();
-      void move_relax();
       void reject_move();
       void test_rho( int );
       void set_T0();
@@ -138,8 +137,6 @@ class BeadModeling : public Input {
       void type_penalty();
       void histogram_penalty();
       void connect_penalty();
-      void mdist_penalty();
-      void surface_penalty();
 
       double distance( unsigned const int, unsigned const int ); /** measures the distance between beads **/
       double bead_distance( Bead, Bead );
@@ -162,20 +159,12 @@ class BeadModeling : public Input {
       void load_input();
       void load_initial_configuration( const std::string& );
       void initial_configuration();
-      void initial_cylinder();
-      void write_xyz( const std::string& );
       void write_intensity( const std::string& );
-      void write_toy_intensity( const std::string&, std::vector<double> );
       void write_statistics( std::vector<double>, const std::string& );
-      void write_surface_beads( const std::string&, int );
-      void test_flat();
+      void SA_nanodisc();
       void update_rho( int );
       void penalty();
-      void penalty_relax();
-      //void generate_toy_model( const std::string& );
-      void SA_only_protein();
-      void relaxation_run();
-      void test();
+      void SA_protein();
 
       /* GET FUNCTIONS */
 
