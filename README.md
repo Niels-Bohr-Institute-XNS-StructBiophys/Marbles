@@ -21,7 +21,7 @@ python beads.py --help
 This command will show all the possible options and mandatory inputs.
 
 ## Contacts
-For bug reports, issues and whatnot contact simone.orioli[at]nbi.ku.dk. 
+For bug reports, issues and whatnot contact simone.orioli[at]nbi.ku.dk.
 
 ## Aknowledgments
-Thanks to Nicholas Skar Gisline and Søren Kynde for writing part of the routines in the code, Martin Nors Pedersen for useful comments and suggestions and Nordforsk Fund for funding.  
+Thanks to N. Skar-Gislinge and S. A. R. Kynde for writing part of the routines in the code, M. N. Pedersen for useful comments and suggestions and Nordforsk Fund for funding.  

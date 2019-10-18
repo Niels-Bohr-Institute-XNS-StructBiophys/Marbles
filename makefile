@@ -4,8 +4,12 @@ CXX ?= g++
 SRC_PATH = src
 BUILD_PATH = build
 BIN_PATH = $(BUILD_PATH)/bin
+GSL_LIB_PATH =
+GSL_INCLUDE_PATH =
+NLOPT_LIB_PATH =
+NLOPT_INCLUDE_PATH =
 
-# executable # 
+# executable #
 BIN_NAME = runner
 
 # extensions #
@@ -22,10 +26,9 @@ OBJECTS = $(SOURCES:$(SRC_PATH)/%.$(SRC_EXT)=$(BUILD_PATH)/%.o)
 DEPS = $(OBJECTS:.o=.d)
 
 # flags #
-COMPILE_FLAGS = -std=c++11 -Wall -Wextra -g -O2 
-INCLUDES = -I include/ -I /usr/local/include
-# Space-separated pkg-config libraries used by this project
-LIBS = -lgsl -lgslcblas -L /usr/local/lib -lm -lnlopt
+COMPILE_FLAGS = -std=c++11 -Wall -Wextra -g -O2
+INCLUDES = -I include/ -I /usr/local/include -I ${GSL_INCLUDE_PATH} -I ${NLOPT_INCLUDE_PATH}
+LIBS = -lgsl -lgslcblas -L /usr/local/lib -lm -lnlopt -L ${GSL_LIB_PATH} -L ${NLOPT_LIB_PATH}
 
 .PHONY: default_target
 default_target: release
