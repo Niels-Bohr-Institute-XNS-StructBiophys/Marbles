@@ -34,6 +34,8 @@ class Bead {
     void assign_position( double, double, double );
     void update_position( double, double, double );
     void assign_volume_and_scattlen( const std::string& );
+    std::vector<double> volume_and_scattlen( const std::string& );
+    void assign_average( const std::string& );
     void save_old_config();
     void recover_old_config();
     void accept(); /** assign new configuration */

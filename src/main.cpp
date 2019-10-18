@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include "BeadModeling.h"
+#include "RigidBody.h"
 using namespace std;
 
 /*! \mainpage Drawing Shapes
@@ -35,6 +35,10 @@ using namespace std;
    cout << "# BEAD MODELING ROUTINE #" << endl;
    cout << "#########################" << endl;
    cout << endl;
+
+   // RigidBody RB = RigidBody( "../rigid_body/kinase.dat", "../rigid_body/kin.pdb", "../rigid_body/tmp/", 100, 0.9, 1.8, 5.1, 10 );
+   //
+   // exit(-1);
 
    if( argc == 2 ) {
      string filename( argv[1] );

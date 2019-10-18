@@ -1,13 +1,17 @@
 #include <iostream>
+#include <vector>
+#include <math.h>
 #import "Bead.h"
 
 using namespace std;
 
 Bead::Bead() {
 }
+//------------------------------------------------------------------------------
 
 Bead::~Bead() {
 }
+//------------------------------------------------------------------------------
 
 void Bead::assign_position( double xx, double yy, double zz ) {
   x = xx;
@@ -16,6 +20,94 @@ void Bead::assign_position( double xx, double yy, double zz ) {
 
   position_assigned = true;
 }
+//------------------------------------------------------------------------------
+
+void Bead::assign_average( const string& sequence ) {
+
+  vector<double> vs(2);
+  double av_v = 0., av_s = 0.;
+
+  for( unsigned int i = 0; i < sequence.size(); i++ ) {
+    vs = volume_and_scattlen( string(1, sequence[i]) );
+    av_v += vs[0];
+    av_s += vs[1];
+  }
+
+  v   = av_v / sequence.size();
+  rho = double( ceil( av_s / sequence.size() ) );
+  res = "DUM";
+}
+//------------------------------------------------------------------------------
+
+vector<double> Bead::volume_and_scattlen( const string& residue ) {
+
+  vector<double> vs(2);
+
+  if( residue == "M" || residue == "MET" ) {
+      vs[0] = 163.296;
+      vs[1] = 70.;
+  } else if( residue == "A" || residue == "ALA" ) {
+      vs[0] = 88.4593;
+      vs[1] = 38.;
+  } else if( residue == "L" || residue == "LEU" ) {
+      vs[0] = 170.317;
+      vs[1] = 62.;
+  } else if( residue == "V" || residue == "VAL") {
+      vs[0] = 143.031;
+      vs[1] = 54.;
+  } else if ( residue == "F" || residue == "PHE" ) {
+      vs[0] = 210.133;
+      vs[1] = 78.;
+  } else if( residue == "Y" || residue == "TYR" ) {
+      vs[0] = 219.449;
+      vs[1] = 86.;
+  } else if( residue == "G" || residue == "GLY" ) {
+      vs[0] = 61.1736;
+      vs[1] = 30.;
+  } else if( residue == "T" || residue == "THR" ) {
+      vs[0] = 125.061;
+      vs[1] = 54.;
+  } else if( residue == "H" || residue == "HIS" ) {
+      vs[0] = 175.398;
+      vs[1] = 76.;
+  } else if( residue == "S" || residue == "SER" ) {
+      vs[0] = 97.7757;
+      vs[1] = 46.;
+  } else if( residue == "K" || residue == "LYS" ) {
+      vs[0] = 183.368;
+      vs[1] = 71.;
+  } else if( residue == "I" || residue == "ILE" ) {
+      vs[0] = 170.317;
+      vs[1] = 62.;
+  } else if( residue == "P" || residue == "PRO" ) {
+      vs[0] = 132.521;
+      vs[1] = 52.;
+  } else if( residue == "R" || residue == "ARG" ) {
+      vs[0] = 188.449;
+      vs[1] = 85.;
+  } else if( residue == "D" || residue == "ASP" ) {
+      vs[0] = 118.612;
+      vs[1] = 59.;
+  } else if( residue == "E" || residue == "GLU" ) {
+      vs[0] = 145.898;
+      vs[1] = 67.;
+  } else if( residue == "N" || residue == "ASN" ) {
+      vs[0] = 122.347;
+      vs[1] = 60.;
+  } else if( residue == "Q" || residue == "GLN" ) {
+      vs[0] = 149.633;
+      vs[1] = 68.;
+  } else if( residue == "C" || residue == "CYS" ) {
+      vs[0] = 108.725;
+      vs[1] = 54.;
+  } else if( residue == "W" || residue == "TRP" ) {
+      vs[0] = 251.48;
+      vs[1] = 98.;
+  }
+
+  return vs;
+}
+//------------------------------------------------------------------------------
 
 void Bead::assign_volume_and_scattlen( const string& residue ) {
 
@@ -108,6 +200,7 @@ void Bead::assign_volume_and_scattlen( const string& residue ) {
 
   selected = false;
 }
+//------------------------------------------------------------------------------
 
 void Bead::save_old_config() {
   x_old    = x;
@@ -116,6 +209,7 @@ void Bead::save_old_config() {
   rho_mold = rho_modified;
   type_old = type;
 }
+//------------------------------------------------------------------------------
 
 void Bead::recover_old_config() {
   x = x_old;
@@ -124,3 +218,4 @@ void Bead::recover_old_config() {
   rho_modified = rho_mold;
   type = type_old;
 }
+//------------------------------------------------------------------------------

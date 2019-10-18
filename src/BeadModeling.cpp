@@ -216,6 +216,7 @@ void BeadModeling::logfile() {
   log.close();
 
 }
+//------------------------------------------------------------------------------
 
 void BeadModeling::load_statistics() {
 
@@ -223,16 +224,6 @@ void BeadModeling::load_statistics() {
   string nnum1_file = "include/statistics/nnum_5.3.dat";
   string nnum2_file = "include/statistics/nnum_6.8.dat";
   string nnum3_file = "include/statistics/nnum_8.3.dat";
-
-  // string ndist_file = "include/statistics/ndist_a08.dat";
-  // string nnum1_file = "include/statistics/nnum1_a08.dat";
-  // string nnum2_file = "include/statistics/nnum2_a08.dat";
-  // string nnum3_file = "include/statistics/nnum3_a08.dat";
-
-  // ndist_ref = load_vector_from_matrix( ndist_file, 1, 2 );
-  // nnum1_ref = load_vector_from_matrix( nnum1_file, 1, 3 );
-  // nnum2_ref = load_vector_from_matrix( nnum2_file, 1, 3 );
-  // nnum3_ref = load_vector_from_matrix( nnum3_file, 1, 3 );
 
   ndist_ref = load_matrix( ndist_file, 3 );
   nnum1_ref = load_matrix( nnum1_file, 3 );
@@ -365,48 +356,6 @@ void BeadModeling::initial_cylinder() {
       } while( clash == true );
     }
 }
-//------------------------------------------------------------------------------
-
-// void BeadModeling::load_initial_configuration( const string& filename ) {
-//
-//   ifstream file( filename );
-//   vector<string> parsed;
-//   vector<double> x, y, z;
-//   vector<string> residue;
-//
-//   if( file.is_open() ) {
-//     string tmp;
-//
-//     while( !file.eof() ) {
-//       getline( file, tmp );
-//
-//       boost::split( parsed, tmp, boost::is_any_of(" ") ); //equivalent of python split
-//       parsed.erase( remove( parsed.begin(), parsed.end(), "" ), parsed.end() ); //removes all occurrences of an empty string
-//
-//       if( parsed[0] == "ATOM" ) {
-//         x.push_back( stod( parsed[6] ) );
-//         y.push_back( stod( parsed[7] ) );
-//         z.push_back( stod( parsed[8] ) );
-//         residue.push_back( parsed[3] );
-//       }
-//     }
-//
-//     nresidues = x.size();
-//     beads.resize( nresidues );
-//
-//     for( int i = 0; i < nresidues; i++ ) {
-//       beads[i].x = x[i];
-//       beads[i].y = y[i];
-//       beads[i].z = z[i];
-//       beads[i].assign_volume_and_scattlen( residue[i] );
-//     }
-//
-//     cout << "# NRESIDUES: " << nresidues << endl;
-//
-//   } else {
-//     cerr << "Cannot open " << sequence_file << endl;
-//   }
-// }
 //------------------------------------------------------------------------------
 
 void BeadModeling::write_pdb( const string& filename ) {
@@ -1140,9 +1089,9 @@ void BeadModeling::move_only_protein() {
     vec = rng.vector3( d2 );
     beads[i].assign_position( beads[j].x + vec[0], beads[j].y + vec[1], beads[j].z + vec[2] );
 
-    if( distance(i,-1) > dmax/2. ) {
-      legal = false;
-    }
+    // if( distance(i,-1) > dmax/2. ) {
+    //   legal = false;
+    // }
 
     if( legal ) {
       legal = ! bead_clash( i );
