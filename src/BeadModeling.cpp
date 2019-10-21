@@ -310,10 +310,6 @@ bool BeadModeling::bead_clash( unsigned const int i ) {
 }
 //------------------------------------------------------------------------------
 
-//####################################################
-//I REMOVED THE SHIFT!!!!!!! REMEMBER TO PUT IT BACK!!!
-//####################################################
-
 void BeadModeling::initial_configuration() {
 
     double x, y, z, r, r2;
@@ -696,7 +692,7 @@ void BeadModeling::histogram_penalty() {
       tmp4 = 0.;
     }
 
-    H += ( 2. * ( tmp1 * tmp1 + tmp2 * tmp2 + tmp3 * tmp3 ) + tmp4 * tmp4 );
+    H += ( 1. * ( tmp1 * tmp1 + tmp2 * tmp2 + tmp3 * tmp3 ) + tmp4 * tmp4 );
   }
 
   H *= lambda;
@@ -780,6 +776,7 @@ void BeadModeling::save_old_config() {
   distances_old.copy_from( distances );
   beta_old.copy_from( beta );
 }
+//------------------------------------------------------------------------------
 
 void BeadModeling::reject_move() {
 
@@ -811,15 +808,6 @@ bool BeadModeling::inside_ellipse( int i, double a, double b ) {
 
   return ( tmp < 1 );
 }
-
-// bool BeadModeling::inside_ellipse( double a, double b ) {
-//
-//   double x = com[0];
-//   double y = com[1];
-//   double tmp = x * x / (a * a) + y * y / ( b * b );
-//
-//   return ( tmp < 1 );
-//}
 //------------------------------------------------------------------------------
 
 void BeadModeling::set_T0() {
@@ -892,18 +880,6 @@ void BeadModeling::move_only_protein() {
 }
 //------------------------------------------------------------------------------
 
-void BeadModeling::compute_com() {
-
-  fill(com.begin(), com.end(), 0);
-
-  for( unsigned int i = 0; i < nresidues; i++ ) {
-    com[0] += beads[i].x / nresidues;
-    com[1] += beads[i].y / nresidues;
-    com[2] += beads[i].z / nresidues;
-  }
-}
-//------------------------------------------------------------------------------
-
 void BeadModeling::move( int l ) {
 
   int s = 0, i, j;
@@ -916,7 +892,7 @@ void BeadModeling::move( int l ) {
 
   rmax = nd.get_radius_major(); //45.;//42.6;
   rmin = nd.get_radius_minor(); //32.;//29.0;
-  z_ref = 14; // what is this parameter doing?
+  z_ref = 14.;//14; // what is this parameter doing?
 
   do {
 
@@ -938,10 +914,6 @@ void BeadModeling::move( int l ) {
     if( legal ) {
       legal = ( fabs( beads[i].z ) > z_ref || inside_ellipse( i, rmax, rmin ) );
     }
-    //
-    // if( legal ) {
-    //   legal = ( fabs( beads[i].z ) > z_ref || inside_ellipse( i, rmax, rmin ) );
-    // }
 
     if( legal ) {
       legal = ! bead_clash( i );
@@ -1095,6 +1067,7 @@ void BeadModeling::SA_nanodisc() {
 
   initial_configuration();
   cout << "# Initial configuration set." << endl;
+  write_pdb( outdir + "configurations/initial.pdb" );
 
   nmethyl = 0;
   nalkyl = 0;
@@ -1195,7 +1168,6 @@ void BeadModeling::SA_nanodisc() {
     //   fit_rough = false;
     // }
 
-    //cout << "# Statistics                    " << endl;
     cout << fixed << setprecision(2) << setfill('0');
     cout << setw(5) << "# Acceptance ratio:  " << (1.*loops_per_pass)/attempts << endl;
     cout << setw(5) << "# Temperature:       " << B << endl;
@@ -1218,7 +1190,6 @@ void BeadModeling::SA_nanodisc() {
     string xyz = outdir + "configurations/" + to_string(p) + ".xyz";
     string pdb = outdir + "configurations/" + to_string(p) + ".pdb";
     string calc_intensity = outdir + "intensities/" + to_string(p) + ".dat";
-    //write_xyz( xyz );
     write_pdb( pdb );
     write_intensity( calc_intensity );
 

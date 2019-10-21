@@ -2,6 +2,8 @@
 build
 others/
 lib/*
+doc/
+python/
 
 # Ignore any executables
 runner
@@ -23,7 +25,6 @@ p450*/*
 *.pdf 
 *.pdb 
 *.log 
-*.py 
 penalty* 
 *out* 
 *.wif 
