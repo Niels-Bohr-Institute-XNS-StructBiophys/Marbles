@@ -1,3 +1,16 @@
+/* *****************************************************************************
+  This file is part of <code name here>, version 0.1
+
+  <code name> is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Lesser General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  <code name> is distributed without any warranty. See the
+  GNU Lesser General Public License for more details.
+  <http://www.gnu.org/licenses/>.
+***************************************************************************** */
+
 #include "BeadModeling.h"
 #include <cmath>
 #include <fstream>
@@ -16,57 +29,53 @@ using namespace std;
 BeadModeling::BeadModeling( const string& seq, const string& data, const string& out, int passes, int loops, double dm, double conn,
                             double lm, double sched, double clash, double maxd, double connd, double tr ) {
 
-  rad_file          = data;           //path to the experimental .rad file
-  sequence_file     = seq;           //path to the file with the protein sequence
-  dmax              = dm;   //dmax from fit
-  npasses           = passes;   //total number of passes
-  loops_per_pass    = loops;   //number of performed loops per pass
-  outdir            = out;           //directory where results are saved
-  lambda            = lm;
-  connect           = conn;
-  clash_distance    = clash; //hardcoded because experimented. Might want to leave the choice open for users though.
-  max_distance      = maxd;
-  conn_distance     = connd;
-  t_ratio           = tr;
-  schedule          = sched;
-  convergence_temp  = 0.1;
-  sequence          = "";
-  shift             = 0.;
-  sphere_generated  = false;
-  compute_scale     = true;
-  init              = true;
-  with_nanodisc     = false;
+  /**
+   * class constructor for simulation in the absence of nanodisc
+   * load input parameters from parser, creates directories and initializes vectors
+   */
+
+  rad_file          = data;   /** path to the experimental SAXS intensity */
+  sequence_file     = seq;    /** path to the protein sequence file */
+  dmax              = dm;     /** protein dmax */
+  npasses           = passes; /** total number of passes */
+  loops_per_pass    = loops;  /** number of performed loops per pass */
+  outdir            = out;    /** directory where results are saved */
+  H0                = lm;     /** strength of histogram penalty function */
+  C0                = conn;   /** strength of connectivity penalty function */
+  clash_distance    = clash;  /** minimum allowed distance between two beads to accept a move */
+  max_distance      = maxd;   /** maximum proposed distance in a move */
+  conn_distance     = connd;  /** maximum distance between two beads to consider them connected */
+  t_ratio           = tr;     /** ratio of the chi squared to be used as initial temperature */
+  schedule          = sched;  /** simulated annealing schedule */
+  convergence_temp  = 0.1;    /** temperature at which convergence is achieved */
+  sequence          = "";     /** string to store the protein sequence */
+  shift             = 0.;     /** z shift of the initial sphere with respect to the nanodisc */
+  sphere_generated  = false;  /** true if the initial configuration has been generated */
+  compute_scale     = true;   /** true if the intensity scaling factor has to be computed */
+  with_nanodisc     = false;  /** true if the simulation has to be carried out in the presence of the nanodisc */
 
   string mkdir = "mkdir " + outdir;
-  system( mkdir.c_str() );
+  system( mkdir.c_str() ); /** create directory to store results */
 
   mkdir = "mkdir " + outdir + "configurations/";
-  system( mkdir.c_str() );
+  system( mkdir.c_str() ); /** create directory to store configurations */
 
   mkdir = "mkdir " + outdir + "intensities/";
-  system( mkdir.c_str() );
+  system( mkdir.c_str() ); /** create directory to store intensities */
 
-  load_FASTA(); //load sequence file
+  load_FASTA(); /** load sequence file */
   cout << "# File '" << sequence_file << "' loaded" << endl;
-  nresidues = sequence.length();
+  nresidues = sequence.length(); /** the number of beads equals the number of residues in the sequence file */
 
-  load_rad(); //experimental file with SAXS or SANS data
+  load_rad(); /** load experimental SAXS intensity */
   cout << "# File '" << rad_file << "' loaded " << endl;
 
-  load_statistics(); //statistics needed for penalty function
+  load_statistics(); /** load tabulated files needed for penalty function */
 
-  cout << endl;
-  cout << "# SUMMARY OF PARAMETERS" << endl;
-  cout << "# ---------------------" << endl;
-  cout << "# Number of beads:          " << nresidues << endl;
-  cout << "# Radius of initial sphere: " << dmax / 2. << endl;
-  cout << "# Max number of passes:     " << npasses << endl;
-  cout << "# Loops per pass:           " << loops_per_pass << endl;
-  cout << "# Storing results in:      '" << outdir << "'" << endl;
-
-  nq = rad.size();
+  nq = rad.size();  /** the number of q points equals the lengths of the SAXS intensity file */
   nnnum = nnum1_ref.size();
 
+  /** initialize needed vectors and matrices */
   beads.resize( nresidues );
   exp_q.resize( nq );
   beta.resize_width( nq );
@@ -77,76 +86,83 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
   distances.initialize(0);
   intensity.resize( nq );
   intensity_old.resize( nq );
-  com.resize( 3 );
 
+  /** save experimental q points in a separate vector */
   for( unsigned int i = 0; i < nq; i++ ) {
     exp_q[i] = rad[i][0];
   }
 
-  logfile();
+  logfile(); /** write an extensive summary log file */
+
+  /** write a quick summary on screen */
+  cout << endl;
+  cout << "# SUMMARY OF PARAMETERS" << endl;
+  cout << "# ---------------------" << endl;
+  cout << "# Number of beads:          " << nresidues << endl;
+  cout << "# Radius of initial sphere: " << dmax / 2. << endl;
+  cout << "# Max number of passes:     " << npasses << endl;
+  cout << "# Loops per pass:           " << loops_per_pass << endl;
+  cout << "# Storing results in:      '" << outdir << "'" << endl;
 }
 //------------------------------------------------------------------------------
 
 BeadModeling::BeadModeling( const string& seq, const string& data, const string& ft, const string& out, int passes, int loops, double dm, double conn,
                             double lm, double tm, int ins, double sched, double clash, double maxd, double connd, double tr ) {
 
-  rad_file          = data;           //path to the experimental .rad file
-  sequence_file     = seq;           //path to the file with the protein sequence
-  best_fit          = ft;
-  dmax              = dm;   //dmax from fit
-  npasses           = passes;   //total number of passes
-  loops_per_pass    = loops;   //number of performed loops per pass
-  outdir            = out;           //directory where results are saved
-  lambda            = lm;
-  connect           = conn;
-  insertion         = ins;
-  T_strength        = tm;
-  clash_distance    = clash;
-  max_distance      = maxd;
-  conn_distance     = connd;
-  t_ratio           = tr;
-  schedule          = sched;
-  convergence_temp  = 0.1;
-  sequence          = "";
-  shift             = 50.;
-  sphere_generated  = false;
-  compute_scale     = true;
-  init              = true;
-  with_nanodisc     = true;
-  nano_model        = "flat";
+  /**
+   * class constructor for simulation in the presence of nanodisc
+   * load input parameters from parser, creates directories and initializes vectors
+   */
+
+  rad_file          = data;   /** path to the experimental SAXS intensity */
+  sequence_file     = seq;    /** path to the protein sequence file */
+  best_fit          = ft;     /** path to WillItFit file with nanodisc fit information */
+  dmax              = dm;     /** protein dmax */
+  npasses           = passes; /** total number of passes */
+  loops_per_pass    = loops;  /** number of performed loops per pass */
+  outdir            = out;    /** directory where results are saved */
+  H0                = lm;     /** strength of histogram penalty function */
+  C0                = conn;   /** strength of connectivity penalty function */
+  insertion         = ins;    /** number of beads to fit inside the nanodisc */
+  T0                = tm;     /** strength of the insertion penalty function */
+  clash_distance    = clash;  /** minimum allowed distance between two beads to accept a move */
+  max_distance      = maxd;   /** maximum proposed distance in a move */
+  conn_distance     = connd;  /** maximum distance between two beads to consider them connected */
+  t_ratio           = tr;     /** ratio of the chi squared to be used as initial temperature */
+  schedule          = sched;  /** simulated annealing schedule */
+  convergence_temp  = 0.1;    /** temperature at which convergence is achieved */
+  sequence          = "";     /** string to store the protein sequence */
+  shift             = 50.;    /** z shift of the initial sphere with respect to the nanodisc */
+  sphere_generated  = false;  /** true if the initial configuration has been generated */
+  compute_scale     = true;   /** true if the intensity scaling factor has to be computed */
+  with_nanodisc     = true;   /** true if the simulation has to be carried out in the presence of the nanodisc */
+  nano_model        = "flat"; /** nanodisc model (either flat or endcaps) */
 
   string mkdir = "mkdir " + outdir;
-  system( mkdir.c_str() );
+  system( mkdir.c_str() );   /** create directory to store results */
 
   mkdir = "mkdir " + outdir + "configurations/";
-  system( mkdir.c_str() );
+  system( mkdir.c_str() ); /** create directory to store configurations */
 
   mkdir = "mkdir " + outdir + "intensities/";
-  system( mkdir.c_str() );
+  system( mkdir.c_str() ); /** create directory to store intensities */
 
-  load_FASTA(); //load sequence file
+  load_FASTA(); /** load sequence file */
   cout << "# File '" << sequence_file << "' loaded" << endl;
-  nresidues = sequence.length();
+  nresidues = sequence.length(); /** the number of beads equals the number of residues in the sequence file */
 
-  nd.load_input_flat( best_fit );
+  nd.load_input_flat( best_fit ); /** load WillItFit best fit file */
   cout << "# File '" << best_fit << "' loaded" << endl;
 
-  load_rad(); //experimental file with SAXS or SANS data
+  load_rad(); /** load experimental SAXS intensity */
   cout << "# File '" << rad_file << "' loaded " << endl;
 
-  load_statistics(); //statistics needed for penalty function
+  load_statistics(); /** load tabulated files needed for penalty function */
 
-  cout << endl;
-  cout << "# SUMMARY OF PARAMETERS" << endl;
-  cout << "# ---------------------" << endl;
-  cout << "# Number of beads:          " << nresidues << endl;
-  cout << "# Radius of initial sphere: " << dmax / 2. << endl;
-  cout << "# Max number of passes:     " << npasses << endl;
-  cout << "# Loops per pass:           " << loops_per_pass << endl;
-
-  nq = rad.size();
+  nq = rad.size(); /** the number of q points equals the lengths of the SAXS intensity file */
   nnnum = nnum1_ref.size();
 
+  /** initialize needed vectors and matrices */
   beads.resize( nresidues );
   exp_q.resize( nq );
   beta.resize_width( nq );
@@ -158,17 +174,26 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
   intensity.resize( nq );
   intensity_old.resize( nq );
 
+  /** save experimental q points in a separate vector */
   for( unsigned int i = 0; i < nq; i++ ) {
     exp_q[i] = rad[i][0];
   }
 
-  fit.fit_background( rad, 5 ); //ask the user for the number of points!
-  fit.set_default_roughness( 4.6 ); //read it from file!!
+  fit.fit_background( rad, 5 ); /** fit with a constant function the last 5 points of the SAXS intensity to estimate the background */
+  fit.set_default_roughness( nd.get_xrough() ); /** set the nanodisc roughness to be used during calculation from WillItFit file */
 
+  logfile(); /** write an extensive summary log file */
+
+  /** write a quick summary on screen */
+  cout << endl;
+  cout << "# SUMMARY OF PARAMETERS" << endl;
+  cout << "# ---------------------" << endl;
+  cout << "# Number of beads:          " << nresidues << endl;
+  cout << "# Radius of initial sphere: " << dmax / 2. << endl;
+  cout << "# Max number of passes:     " << npasses << endl;
+  cout << "# Loops per pass:           " << loops_per_pass << endl;
   cout << "# Background:               " << fit.get_background() << endl;
   cout << "# Storing results in:      '" << outdir << "'" << endl;
-
-  logfile();
 }
 //------------------------------------------------------------------------------
 
@@ -212,11 +237,11 @@ void BeadModeling::logfile() {
   log << "# PENALTY FUNCTION" << endl;
   log << "#-----------------" << endl;
   log << "# Connect distance:            " << conn_distance << endl;
-  log << "# Connectivity strength:       " << connect << endl;
-  log << "# Neighbour strength:          " << lambda << endl;
+  log << "# Connectivity strength:       " << C0 << endl;
+  log << "# Neighbour strength:          " << H0 << endl;
 
   if( with_nanodisc ) {
-    log << "# Insertion strength:          " << T_strength << endl;
+    log << "# Insertion strength:          " << T0 << endl;
   }
 
   log << endl;
@@ -370,7 +395,7 @@ void BeadModeling::write_intensity( const string& filename ) {
 }
 //------------------------------------------------------------------------------
 
-void BeadModeling::write_statistics( vector<double> stat, const string& filename ) {
+void BeadModeling::write_stat( vector<double> stat, const string& filename ) {
 
   ofstream stat_file;
 
@@ -497,7 +522,7 @@ void BeadModeling::update_rho( int i ) {
 }
 //------------------------------------------------------------------------------
 
-void BeadModeling::expand_sh( double q, int index, int i, int sign, int indice ) {
+void BeadModeling::expand_sh( double q, int index, int i, int sign ) {
 
   double x, y, z, r, theta, phi;
   double sqrt_4pi = sqrt( 4. * M_PI );
@@ -669,7 +694,7 @@ void BeadModeling::type_penalty() {
   int tmp;
   tmp = nalkyl + nmethyl + nhead - insertion;
 
-  T = T_strength * tmp * tmp;
+  T = T0 * tmp * tmp;
 }
 //------------------------------------------------------------------------------
 
@@ -695,7 +720,7 @@ void BeadModeling::histogram_penalty() {
     H += ( 1. * ( tmp1 * tmp1 + tmp2 * tmp2 + tmp3 * tmp3 ) + tmp4 * tmp4 );
   }
 
-  H *= lambda;
+  H *= H0;
 }
 //------------------------------------------------------------------------------
 
@@ -739,7 +764,7 @@ void BeadModeling::connect_penalty() {
       }
   }
 
-  C = connect * fabs( log( (1. * nresidues) / max ) );
+  C = C0 * fabs( log( (1. * nresidues) / max ) );
 }
 //------------------------------------------------------------------------------
 
@@ -810,27 +835,6 @@ bool BeadModeling::inside_ellipse( int i, double a, double b ) {
 }
 //------------------------------------------------------------------------------
 
-void BeadModeling::set_T0() {
-
-  double P0 = P, P_av = 0.;
-  int nincreases = 0;
-
-  for( unsigned int l = 0; l < loops_per_pass; l++ ) {
-      move_only_protein();
-
-      if( P > P0 ) {
-        P_av += -(P - P0);
-        nincreases++;
-      }
-
-      reject_move();
-  }
-
-  P_av /= nincreases;
-  T0 = P_av / std::log(0.7);
-}
-//------------------------------------------------------------------------------
-
 void BeadModeling::move_only_protein() {
 
   int s = 0, i, j;
@@ -867,8 +871,8 @@ void BeadModeling::move_only_protein() {
   } while( legal == false );
 
   for( unsigned int k = 0; k < nq; k++ ) {
-    expand_sh( exp_q[k], k, i, -1, 0 ); //subtract the contribution of the previous position
-    expand_sh( exp_q[k], k, i, 1, 0 );  //update beta with the new position
+    expand_sh( exp_q[k], k, i, -1 ); //subtract the contribution of the previous position
+    expand_sh( exp_q[k], k, i, 1 );  //update beta with the new position
   }
 
   only_prot_intensity();
@@ -922,13 +926,13 @@ void BeadModeling::move( int l ) {
   } while( legal == false );
 
   for( unsigned int k = 0; k < nq; k++ ) {
-    expand_sh( exp_q[k], k, i, -1, 0 ); //subtract the contribution of the previous position
+    expand_sh( exp_q[k], k, i, -1 ); //subtract the contribution of the previous position
   }
 
   update_rho( i );
 
   for( unsigned int k = 0; k < nq; k++ ) {
-    expand_sh( exp_q[k], k, i, 1, 0 );  //update beta with the new position
+    expand_sh( exp_q[k], k, i, 1 );  //update beta with the new position
   }
 
   calc_intensity( exp_q );
@@ -966,7 +970,7 @@ void BeadModeling::SA_protein() {
 
   for( unsigned int j = 0; j < nq; j++ ) {
     for( unsigned int i = 0; i < nresidues; i++ ) {
-      expand_sh( exp_q[j], j, i, 1, 0 );
+      expand_sh( exp_q[j], j, i, 1 );
     }
   }
 
@@ -1038,10 +1042,10 @@ void BeadModeling::SA_protein() {
     string calc_intensity = outdir + "intensities/" + to_string(p) + ".dat";
     write_pdb( pdb );
     write_intensity( calc_intensity );
-    write_statistics( ndist, outdir + "ndist.dat" );
-    write_statistics( nnum1, outdir + "nnum1.dat" );
-    write_statistics( nnum2, outdir + "nnum2.dat" );
-    write_statistics( nnum3, outdir + "nnum3.dat" );
+    write_stat( ndist, outdir + "ndist.dat" );
+    write_stat( nnum1, outdir + "nnum1.dat" );
+    write_stat( nnum2, outdir + "nnum2.dat" );
+    write_stat( nnum3, outdir + "nnum3.dat" );
 
     B *= schedule;
 
@@ -1083,7 +1087,7 @@ void BeadModeling::SA_nanodisc() {
 
   for( unsigned int j = 0; j < nq; j++ ) {
     for( unsigned int i = 0; i < nresidues; i++ ) {
-      expand_sh( exp_q[j], j, i, 1, 0 );
+      expand_sh( exp_q[j], j, i, 1 );
     }
   }
 
