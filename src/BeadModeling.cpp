@@ -115,7 +115,7 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
   with_nanodisc     = true;
   nano_model        = "flat";
 
-  string intra_seq  = "CRKAGUGQSWKENSPLNVS";
+  intra_seq         = "CRKAGVGQSWKENSPLNVS";
 
   string mkdir = "mkdir " + outdir;
   system( mkdir.c_str() );
@@ -150,7 +150,7 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
   nnnum = nnum1_ref.size();
 
   beads.resize( nresidues );
-  extracell.resize( intra_seq.size() );
+  intracell.resize( intra_seq.size() );
   exp_q.resize( nq );
   beta.resize_width( nq );
   beta.initialize(0);
@@ -321,6 +321,44 @@ void BeadModeling::initial_configuration() {
     r = dmax / 2.; /** radius of the sphere **/
     r2 = r * r;
 
+    for( unsigned int i = 0; i < intra_seq.size(); i++ ) {
+      intracell[i].assign_volume_and_scattlen( string(1, intra_seq[i]) );
+
+      if( i == 0 ) {
+        intracell[i].assign_position( 0, 0, -22 );
+      } else {
+        intracell[i].assign_position( rng.in_range2( -3.8, 3.8 ), rng.in_range2( -3.8, 3.8 ), - 22 - (double)(i) * 3.8 );
+      }
+
+      double fz          = fabs(intracell[i].z);
+      double hlipid      = nd.get_hlipid();
+      double hmethyl     = nd.get_hmethyl();
+      double hcore       = nd.get_hcore();
+      double rho_alkyl   = nd.get_rho_alkyl();
+      double rho_methyl  = nd.get_rho_methyl();
+      double rho_head    = nd.get_rho_head();
+      double cvprotein   = nd.get_cvprotein();
+      double rho_solvent = nd.get_rho_solvent();
+
+      if( fz < hmethyl * .5 ) {
+        intracell[i].type = 3;
+        intracell[i].rho_modified = intracell[i].rho - intracell[i].v * cvprotein * rho_methyl;
+        nmethyl++;
+      } else if( fz < hcore * .5 ) {
+        intracell[i].type = 2;
+        intracell[i].rho_modified = intracell[i].rho - intracell[i].v * cvprotein * rho_alkyl;
+        nalkyl++;
+      } else if( fz < hlipid * .5 ) {
+        intracell[i].type = 1;
+        intracell[i].rho_modified = intracell[i].rho - intracell[i].v * cvprotein * rho_head;
+        nhead++;
+      } else {
+        intracell[i].type = 0;
+        intracell[i].rho_modified = intracell[i].rho - intracell[i].v * cvprotein * rho_solvent;
+      }
+
+    }
+
     for( unsigned int i = 0; i < nresidues; i++ ) {
       beads[i].assign_volume_and_scattlen( string(1, sequence[i]) );
 
@@ -342,9 +380,16 @@ void BeadModeling::initial_configuration() {
       } while( clash == true );
     }
 
-    for( unsigned int i = 0; i < intra_seq.size(); i++ ) {
-      intracell[i].assign_volume_and_scattlen( string(1, intra_seq[i]) );
+    double maxz = -1000;
+    int max_ind = -1000;
+    for( int i = 0; i < nresidues; i++ ) {
+      if( beads[i].z > maxz ) {
+        maxz = beads[i].z;
+        max_ind = i;
+      }
     }
+
+    cout << "dimension: " << maxz - intracell[intra_seq.size()-1].z << endl;
 
 }
 //------------------------------------------------------------------------------
@@ -358,6 +403,13 @@ void BeadModeling::write_pdb( const string& filename ) {
     for( unsigned int i = 0; i < nresidues; i++ ) {
         const char *c = beads[i].res.c_str();
         fprintf(fil,"ATOM   %4d  CA  %s   %4d   %8.3lf%8.3lf%8.3lf  1.00 18.20           N\n",i+1,c,i+1,beads[i].x, beads[i].y,beads[i].z);
+    }
+
+    int k = nresidues;
+    for( unsigned int i = 0; i < intra_seq.size(); i++ ) {
+        const char *c = intracell[i].res.c_str();
+        fprintf(fil,"ATOM   %4d  CA  %s   %4d   %8.3lf%8.3lf%8.3lf  1.00 18.20           N\n",k,c,k,intracell[i].x, intracell[i].y,intracell[i].z);
+        k++;
     }
 
     fclose(fil);
@@ -513,14 +565,22 @@ void BeadModeling::expand_sh( double q, int index, int i, int sign, int indice )
   vector<double> legendre( harmonics_order + 1 );
   complex<double> j(0,1), tmp, p;
 
-  if( sign < 0 ) {
-    x     = beads[i].x_old;
-    y     = beads[i].y_old;
-    z     = beads[i].z_old;
+  if( indice == 0 ) {
+
+    if( sign < 0 ) {
+      x     = beads[i].x_old;
+      y     = beads[i].y_old;
+      z     = beads[i].z_old;
+    } else {
+      x     = beads[i].x;
+      y     = beads[i].y;
+      z     = beads[i].z;
+    }
+
   } else {
-    x     = beads[i].x;
-    y     = beads[i].y;
-    z     = beads[i].z;
+    x     = intracell[i].x;
+    y     = intracell[i].y;
+    z     = intracell[i].z;
   }
 
   r     = sqrt( x*x + y*y + z*z );
@@ -1074,11 +1134,10 @@ void BeadModeling::SA_nanodisc() {
   cout << "# -------------" << endl;
 
   initial_configuration();
-  exit(-1);
-
 
   cout << "# Initial configuration set." << endl;
   write_pdb( outdir + "configurations/initial.pdb" );
+  //exit(-1);
 
   nmethyl = 0;
   nalkyl = 0;
@@ -1095,6 +1154,12 @@ void BeadModeling::SA_nanodisc() {
   for( unsigned int j = 0; j < nq; j++ ) {
     for( unsigned int i = 0; i < nresidues; i++ ) {
       expand_sh( exp_q[j], j, i, 1, 0 );
+    }
+
+    //consider also the intracellular part of the protein
+    //it should be fine to compute this once and for all
+    for( unsigned int i = 0; i < intra_seq.size(); i++ ) {
+      expand_sh( exp_q[j], j, i, 1, 1 );
     }
   }
 
