@@ -85,7 +85,8 @@ void Nanodisc::load_input_flat( const string& best_fit ) {
     rho_head              = 4.62e-11 / e_scatt_len; //stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
     rho_alkyl             = 6.71e-11 / e_scatt_len; //stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
     rho_methyl            = 5.08e-12 / e_scatt_len; //stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
-    rho_belt              = 3.31e-9  / e_scatt_len;; //stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
+    //rho_belt              = 3.31e-9  / e_scatt_len; //stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
+    rho_belt              = 4.52e-9  / e_scatt_len; //for TissueFactor
 
     // cout << rho_h2o << endl;
     // cout << rho_head << endl;
@@ -98,7 +99,8 @@ void Nanodisc::load_input_flat( const string& best_fit ) {
     vhead                 = 319.; //stod( parse_double_delimiter( file, d_, d__ ) );
     valkyl                = 818.8; //stod( parse_double_delimiter( file, d_, d__ ) );
     vmethyl               = 108.6; //stod( parse_double_delimiter( file, d_, d__ ) );
-    vbelt                 = 27587.8; //27653.3; //stod( parse_double_delimiter( file, d_, d__ ) );
+    //vbelt                 = 27587.8; //27653.3; //stod( parse_double_delimiter( file, d_, d__ ) );
+    vbelt                 = 36276.0; //for TissueFactor
 
     // cout << vh2o << endl;
     // cout << vhead << endl;
@@ -732,7 +734,7 @@ void Nanodisc::expand_sh2( int index ) {
         }
     }
 
-    //cout << Int << endl;
+    //cout << Int * e_scatt_len * e_scatt_len + 0.000516 << endl;
 
     // for(m=0;m<Nh+1;m+=skip){
     //   for(l=m;l<=Nh;l+=skip){   //For disc symmetry only even harmonics contribute
@@ -778,7 +780,7 @@ void Nanodisc::nanodisc_form_factor( vector<double> exp_q ) {
     // }
 
     expand_sh2( i ); //uncomment
-    //cout << exp_q[i] << " " << intensity << endl;
+    // cout << exp_q[i] << " " << intensity << endl;
   }
 
 }

@@ -24,6 +24,7 @@ class BeadModeling : public Input {
       RandomNumbers rng;           /** RandomNumbers class for random number generation */
       Fit fit;                     /** Fit class for fitting routines */
       std::vector<Bead> beads;     /** Vector of Bead classes for protein beads handling */
+      std::vector<Bead> intracell; /** allow some intracellular beads that will not be moved during bead modelling */
 
       /* FLAGS */
       bool sphere_generated;       /** Flag for avoiding regereating the initial sphere */
@@ -39,6 +40,7 @@ class BeadModeling : public Input {
       std::string best_fit;        /** Report file from WillItFit */
       std::string sequence_file;   /** FASTA sequence file of the protein */
       std::string nano_model;      /** type of nanodisc model employed (with endcaps or flat) */
+      std::string intra_seq;       /** sequence of the intracellular part of the protein */
 
       /* INFO VARIABLES */
 
