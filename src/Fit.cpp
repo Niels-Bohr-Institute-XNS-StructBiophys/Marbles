@@ -48,40 +48,6 @@ double Fit::chi2_background( const std::vector<double> &x, std::vector<double> &
 }
 //------------------------------------------------------------------------------
 
-// double Fit::chi2_intensity( const std::vector<double> &x, std::vector<double> &grad, void *data ) {
-//
-//   double r, q, tmp, tmp2, exponent;
-//   double sum_squares = 0;
-//   int_data *d = (int_data *) data;
-//
-//   std::vector<double> intensity( d->nq );
-//   fill(intensity.begin(),intensity.end(),0);
-//
-//   for( int i = 0; i < d->nq; i++ ) {
-//     q = d->exp_q[i];
-//     exponent = x[0] * q * x[0] * q;
-//     r = exp( - exponent / 2. );
-//
-//     for(int l = 0; l <= d->harmonics_order; l++ ) {
-//       for(int m = 0; m <= l; m++ ) {
-//         tmp = abs( r * d->alpha.at( i, l, m ) + d->beta.at( i, l, m ) );
-//         tmp *= tmp;
-//         intensity[i] += ( (m > 0) + 1. ) * tmp;
-//       }
-//     }
-//
-//     intensity[i] = intensity[i] * d->e_scattlen * d->e_scattlen * d->scale_factor + d->background;
-//     tmp2 = ( intensity[i] - d->ref_intensity[i] ) / d->err[i];
-//     sum_squares += tmp2 * tmp2;
-//
-//     //std::cout << sum_squares << std::endl;
-//
-//   }
-//
-//   return sum_squares / ( d->nq - 1 );
-// }
-//------------------------------------------------------------------------------
-
 double Fit::chi2_intensity( const std::vector<double> &x, std::vector<double> &grad, void *data ) {
 
   double r, q, tmp, tmp2, exponent;
@@ -93,8 +59,7 @@ double Fit::chi2_intensity( const std::vector<double> &x, std::vector<double> &g
 
   for( int i = 0; i < d->nq; i++ ) {
     q = d->exp_q[i];
-    r = d->r;
-    exponent = q * q * r * r;//x[0] * q * x[0] * q;
+    exponent = x[0] * q * x[0] * q;
     r = exp( - exponent / 2. );
 
     for(int l = 0; l <= d->harmonics_order; l++ ) {
@@ -105,7 +70,7 @@ double Fit::chi2_intensity( const std::vector<double> &x, std::vector<double> &g
       }
     }
 
-    intensity[i] = intensity[i] * d->e_scattlen * d->e_scattlen * d->scale_factor + x[0];//d->background;
+    intensity[i] = intensity[i] * d->e_scattlen * d->e_scattlen * d->scale_factor + d->background;
     tmp2 = ( intensity[i] - d->ref_intensity[i] ) / d->err[i];
     sum_squares += tmp2 * tmp2;
 
@@ -161,7 +126,7 @@ void Fit::fit_background( std::vector<std::vector<double> > rad, unsigned int bc
 }
 //------------------------------------------------------------------------------
 
-void Fit::fit_intensity( std::vector<std::complex<double> > a, std::vector<std::complex<double> > b, std::vector<std::vector<double> > rad, double scale, double r, unsigned int ho ) {
+void Fit::fit_intensity( std::vector<std::complex<double> > a, std::vector<std::complex<double> > b, std::vector<std::vector<double> > rad, double scale, unsigned int ho ) {
 
   unsigned int opt_dimension = 1; //number of parameters passed to the optimizer
 
@@ -184,8 +149,7 @@ void Fit::fit_intensity( std::vector<std::complex<double> > a, std::vector<std::
 
   datai.harmonics_order = ho;
   datai.e_scattlen = 2.82e-13;
-  //datai.background = y_bck[0];
-  datai.r = r;
+  datai.background = y_bck[0];
   datai.scale_factor = scale;
   datai.exp_q = q;
   datai.ref_intensity = exper;
@@ -199,7 +163,7 @@ void Fit::fit_intensity( std::vector<std::complex<double> > a, std::vector<std::
   nlopt::opt cobyla(nlopt::LN_COBYLA, opt_dimension); //initialize the optimization class
 
   lb[0] = 0.; //lower bound for the value of the background is 0
-  y_int[0] = y_bck[0];//0.; //initial value of the background fed to the optimizer
+  y_int[0] = 0.; //initial value of the background fed to the optimizer
   cobyla.set_lower_bounds(lb); //assign the lower bounds to the optimizer
 
   cobyla.set_min_objective( chi2_intensity, &datai ); //assign to the optimizer the function to optimize
@@ -207,7 +171,6 @@ void Fit::fit_intensity( std::vector<std::complex<double> > a, std::vector<std::
 
   try {
     nlopt::result result = cobyla.optimize(y_int, chi2_int); //run the otimization
-    y_bck[0] = y_int[0];
   } catch(std::exception &e) {
     //something went wrong! call an exception and exit
     std::cout << "nlopt failed: " << e.what() << std::endl;

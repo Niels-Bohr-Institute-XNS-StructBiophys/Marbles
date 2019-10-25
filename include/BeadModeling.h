@@ -24,7 +24,6 @@ class BeadModeling : public Input {
       RandomNumbers rng;           /** RandomNumbers class for random number generation */
       Fit fit;                     /** Fit class for fitting routines */
       std::vector<Bead> beads;     /** Vector of Bead classes for protein beads handling */
-      std::vector<Bead> intracell; /** allow some intracellular beads that will not be moved during bead modelling */
 
       /* FLAGS */
       bool sphere_generated;       /** Flag for avoiding regereating the initial sphere */
@@ -40,7 +39,6 @@ class BeadModeling : public Input {
       std::string best_fit;        /** Report file from WillItFit */
       std::string sequence_file;   /** FASTA sequence file of the protein */
       std::string nano_model;      /** type of nanodisc model employed (with endcaps or flat) */
-      std::string intra_seq;       /** sequence of the intracellular part of the protein */
 
       /* INFO VARIABLES */
 
@@ -59,6 +57,7 @@ class BeadModeling : public Input {
       unsigned int insertion;      /** Number of residues that are required to be inserted in the nanodisc */
       unsigned int nq;             /** Length of the rad file, i.e. number of experimental q points */
       unsigned int nnnum;          /** Length of the nnum files */
+      unsigned int qs_to_fit;      /** number of high q points to use to determine the background */
 
       double lambda;               /** TO BE CLEARED */
       double connect;              /** TO BE CLEARED */
@@ -80,8 +79,10 @@ class BeadModeling : public Input {
       double P_old;
       double B;
       double T0;
+      double D;
       double T_strength;           /** strength of the type penalty */
       double scale_factor;
+      double ref_mat_sum;
 
       const unsigned int harmonics_order = 17;
       const unsigned int ntheta = (harmonics_order + 1) * 2;
@@ -89,7 +90,8 @@ class BeadModeling : public Input {
 
       std::vector<std::vector<double> > rad;   /* experimental SAXS value for different values of q */
       std::vector<double> exp_q;
-      std::vector<double> com; //protein center of mass
+      std::vector<std::vector<double> > cmap; //helix cmap
+      std::vector<std::vector<double> > ref_cmap; //reference helix cmap
 
       std::vector<double> ndist;
       std::vector<std::vector<double> > ndist_ref;
@@ -134,6 +136,8 @@ class BeadModeling : public Input {
       void reject_move();
       void test_rho( int );
       void set_T0();
+      void helix_ref_cmap();
+      void helix_cmap();
 
       //penalty functions
       void chi_squared();
