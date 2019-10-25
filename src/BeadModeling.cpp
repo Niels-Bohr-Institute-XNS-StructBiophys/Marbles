@@ -761,6 +761,7 @@ void BeadModeling::type_penalty() {
   int tmp1, tmp2, tmp3, tmp4;
 
   tmp1 = nalkyl - (int)(insertion * halkyl/hbil);
+
   tmp2 = nmethyl - (int)(insertion * hmethyl/hbil);
   tmp3 = nhead - (int)(insertion * hhead/hbil);
   tmp4 = nalkyl + nmethyl + nhead - insertion;
@@ -1008,9 +1009,9 @@ void BeadModeling::move( int l ) {
 
     //compute_com();
 
-    if( legal ) {
-      legal = ( fabs( beads[i].z ) > z_ref || inside_ellipse( i, rmax, rmin ) );
-    }
+    // if( legal ) {
+    //   legal = ( fabs( beads[i].z ) > z_ref || inside_ellipse( i, rmax, rmin ) );
+    // }
 
     if( legal ) {
       legal = ! bead_clash( i );
@@ -1249,42 +1250,21 @@ void BeadModeling::SA_nanodisc() {
       int diff = nalkyl + nmethyl + nhead - insertion;
       penalty_file << iterations << "\t" << B << "\t" << X << "\t" << T << "\t" << H << "\t" << C << "\t" << P << endl;
       iterations++;
-
-      //fit.fit_intensity( nd.get_alpha_buffer(), beta.get_buffer(), rad, scale_factor, harmonics_order );
     }
 
     scale_tmp = rad[0][1]/intensity[0];
     scale_factor *= scale_tmp;
 
-    //cout << fit_rough << " " << (fit_rough == true && (p > skip_passes)) << endl;
-    //
-    // if( fit_rough && p%skip_passes == 0 && p != 0 ) {
-    //   fit.fit_intensity( nd.get_alpha_buffer(), beta.get_buffer(), rad, scale_factor, harmonics_order );
-    // }
-    //
-    // if( fit.get_rough_chi2() <= 1. && fit.get_rough_chi2() != -1 ) {
-    //   fit_rough = false;
-    // }
-
-    //helix_cmap();
-
-    cout << fixed << setprecision(2) << setfill('0');
+    cout << fixed << setprecision(3) << setfill('0');
     cout << setw(5) << "# Acceptance ratio:  " << (1.*loops_per_pass)/attempts << endl;
     cout << setw(5) << "# Temperature:       " << B << endl;
     cout << setw(5) << "# Chi squared:       " << X << endl;
     cout << setw(5) << "# Type penalty:      " << T << endl;
     cout << setw(5) << "# Histogram penalty: " << H << endl;
     cout << setw(5) << "# Connect penalty:   " << C << endl;
-    //cout << setw(5) << "# Helix penalty:     " << D << endl;
     cout << setw(5) << "# Total penalty:     " << P << endl;
     cout << setw(5) << "# Inserted beads:    " << nhead << " " << nalkyl << " " << nmethyl << endl;
     cout << setw(5) << "# I_exp[0]/I[0]:     " << setprecision(3) << scale_tmp << endl;
-
-    // if( fit_rough && p%skip_passes == 0 && p != 0 ) {
-    //   cout << setw(5) << "# Fitted roughness:  " << fit.get_rough() << " (X^2_R = " << fit.get_rough_chi2() << ")" << endl;
-    // } else {
-    //   cout << setw(5) << "# Fitted roughness:  " << fit.get_rough() << endl;
-    // }
     cout << setw(5) << scientific << "# Scale factor:      " << scale_factor << endl;
     cout << endl;
 
