@@ -85,7 +85,8 @@ void Nanodisc::load_input_flat( const string& best_fit ) {
     rho_head              = 4.62e-11 / e_scatt_len; //stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
     rho_alkyl             = 6.71e-11 / e_scatt_len; //stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
     rho_methyl            = 5.08e-12 / e_scatt_len; //stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
-    rho_belt              = 3.31e-9  / e_scatt_len;; //stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
+    //rho_belt              = 3.31e-9  / e_scatt_len; //stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
+    rho_belt              = 4.52e-9  / e_scatt_len; //Tissue Factor
 
     // cout << rho_h2o << endl;
     // cout << rho_head << endl;
@@ -98,7 +99,8 @@ void Nanodisc::load_input_flat( const string& best_fit ) {
     vhead                 = 319.; //stod( parse_double_delimiter( file, d_, d__ ) );
     valkyl                = 818.8; //stod( parse_double_delimiter( file, d_, d__ ) );
     vmethyl               = 108.6; //stod( parse_double_delimiter( file, d_, d__ ) );
-    vbelt                 = 27587.8; //27653.3; //stod( parse_double_delimiter( file, d_, d__ ) );
+    //vbelt                 = 27587.8; //27653.3; //stod( parse_double_delimiter( file, d_, d__ ) );
+    vbelt                 = 36276.0; //Tissue Factor
 
     // cout << vh2o << endl;
     // cout << vhead << endl;
@@ -309,6 +311,28 @@ double sinc( double x ) {
     else
         result=sin(x)/x;
     return result;
+}
+
+void Nanodisc::zshifted_gaussian_coil( double R, double z, double rho, double q, int index ) {
+
+  double x = R * q * q;
+  double theta, cos_t;
+  complex<double> tmp;
+  double thetastep = M_PI / ntheta;
+  const std::complex<double> i(0, 1);
+
+  for( int t = 0; t < ntheta; t++ ) {
+      theta = (t + .5) * thetastep;
+      cos_t = cos(theta);
+
+      if( x == 0 ) {
+        tmp = rho;
+      } else {
+        tmp = rho * ( 1. - exp(-x) ) / x * std::exp( -i * q * (z-sqrt(R)) * cos_t);
+      }
+
+      for( int p = 0; p < nphi; p++ ) FC.add(index, t, p, tmp);
+  }
 }
 
 void Nanodisc::flat_disc_form_factor( double a, double b, double L, double rho, double q, int index ) {
@@ -743,6 +767,78 @@ void Nanodisc::expand_sh2( int index ) {
     //return Int;
 }
 
+void Nanodisc::expand_sh_coil( int index ) {
+
+    double theta,phi;
+    double thetastep=M_PI/(ntheta), phistep=2*M_PI/(nphi);
+    complex<double> fm[ntheta];//={0};
+    complex<double> phase[harmonics_order+1][nphi];
+    int l,m,i,j,p, t;
+    double Int=0;
+    double sinth[ntheta];
+    double w[ntheta];//={0};
+    double legendre[ntheta][harmonics_order+1];
+
+    for(i=0;i<ntheta;i++){
+        fm[i]={0.,0.};
+    }
+
+    for(i=0;i<ntheta;i++){
+        w[i]=0;
+    }
+    for(j=0;j<ntheta;j++){ //calculate weights dtheta for theta integral
+        theta=(j+.5)*thetastep;
+        for(l=0;l<ntheta/2;l++){
+            w[j]+=(double) 2./(ntheta/2)*1./(2*l+1)*sin((2*l+1)*theta);
+        }
+    }
+
+    for(m=0;m<harmonics_order+1;m+=2){ //Because symetry of disc only the even harmonics contribute
+        for(t=0;t<ntheta;t++){
+            fm[t]=0.;
+            for(p=0;p<nphi;p++){  //integration over phi
+                phi=phistep*(p+.5);
+                if(t==0) {
+                    phase[m][p]=pol2(phistep,-m*phi);
+
+                  }
+                fm[t]+= FC.at(index,t,p)*phase[m][p];
+            }
+        }
+        for(l=m;l<=harmonics_order;l+=2){   //For disc symmetry only even harmonics contribute
+            for(t=0;t<ntheta;t++){    //integration over theta
+                theta=(t+.5)*thetastep;
+                if(l==m){
+                    gsl_sf_legendre_sphPlm_array(harmonics_order,m,cos(theta),&legendre[t][l]);//Calculate all Plm(cos(th)) for l=m ... to l=N;
+                    sinth[t]=sin(theta);
+                }
+              gamma.add( index, l, m, 1/sqrt(4*M_PI)*legendre[t][l]*w[t]*sinth[t]*fm[t]);
+
+              //cout << legendre[t][l] << " " << w[t] << " " << sinth[t] << " " << fm[t] << endl;
+            }
+            //Int+=((m>0)+1)*pow( abs( alpha.at(index,l,m) ), 2 ); //sum over l and m
+        }
+    }
+}
+
+void Nanodisc::gaussian_coil_form_factor( vector<double> exp_q, double R ) {
+
+  double q;
+  int dim = exp_q.size();
+
+  gamma.resize_width( dim );
+  gamma.initialize(0);
+  FC.resize_width( dim );
+
+  for( int i = 0; i < dim; i++ ) {
+    q = exp_q[i];
+
+    FC.initialize(0);
+    zshifted_gaussian_coil( R, - hlipid/2., rho_belt - rho_h2o, q, i );
+    expand_sh_coil( i );
+  }
+}
+
 //compatible with previous version within 5e-4 relative error.
 void Nanodisc::nanodisc_form_factor( vector<double> exp_q ) {
 
@@ -841,6 +937,10 @@ double Nanodisc::get_e_scatt_len() {
 
 complex<double> Nanodisc::get_alpha( int i, int l, int m ) {
   return alpha.at( i, l, m );
+}
+
+complex<double> Nanodisc::get_gamma( int i, int l, int m ) {
+  return gamma.at( i, l, m );
 }
 
 std::vector<complex<double> > Nanodisc::get_alpha_buffer() {
