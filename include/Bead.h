@@ -24,10 +24,8 @@ class Bead {
     double z_old;
     double rho_mold;
     unsigned int type_old;
-    unsigned int ntype_old;
 
     unsigned int type;   /* location of the bead inside the nanodisc */
-    unsigned int ntype;
     unsigned int burn;
 
     bool position_assigned;

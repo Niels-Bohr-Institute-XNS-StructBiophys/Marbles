@@ -203,21 +203,19 @@ void Bead::assign_volume_and_scattlen( const string& residue ) {
 //------------------------------------------------------------------------------
 
 void Bead::save_old_config() {
-  x_old     = x;
-  y_old     = y;
-  z_old     = z;
-  rho_mold  = rho_modified;
-  ntype_old = ntype;
-  type_old  = type;
+  x_old    = x;
+  y_old    = y;
+  z_old    = z;
+  rho_mold = rho_modified;
+  type_old = type;
 }
 //------------------------------------------------------------------------------
 
 void Bead::recover_old_config() {
-  x            = x_old;
-  y            = y_old;
-  z            = z_old;
+  x = x_old;
+  y = y_old;
+  z = z_old;
   rho_modified = rho_mold;
-  type         = type_old;
-  ntype        = ntype_old;
+  type = type_old;
 }
 //------------------------------------------------------------------------------

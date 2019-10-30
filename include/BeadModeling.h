@@ -59,11 +59,6 @@ class BeadModeling : public Input {
       unsigned int nnnum;          /** Length of the nnum files */
       unsigned int qs_to_fit;      /** number of high q points to use to determine the background */
 
-      int rntype1, rntype2, rntype3;
-      int rntype4, rntype5, rntype6;
-      int ntype1, ntype2, ntype3;
-      int ntype4, ntype5, ntype6;
-
       double lambda;               /** TO BE CLEARED */
       double connect;              /** TO BE CLEARED */
       double dmax;                 /** maximum length detected from P(r) */
@@ -88,7 +83,6 @@ class BeadModeling : public Input {
       double T_strength;           /** strength of the type penalty */
       double scale_factor;
       double ref_mat_sum;
-      double Rg;
 
       const unsigned int harmonics_order = 17;
       const unsigned int ntheta = (harmonics_order + 1) * 2;
@@ -133,7 +127,6 @@ class BeadModeling : public Input {
       void logfile();
       void expand_sh( double, int, int, int, int );
       void calc_intensity( std::vector<double> );
-      void calc_intensity_wcoil( std::vector<double> );
       void distance_matrix();
       void update_statistics();
       void recursive_connect( int, int, int* );
@@ -145,7 +138,6 @@ class BeadModeling : public Input {
       void set_T0();
       void helix_ref_cmap();
       void helix_cmap();
-      void count_ref_types();
 
       //penalty functions
       void chi_squared();
