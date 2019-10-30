@@ -107,7 +107,7 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
   schedule          = sched;
   convergence_temp  = 0.1;
   sequence          = "";
-  shift             = 50.;
+  shift             = 55.;
   qs_to_fit         = 5;
   sphere_generated  = false;
   compute_scale     = true;
@@ -526,17 +526,17 @@ void BeadModeling::update_rho( int i ) {
     nhead--;
   }
 
-  if( beads[i].type_old == 1 ) {
+  if( beads[i].ntype_old == 1 ) {
     ntype1--;
-  } else if( beads[i].type_old == 2 ) {
+  } else if( beads[i].ntype_old == 2 ) {
     ntype2--;
-  } else if( beads[i].type_old == 3 ) {
+  } else if( beads[i].ntype_old == 3 ) {
     ntype3--;
-  } else if( beads[i].type_old == 4 ) {
+  } else if( beads[i].ntype_old == 4 ) {
     ntype4--;
-  } else if( beads[i].type_old == 5 ) {
+  } else if( beads[i].ntype_old == 5 ) {
     ntype5--;
-  } else if( beads[i].type_old == 6 ) {
+  } else if( beads[i].ntype_old == 6 ) {
     ntype6--;
   }
 
@@ -883,14 +883,13 @@ void BeadModeling::helix_cmap() {
 //------------------------------------------------------------------------------
 
 void BeadModeling::type_penalty() {
-  double tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
 
-  tmp1 = rntype1 - ntype1;
-  tmp2 = rntype2 - ntype2;
-  tmp3 = rntype3 - ntype3;
-  tmp4 = rntype4 - ntype4;
-  tmp5 = rntype5 - ntype5;
-  tmp6 = rntype6 - ntype6;
+  double tmp1 = rntype1 - ntype1;
+  double tmp2 = rntype2 - ntype2;
+  double tmp3 = rntype3 - ntype3;
+  double tmp4 = rntype4 - ntype4;
+  double tmp5 = rntype5 - ntype5;
+  double tmp6 = rntype6 - ntype6;
 
   T = T_strength * ( tmp1 * tmp1 + tmp2 * tmp2 + tmp3 * tmp3 + tmp4 * tmp4 + tmp5 * tmp5 + tmp6 * tmp6 );
 }
@@ -1318,6 +1317,15 @@ void BeadModeling::SA_nanodisc() {
   nalkyl = 0;
   nhead = 0;
 
+  ntype1 = 0;
+  ntype2 = 0;
+  ntype3 = 0;
+  ntype4 = 0;
+  ntype5 = 0;
+  ntype6 = 0;
+
+  count_ref_types();
+
   //comment this for only nanodisc benchmark
   for( unsigned int i = 0; i < nresidues; i++ ) {
     update_rho( i );
@@ -1334,7 +1342,6 @@ void BeadModeling::SA_nanodisc() {
 
   cout << "# Compute form factor: done!" << endl;
 
-  //double Rg = 19 * 3.8 / 6.;
   nd.gaussian_coil_form_factor( exp_q, Rg );
   calc_intensity_wcoil( exp_q );
   //calc_intensity( exp_q );
@@ -1347,8 +1354,6 @@ void BeadModeling::SA_nanodisc() {
 
   distance_matrix();
   update_statistics();
-  count_ref_types();
-  //helix_ref_cmap();
 
   cout << "# Update statistics: done!" << endl;
   cout << "# Background: " << std::setprecision(2) << fit.get_background() << " (X^2_R = " << fit.get_bck_chi2() << ")" << endl;
