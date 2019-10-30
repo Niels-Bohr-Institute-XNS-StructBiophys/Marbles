@@ -83,6 +83,7 @@ class BeadModeling : public Input {
       double T_strength;           /** strength of the type penalty */
       double scale_factor;
       double ref_mat_sum;
+      double Rg;
 
       const unsigned int harmonics_order = 17;
       const unsigned int ntheta = (harmonics_order + 1) * 2;
@@ -127,6 +128,7 @@ class BeadModeling : public Input {
       void logfile();
       void expand_sh( double, int, int, int, int );
       void calc_intensity( std::vector<double> );
+      void calc_intensity_wcoil( std::vector<double> exp_q );
       void distance_matrix();
       void update_statistics();
       void recursive_connect( int, int, int* );

@@ -263,6 +263,43 @@ void BeadModeling::load_statistics() {
 }
 //------------------------------------------------------------------------------
 
+void BeadModeling::load_initial_configuration( const string& inpf ) {
+
+  ifstream file( inpf );
+  string atom;
+  int k = 0;
+
+  if( file.is_open() ) {
+
+    while( !file.eof() ) {
+      getline( file, atom );
+      if( atom.rfind("ATOM", 0) == 0 ) {
+
+        std::string token;
+        std::stringstream ss(atom);
+        char delim = ' ';
+        vector<string> cont;
+        while(std::getline(ss, token, delim)) {
+            cont.push_back(token);
+        }
+        cont.erase( remove( cont.begin(), cont.end(), "" ), cont.end() );
+
+        if( cont[2] == "CA" ) {
+          beads[k].assign_volume_and_scattlen( cont[3] );
+          beads[k].assign_position( stod(cont[6]), stod(cont[7]), stod(cont[8]) );
+          k++;
+        }
+
+      }
+    }
+
+    cout << "Num residues " << k << endl;
+  } else {
+    cerr << "Cannot open " << inpf << endl;
+  }
+}
+//------------------------------------------------------------------------------
+
 void BeadModeling::load_FASTA() {
 
     ifstream file( sequence_file );
@@ -489,33 +526,6 @@ void BeadModeling::update_rho( int i ) {
         beads[i].type = 0;
         beads[i].rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_solvent;
       }
-
-      double hbil    = nd.get_hlipid();
-      double hmethyl = nd.get_hmethyl();
-      double halkyl  = nd.get_hcore();
-      double hhead   = hbil - hmethyl - halkyl;
-
-      if( fz <= hbil/2. && fz > (hbil-hhead)/2. && z > 0 ) {
-        beads[i].ntype = 1;
-        ntype1++;
-      } else if( fz < hbil/2. && fz > (hbil-hhead)/2. && z < 0 ) {
-        beads[i].ntype = 6;
-        ntype6++;
-      } else if( fz < (hbil-hhead)/2. && fz > (hbil-hhead-halkyl)/2. && z > 0 ) {
-        beads[i].ntype = 2;
-        ntype2++;
-      } else if( fz < (hbil-hhead)/2. && fz > (hbil-hhead-halkyl)/2. && z < 0 ) {
-        beads[i].ntype = 5;
-        ntype5++;
-      } else if( fz < (hbil-hhead-halkyl)/2. && z > 0 ) {
-        beads[i].ntype = 3;
-        ntype3++;
-      } else if( fz < (hbil-hhead-halkyl)/2. && z < 0 ) {
-        beads[i].ntype = 4;
-        ntype4++;
-      } else {
-        beads[i].ntype = 0;
-      }
   }
 
   if( beads[i].type_old == 3 ) {
@@ -525,21 +535,6 @@ void BeadModeling::update_rho( int i ) {
   } else if( beads[i].type_old == 1 ) {
     nhead--;
   }
-
-  if( beads[i].ntype_old == 1 ) {
-    ntype1--;
-  } else if( beads[i].ntype_old == 2 ) {
-    ntype2--;
-  } else if( beads[i].ntype_old == 3 ) {
-    ntype3--;
-  } else if( beads[i].ntype_old == 4 ) {
-    ntype4--;
-  } else if( beads[i].ntype_old == 5 ) {
-    ntype5--;
-  } else if( beads[i].ntype_old == 6 ) {
-    ntype6--;
-  }
-
 }
 //------------------------------------------------------------------------------
 
@@ -752,53 +747,6 @@ void BeadModeling::chi_squared() {
 }
 //------------------------------------------------------------------------------
 
-void BeadModeling::count_ref_types() {
-
-  double b, nturns, t, z, tmp;
-  double hbil    = nd.get_hlipid();
-  double hmethyl = nd.get_hmethyl();
-  double halkyl  = nd.get_hcore();
-  double hhead   = hbil - hmethyl - halkyl;
-
-  rntype1 = 0;
-  rntype2 = 0;
-  rntype3 = 0;
-  rntype4 = 0;
-  rntype5 = 0;
-  rntype6 = 0;
-
-  nturns = insertion / 4.; /** number of helix turns */
-  b      = 0.9; /** 2b*pi is the helix pitch: a-helix pitch is 5.3A */
-
-  for( unsigned int i = 0; i < insertion; i++ ) {
-    t = 2. * i * nturns * M_PI / insertion; /** arc-length of the helix */
-    z = - b * t + hbil/2.;
-
-    if(        fabs(z) <= hbil/2. && fabs(z) > (hbil-hhead)/2. && z > 0 ) {
-      //cout << "z>0: " << hbil/2. << " > " << fabs(z) << " > " << (hbil-hhead)/2. << endl;
-      rntype1++;
-    } else if( fabs(z) < hbil/2. && fabs(z) > (hbil-hhead)/2. && z < 0 ) {
-      //cout << "z<0: " << hbil/2. << " > " << fabs(z) << " > " << (hbil-hhead)/2. << endl;
-      rntype6++;
-    } else if( fabs(z) < (hbil-hhead)/2. && fabs(z) > (hbil-hhead-halkyl)/2. && z > 0 ) {
-      //cout << "z>0: " << (hbil-hhead)/2. << " > " << fabs(z) << " > " << (hbil-hhead-halkyl)/2. << endl;
-      rntype2++;
-    } else if( fabs(z) < (hbil-hhead)/2. && fabs(z) > (hbil-hhead-halkyl)/2. && z < 0 ) {
-      //cout << "z<0: " << (hbil-hhead)/2. << " > " << fabs(z) << " > " << (hbil-hhead-halkyl)/2. << endl;
-      rntype5++;
-    } else if( fabs(z) < (hbil-hhead-halkyl)/2. && z > 0 ) {
-      //cout << "z>0: " << (hbil-hhead-halkyl)/2. << " > " << fabs(z) << " > 0" << endl;
-      rntype3++;
-    } else if( fabs(z) < (hbil-hhead-halkyl)/2. && z < 0 ) {
-      //cout << "z<0: " << (hbil-hhead-halkyl)/2. << " > " << fabs(z) << " > 0" << endl;
-      rntype4++;
-    }
-  }
-
-  //cout << rntype1 + rntype2 + rntype3 + rntype4 + rntype5 + rntype6 << endl;
-}
-//------------------------------------------------------------------------------
-
 void BeadModeling::helix_ref_cmap() {
 
   double a, b, nturns, t, tmp;
@@ -884,32 +832,20 @@ void BeadModeling::helix_cmap() {
 
 void BeadModeling::type_penalty() {
 
-  double tmp1 = rntype1 - ntype1;
-  double tmp2 = rntype2 - ntype2;
-  double tmp3 = rntype3 - ntype3;
-  double tmp4 = rntype4 - ntype4;
-  double tmp5 = rntype5 - ntype5;
-  double tmp6 = rntype6 - ntype6;
+  double hbil    = nd.get_hlipid();
+  double hmethyl = nd.get_hmethyl();
+  double halkyl  = nd.get_hcore();
+  double hhead   = hbil - hmethyl - halkyl;
+  int tmp1, tmp2, tmp3, tmp4;
 
-  T = T_strength * ( tmp1 * tmp1 + tmp2 * tmp2 + tmp3 * tmp3 + tmp4 * tmp4 + tmp5 * tmp5 + tmp6 * tmp6 );
+  tmp1 = nalkyl - (int)(insertion * halkyl/hbil);
+
+  tmp2 = nmethyl - (int)(insertion * hmethyl/hbil);
+  tmp3 = nhead - (int)(insertion * hhead/hbil);
+  tmp4 = nalkyl + nmethyl + nhead - insertion;
+
+  T = T_strength * ( tmp1 * tmp1 + tmp2 * tmp2 + tmp3 * tmp3 + tmp4 * tmp4 );
 }
-
-// void BeadModeling::type_penalty() {
-//
-//   double hbil    = nd.get_hlipid();
-//   double hmethyl = nd.get_hmethyl();
-//   double halkyl  = nd.get_hcore();
-//   double hhead   = hbil - hmethyl - halkyl;
-//   int tmp1, tmp2, tmp3, tmp4;
-//
-//   tmp1 = nalkyl - (int)(insertion * halkyl/hbil);
-//
-//   tmp2 = nmethyl - (int)(insertion * hmethyl/hbil);
-//   tmp3 = nhead - (int)(insertion * hhead/hbil);
-//   tmp4 = nalkyl + nmethyl + nhead - insertion;
-//
-//   T = T_strength * ( tmp1 * tmp1 + tmp2 * tmp2 + tmp3 * tmp3 + tmp4 * tmp4 );
-// }
 //------------------------------------------------------------------------------
 
 void BeadModeling::histogram_penalty() {
@@ -1171,10 +1107,10 @@ void BeadModeling::move( int l ) {
     expand_sh( exp_q[k], k, i, 1, 0 );  //update beta with the new position
   }
 
-  //calc_intensity( exp_q );
+  calc_intensity( exp_q );
 
 
-  calc_intensity_wcoil( exp_q );
+  //calc_intensity_wcoil( exp_q );
   distance_matrix();
   update_statistics();
 
@@ -1204,7 +1140,6 @@ void BeadModeling::SA_protein() {
 
   for( unsigned int i = 0; i < nresidues; i++ ) {
     beads[i].type  = 0;
-    beads[i].ntype = 0;
     beads[i].rho_modified = beads[i].rho - beads[i].v * rho_solvent;
   }
 
@@ -1310,21 +1245,14 @@ void BeadModeling::SA_nanodisc() {
   cout << "# -------------" << endl;
 
   initial_configuration();
+  //load_initial_configuration("../p450/rigid_body/p450_centered.pdb");
   cout << "# Initial configuration set." << endl;
-  write_pdb( outdir + "configurations/initial.pdb" );
+  // write_pdb( "test.pdb" );
+  //exit(-1);
 
   nmethyl = 0;
   nalkyl = 0;
   nhead = 0;
-
-  ntype1 = 0;
-  ntype2 = 0;
-  ntype3 = 0;
-  ntype4 = 0;
-  ntype5 = 0;
-  ntype6 = 0;
-
-  count_ref_types();
 
   //comment this for only nanodisc benchmark
   for( unsigned int i = 0; i < nresidues; i++ ) {
@@ -1342,13 +1270,13 @@ void BeadModeling::SA_nanodisc() {
 
   cout << "# Compute form factor: done!" << endl;
 
-  nd.gaussian_coil_form_factor( exp_q, Rg );
-  calc_intensity_wcoil( exp_q );
-  //calc_intensity( exp_q );
+  //nd.gaussian_coil_form_factor( exp_q, Rg );
+  //calc_intensity_wcoil( exp_q );
+  calc_intensity( exp_q );
   cout << "# Compute intensity: done!" << endl;
 
   //uncomment this for only nanodisc benchmark
-  // string intens = outdir + "only_coil.dat";
+  // string intens = "true_prot_wnano.dat";
   // write_intensity( intens );
   // exit(-1);
 
@@ -1370,12 +1298,6 @@ void BeadModeling::SA_nanodisc() {
   //fit.set_default_roughness( 6.335 );
 
   penalty();
-
-  cout << T << endl;
-
-  cout << ntype1 << " " << ntype2 << " " << ntype3 << " " << ntype4 << " " << ntype5 << " " << ntype6 << endl;
-  cout << rntype1 << " " << rntype2 << " " << rntype3 << " " << rntype4 << " " << rntype5 << " " << rntype6 << endl;
-  // exit(-1);
 
   B = X / t_ratio; //effective temperature
 
@@ -1425,8 +1347,7 @@ void BeadModeling::SA_nanodisc() {
     cout << setw(5) << "# Histogram penalty: " << H << endl;
     cout << setw(5) << "# Connect penalty:   " << C << endl;
     cout << setw(5) << "# Total penalty:     " << P << endl;
-    //cout << setw(5) << "# Inserted beads:    " << nhead << " " << nalkyl << " " << nmethyl << endl;
-    cout << setw(5) << "# Inserted beads:    " << ntype1 << " " << ntype2 << " " << ntype3 << " " << ntype4 << " " << ntype5 << " " << ntype6 << endl;
+    cout << setw(5) << "# Inserted beads:    " << nhead << " " << nalkyl << " " << nmethyl << endl;
     cout << setw(5) << "# I_exp[0]/I[0]:     " << setprecision(3) << scale_tmp << endl;
     cout << setw(5) << scientific << "# Scale factor:      " << scale_factor << endl;
     cout << endl;
