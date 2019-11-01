@@ -954,12 +954,22 @@ void BeadModeling::optimize_initial_position() {
   int rmj      = (int)(nd.get_radius_major());
   int rmi      = (int)(nd.get_radius_minor());
   double min_X = 1e20;
+  int n = 5;
 
-  for( int i = 0; i < rmj; i += 5 ) {
-    for( int j = 0; j < rmi; j += 5 ) {
+  initial_configuration( 0., 0. );
+
+  //ofstream file;
+  //file.open( "../p450/toy_model_building/x2_centered.dat" );
+
+  for( int i = 0; i < rmj+n; i += n ) {
+    for( int j = 0; j < rmi+n; j += n ) {
+
+      for( int k = 0; k < nresidues; k++ ) {
+        beads[k].x -= (double)(i);
+        beads[k].y -= (double)(j);
+      }
 
       beta.initialize(0);
-      initial_configuration( (double)(i), (double)(j) );
 
       for( unsigned int i = 0; i < nresidues; i++ ) {
         update_rho( i );
@@ -974,13 +984,24 @@ void BeadModeling::optimize_initial_position() {
       calc_intensity( exp_q );
       chi_squared();
 
+      //cout << i << " " << j << " " << X << endl;
+      //file << X << " ";
+
       if( X < min_X ) {
         min_X = X;
-        opt_shift_x = (double)(i);
-        opt_shift_y = (double)(j);
+        opt_shift_x = -(double)(i);
+        opt_shift_y = -(double)(j);
+      }
+
+      for( int k = 0; k < nresidues; k++ ) {
+        beads[k].x += (double)(i);
+        beads[k].y += (double)(j);
       }
     }
+    //file << endl;
   }
+
+  //file.close();
 }
 //------------------------------------------------------------------------------
 
@@ -1227,7 +1248,6 @@ void BeadModeling::SA_nanodisc() {
   initial_configuration( opt_shift_x, opt_shift_y );
   cout << "# Initial configuration set." << endl;
   write_pdb( outdir + "configurations/initial.pdb" );
-  //exit(-1);
 
   nmethyl = 0;
   nalkyl = 0;
