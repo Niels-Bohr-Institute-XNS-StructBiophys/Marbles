@@ -108,7 +108,7 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
   convergence_temp  = 0.1;
   sequence          = "";
   shift             = 50.;
-  qs_to_fit         = 5;
+  qs_to_fit         = 4;
   sphere_generated  = false;
   compute_scale     = true;
   init              = true;
@@ -315,7 +315,7 @@ bool BeadModeling::bead_clash( unsigned const int i ) {
 }
 //------------------------------------------------------------------------------
 
-void BeadModeling::initial_configuration() {
+void BeadModeling::initial_configuration( double x0, double y0 ) {
 
     double x, y, z, r, r2;
     bool clash;
@@ -335,7 +335,7 @@ void BeadModeling::initial_configuration() {
             x = rng.in_range2( -r, r );
             y = rng.in_range2( -r, r );
             z = rng.in_range2( -r, r );
-            beads[i].assign_position( x, y, z + shift );
+            beads[i].assign_position( x + x0, y + y0, z + shift );
 
           } while( x*x +  y*y + z*z > r2 ); // condition that defines a sphere
 
@@ -472,15 +472,15 @@ void BeadModeling::update_rho( int i ) {
 
     //the nanodisc is symmetric with respect the horizontal axis of the methyl layer
 
-      if( fz < hmethyl * .5 ) {
+      if( fz < hmethyl * .5 && inside_ellipse( i, radius_major, radius_minor ) ) {
         beads[i].type = 3;
         beads[i].rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_methyl;
         nmethyl++;
-      } else if( fz < hcore * .5 ) {
+      } else if( fz < hcore * .5 && inside_ellipse( i, radius_major, radius_minor ) ) {
         beads[i].type = 2;
         beads[i].rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_alkyl;
         nalkyl++;
-      } else if( fz < hlipid * .5 ) {
+      } else if( fz < hlipid * .5 && inside_ellipse( i, radius_major, radius_minor ) ) {
         beads[i].type = 1;
         beads[i].rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_head;
         nhead++;
@@ -597,7 +597,14 @@ void BeadModeling::calc_intensity( vector<double> exp_q ) {
 
     if( compute_scale ) {
       I0 = intensity[0] * e_scattlen * e_scattlen;
-      scale_factor = rad[0][1]/I0;
+
+      double mean = 0;
+      int n = 5;
+      for( int i = 0; i < n; i++ ) {
+        mean += rad[i][1]/n;
+      }
+      //scale_factor = rad[0][1]/I0;
+      scale_factor = mean/I0;
       // scale_factor = 3.65282370*1e-2 / I0; /* for only nanodisc benchmark */
     }
     compute_scale = false;
@@ -742,14 +749,14 @@ void BeadModeling::helix_cmap() {
 }
 //------------------------------------------------------------------------------
 
-void BeadModeling::type_penalty() {
-
-  double sum = 1. * ( nalkyl + nmethyl + nhead );
-  double tmp = sum - insertion;
-
-  T = T_strength * tmp * tmp;
-
-}
+// void BeadModeling::type_penalty() {
+//
+//   double sum = 1. * ( nalkyl + nmethyl + nhead );
+//   double tmp = sum - insertion;
+//
+//   T = T_strength * tmp * tmp;
+//
+// }
 //------------------------------------------------------------------------------
 
 // void BeadModeling::type_penalty() {
@@ -765,22 +772,22 @@ void BeadModeling::type_penalty() {
 // }
 //------------------------------------------------------------------------------
 
-// void BeadModeling::type_penalty() {
-//
-//   double hbil    = nd.get_hlipid();
-//   double hmethyl = nd.get_hmethyl();
-//   double halkyl  = nd.get_hcore();
-//   double hhead   = hbil - hmethyl - halkyl;
-//   int tmp1, tmp2, tmp3, tmp4;
-//
-//   tmp1 = nalkyl - (int)(insertion * halkyl/hbil);
-//
-//   tmp2 = nmethyl - (int)(insertion * hmethyl/hbil);
-//   tmp3 = nhead - (int)(insertion * hhead/hbil);
-//   tmp4 = nalkyl + nmethyl + nhead - insertion;
-//
-//   T = T_strength * ( tmp1 * tmp1 + tmp2 * tmp2 + tmp3 * tmp3 + tmp4 * tmp4 );
-// }
+void BeadModeling::type_penalty() {
+
+  double hbil    = nd.get_hlipid();
+  double hmethyl = nd.get_hmethyl();
+  double halkyl  = nd.get_hcore();
+  double hhead   = hbil - hmethyl - halkyl;
+  int tmp1, tmp2, tmp3, tmp4;
+
+  tmp1 = nalkyl - (int)(insertion * halkyl/hbil);
+
+  tmp2 = nmethyl - (int)(insertion * hmethyl/hbil);
+  tmp3 = nhead - (int)(insertion * hhead/hbil);
+  tmp4 = nalkyl + nmethyl + nhead - insertion;
+
+  T = T_strength * ( tmp1 * tmp1 + tmp2 * tmp2 + tmp3 * tmp3 + tmp4 * tmp4 );
+}
 //------------------------------------------------------------------------------
 
 void BeadModeling::histogram_penalty() {
@@ -861,7 +868,7 @@ void BeadModeling::penalty() {
   histogram_penalty();
   chi_squared();
   connect_penalty();
-  //if( with_nanodisc ) type_penalty();
+  if( with_nanodisc ) type_penalty();
   //helix_cmap();
 
   P += X + H + C + T;// + D;
@@ -942,6 +949,41 @@ void BeadModeling::set_T0() {
 }
 //------------------------------------------------------------------------------
 
+void BeadModeling::optimize_initial_position() {
+
+  int rmj      = (int)(nd.get_radius_major());
+  int rmi      = (int)(nd.get_radius_minor());
+  double min_X = 1e20;
+
+  for( int i = 0; i < rmj; i += 5 ) {
+    for( int j = 0; j < rmi; j += 5 ) {
+
+      beta.initialize(0);
+      initial_configuration( (double)(i), (double)(j) );
+
+      for( unsigned int i = 0; i < nresidues; i++ ) {
+        update_rho( i );
+      }
+
+      for( unsigned int j = 0; j < nq; j++ ) {
+        for( unsigned int i = 0; i < nresidues; i++ ) {
+          expand_sh( exp_q[j], j, i, 1, 0 );
+        }
+      }
+
+      calc_intensity( exp_q );
+      chi_squared();
+
+      if( X < min_X ) {
+        min_X = X;
+        opt_shift_x = (double)(i);
+        opt_shift_y = (double)(j);
+      }
+    }
+  }
+}
+//------------------------------------------------------------------------------
+
 void BeadModeling::move_only_protein() {
 
   int s = 0, i, j;
@@ -1003,7 +1045,7 @@ void BeadModeling::move( int l ) {
 
   rmax = nd.get_radius_major(); //45.;//42.6;
   rmin = nd.get_radius_minor(); //32.;//29.0;
-  z_ref = 0.;//14.;//14; // what is this parameter doing?
+  z_ref = 0;//14; // what is this parameter doing?
 
   do {
 
@@ -1022,9 +1064,9 @@ void BeadModeling::move( int l ) {
 
     //compute_com();
 
-    // if( legal ) {
-    //   legal = ( fabs( beads[i].z ) > z_ref || inside_ellipse( i, rmax, rmin ) );
-    // }
+    if( legal ) {
+      legal = ( fabs( beads[i].z ) > z_ref || inside_ellipse( i, rmax, rmin ) );
+    }
 
     if( legal ) {
       legal = ! bead_clash( i );
@@ -1063,7 +1105,7 @@ void BeadModeling::SA_protein() {
   cout << "# PRELIMINARIES" << endl;
   cout << "# -------------" << endl;
 
-  initial_configuration();
+  initial_configuration( 0, 0 );
   cout << "# Setup of initial configuration ..." << endl;
 
   nmethyl = 0;
@@ -1176,13 +1218,22 @@ void BeadModeling::SA_nanodisc() {
   cout << "# PRELIMINARIES" << endl;
   cout << "# -------------" << endl;
 
-  initial_configuration();
+  nd.nanodisc_form_factor( exp_q );
+  cout << "# Optimizing initial sphere ..." << endl;
+
+  optimize_initial_position();
+  cout << "# Optimal sphere center:   [" << opt_shift_x << ", " << opt_shift_y << ", " << shift << "]" << endl;
+
+  initial_configuration( opt_shift_x, opt_shift_y );
   cout << "# Initial configuration set." << endl;
   write_pdb( outdir + "configurations/initial.pdb" );
+  //exit(-1);
 
   nmethyl = 0;
   nalkyl = 0;
   nhead = 0;
+
+  beta.initialize(0);
 
   //comment this for only nanodisc benchmark
   for( unsigned int i = 0; i < nresidues; i++ ) {
@@ -1190,7 +1241,7 @@ void BeadModeling::SA_nanodisc() {
   }
   cout << "# Update scattering lengths: done!" << endl;
 
-  nd.nanodisc_form_factor( exp_q );
+  //nd.nanodisc_form_factor( exp_q );
 
   for( unsigned int j = 0; j < nq; j++ ) {
     for( unsigned int i = 0; i < nresidues; i++ ) {
@@ -1265,7 +1316,13 @@ void BeadModeling::SA_nanodisc() {
       iterations++;
     }
 
-    scale_tmp = rad[0][1]/intensity[0];
+    double mean = 0;
+    for( int i = 0; i < 5; i++ ) {
+      mean += rad[i][1]/5.;
+    }
+    scale_tmp = mean/intensity[0];
+
+    //scale_tmp = rad[0][1]/intensity[0];
     scale_factor *= scale_tmp;
 
     cout << fixed << setprecision(3) << setfill('0');
@@ -1288,7 +1345,7 @@ void BeadModeling::SA_nanodisc() {
     write_intensity( calc_intensity );
 
     //if( B > convergence_temp ) {
-    B *= 0.9;
+    B *= schedule;
     //}
   }
 

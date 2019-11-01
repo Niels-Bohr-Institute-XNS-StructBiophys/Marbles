@@ -83,6 +83,8 @@ class BeadModeling : public Input {
       double T_strength;           /** strength of the type penalty */
       double scale_factor;
       double ref_mat_sum;
+      double opt_shift_x;
+      double opt_shift_y;
 
       const unsigned int harmonics_order = 17;
       const unsigned int ntheta = (harmonics_order + 1) * 2;
@@ -167,7 +169,8 @@ class BeadModeling : public Input {
       /* PUBLIC UTILITIES */
       void load_input();
       void load_initial_configuration( const std::string& );
-      void initial_configuration();
+      void initial_configuration( double, double );
+      void optimize_initial_position();
       void write_intensity( const std::string& );
       void write_statistics( std::vector<double>, const std::string& );
       void SA_nanodisc();
