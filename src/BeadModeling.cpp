@@ -472,15 +472,15 @@ void BeadModeling::update_rho( int i ) {
 
     //the nanodisc is symmetric with respect the horizontal axis of the methyl layer
 
-      if( fz < hmethyl * .5 && inside_ellipse( i, radius_major, radius_minor ) ) {
+      if( fz < hmethyl * .5 && inside_ellipse( i, radius_major-3., radius_minor-3. ) ) {
         beads[i].type = 3;
         beads[i].rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_methyl;
         nmethyl++;
-      } else if( fz < hcore * .5 && inside_ellipse( i, radius_major, radius_minor ) ) {
+      } else if( fz < hcore * .5 && inside_ellipse( i, radius_major-3., radius_minor-3. ) ) {
         beads[i].type = 2;
         beads[i].rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_alkyl;
         nalkyl++;
-      } else if( fz < hlipid * .5 && inside_ellipse( i, radius_major, radius_minor ) ) {
+      } else if( fz < hlipid * .5 && inside_ellipse( i, radius_major-3., radius_minor-3. ) ) {
         beads[i].type = 1;
         beads[i].rho_modified = beads[i].rho - beads[i].v * cvprotein * rho_head;
         nhead++;
@@ -764,7 +764,7 @@ void BeadModeling::helix_cmap() {
 //   double sum = 1. * ( nalkyl + nmethyl + nhead );
 //   double tmp = sum - insertion;
 //
-//   if( sum < insertion ) {
+//   if( tmp < 0 ) {
 //     T = T_strength * tmp * tmp;
 //   } else {
 //     T = 0.;
@@ -928,6 +928,29 @@ bool BeadModeling::inside_ellipse( int i, double a, double b ) {
 }
 //------------------------------------------------------------------------------
 
+bool BeadModeling::msp_clash( unsigned const int i ) {
+
+  double rmax = nd.get_radius_major();
+  double rmin = nd.get_radius_minor();
+  double hbelt = nd.get_hbelt();
+  double wbelt = nd.get_wbelt();
+  double fx    = fabs( beads[i].x );
+  double fy    = fabs( beads[i].y );
+  double fz    = fabs( beads[i].z );
+
+  if( fz < hbelt/2. ) {
+    //bead is clashing with MSP and the move cannot be accepted
+    if( fx >= rmax && fx < rmax + wbelt && fy >= rmin && fy < rmin + wbelt ) {
+      return true;
+    } else {
+      return false;
+    }
+  } else {
+    return false;
+  }
+}
+//------------------------------------------------------------------------------
+
 void BeadModeling::set_T0() {
 
   double P0 = P, P_av = 0.;
@@ -954,22 +977,12 @@ void BeadModeling::optimize_initial_position() {
   int rmj      = (int)(nd.get_radius_major());
   int rmi      = (int)(nd.get_radius_minor());
   double min_X = 1e20;
-  int n = 5;
 
-  initial_configuration( 0., 0. );
-
-  //ofstream file;
-  //file.open( "../p450/toy_model_building/x2_centered.dat" );
-
-  for( int i = 0; i < rmj+n; i += n ) {
-    for( int j = 0; j < rmi+n; j += n ) {
-
-      for( int k = 0; k < nresidues; k++ ) {
-        beads[k].x -= (double)(i);
-        beads[k].y -= (double)(j);
-      }
+  for( int i = 0; i < rmj; i += 5 ) {
+    for( int j = 0; j < rmi; j += 5 ) {
 
       beta.initialize(0);
+      initial_configuration( (double)(i), (double)(j) );
 
       for( unsigned int i = 0; i < nresidues; i++ ) {
         update_rho( i );
@@ -984,24 +997,13 @@ void BeadModeling::optimize_initial_position() {
       calc_intensity( exp_q );
       chi_squared();
 
-      //cout << i << " " << j << " " << X << endl;
-      //file << X << " ";
-
       if( X < min_X ) {
         min_X = X;
-        opt_shift_x = -(double)(i);
-        opt_shift_y = -(double)(j);
-      }
-
-      for( int k = 0; k < nresidues; k++ ) {
-        beads[k].x += (double)(i);
-        beads[k].y += (double)(j);
+        opt_shift_x = (double)(i);
+        opt_shift_y = (double)(j);
       }
     }
-    //file << endl;
   }
-
-  //file.close();
 }
 //------------------------------------------------------------------------------
 
@@ -1064,8 +1066,8 @@ void BeadModeling::move( int l ) {
   vector<double> vec(3);
   d2 = rng.in_range2( clash_distance, max_distance );
 
-  rmax = nd.get_radius_major(); //45.;//42.6;
-  rmin = nd.get_radius_minor(); //32.;//29.0;
+  rmax = nd.get_radius_major() - 3.; //45.;//42.6;
+  rmin = nd.get_radius_minor() - 3.; //32.;//29.0;
   z_ref = 0;//14; // what is this parameter doing?
 
   do {
@@ -1087,6 +1089,10 @@ void BeadModeling::move( int l ) {
 
     if( legal ) {
       legal = ( fabs( beads[i].z ) > z_ref || inside_ellipse( i, rmax, rmin ) );
+    }
+
+    if( legal ) {
+      legal = ! msp_clash( i );
     }
 
     if( legal ) {
@@ -1248,6 +1254,7 @@ void BeadModeling::SA_nanodisc() {
   initial_configuration( opt_shift_x, opt_shift_y );
   cout << "# Initial configuration set." << endl;
   write_pdb( outdir + "configurations/initial.pdb" );
+  //exit(-1);
 
   nmethyl = 0;
   nalkyl = 0;

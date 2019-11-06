@@ -839,6 +839,14 @@ double Nanodisc::get_e_scatt_len() {
   return e_scatt_len;
 }
 
+double Nanodisc::get_hbelt() {
+  return hbelt;
+}
+
+double Nanodisc::get_wbelt() {
+  return width_belt;
+}
+
 complex<double> Nanodisc::get_alpha( int i, int l, int m ) {
   return alpha.at( i, l, m );
 }

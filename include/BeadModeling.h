@@ -151,6 +151,7 @@ class BeadModeling : public Input {
       double bead_distance( Bead, Bead );
 
       bool bead_clash( unsigned const int ); /** checks wether the position of a bead clashes with another one **/
+      bool msp_clash( unsigned const int );
       bool inside_ellipse( int, double, double );
 
       void setup();
