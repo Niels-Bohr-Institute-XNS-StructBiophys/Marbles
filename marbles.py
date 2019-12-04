@@ -1,3 +1,21 @@
+'''*****************************************************************************
+Copyright (C) 2020  Niels Bohr Institute
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*****************************************************************************'''
+
+
 import argparse
 import os
 
@@ -35,7 +53,7 @@ parser.add_argument( '--insertion_strength', '-ii', type = float, required = Fal
 
 parser.add_argument( '--schedule', '-ss', type = float, required = False, default = 0.9,
                     help = 'Simulated annealing schedule (default: 0.9)' )
-parser.add_argument( '--temperature_factor', '-t', type = int, required = False, default = 10,
+parser.add_argument( '--temperature_factor', '-t', type = float, required = False, default = 10,
                     help = 'Number by which the initial chi squared is divided to define the initial temperature (default: 10)' )
 parser.add_argument( '--clash_distance', '-cd', type = float, required = False, default = 1.8,
                     help = 'Smaller possible distance between beads before move is rejected (default: 1.8A)' )
@@ -43,34 +61,38 @@ parser.add_argument( '--maximum_distance', '-md', type = float, required = False
                     help = 'Maximum distance between chosen beads allowed by Monte Carlo move (default: 5.1A)' )
 parser.add_argument( '--connected', '-cc', type = float, required = False, default = 5.81,
                     help = 'Maximum distance within which two beads are considered connected (default: 5.81A)' )
+parser.add_argument( '--qs_for_I0', '-qi', type = int, required = False, default = 5,
+                    help = 'Number of low-q points to use to determine the value of I(0) (default: 5)' )
 
 args = parser.parse_args()
 
 if args.with_nanodisc and (args.fit is None or args.inserted_residues is None):
     parser.error("--with_nanodisc (-w) requires --fit (-f) and --inserted_residues (-aa).")
 
-# print( "Sequence file:  ", args.sequence_file )
-# print( "Using nanodisc: ", args.with_nanodisc )
-# print( "SAXS data:      ", args.input )
-# print( "Output:         ", args.output )
-# print( "Dmax:           ", args.dmax )
-# print( "Npasses:        ", args.passes )
-# print( "Loops:          ", args.loops )
-# print( "Connect:        ", args.connect_strength )
-# print( "Neighbours:     ", args.neighbours_strength )
-# print( "Schedule:       ", args.schedule )
-# print( "Temp factor:    ", args.temperature_factor )
-# print( "Clash distance: ", args.clash_distance )
-# print( "Max distance:   ", args.maximum_distance )
-# print( "Connect dist    ", args.connected )
-# print( "Fit             ", args.fit )
-# print( "AA              ", args.inserted_residues )
-# print( "Insertion       ", args.insertion_strength )
+print( "Sequence file:  ", args.sequence_file )
+print( "Using nanodisc: ", args.with_nanodisc )
+print( "SAXS data:      ", args.input )
+print( "Output:         ", args.output )
+print( "Dmax:           ", args.dmax )
+print( "Npasses:        ", args.passes )
+print( "Loops:          ", args.loops )
+print( "Connect:        ", args.connect_strength )
+print( "Neighbours:     ", args.neighbours_strength )
+print( "Schedule:       ", args.schedule )
+print( "Temp factor:    ", args.temperature_factor )
+print( "Clash distance: ", args.clash_distance )
+print( "Max distance:   ", args.maximum_distance )
+print( "Connect dist    ", args.connected )
+print( "Fit             ", args.fit )
+print( "AA              ", args.inserted_residues )
+print( "Insertion       ", args.insertion_strength )
+print( "qs I0           ", args.qs_for_I0 )
 
 cmd  = './runner ' + str(args.sequence_file) + ' ' + str(args.with_nanodisc) + ' ' + str(args.input) + ' ' + str(args.output) + ' ' + \
          str(args.dmax) + ' ' + str(args.passes) + ' ' + str(args.loops) + ' ' + str(args.connect_strength) + ' ' + str(args.neighbours_strength) + \
          ' ' + str(args.schedule) + ' ' + str(args.temperature_factor) + ' ' + str(args.clash_distance) + \
-         ' ' + str(args.maximum_distance) + ' ' + str(args.connected) + ' ' + str(args.fit) + ' ' + str(args.inserted_residues) + ' ' + str(args.insertion_strength)
+         ' ' + str(args.maximum_distance) + ' ' + str(args.connected) + ' ' + str(args.fit) + ' ' + str(args.inserted_residues) + \
+         ' ' + str(args.insertion_strength) + ' ' + str(args.qs_for_I0)
 
 #print(cmd)
 os.system( cmd )

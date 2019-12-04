@@ -1,3 +1,20 @@
+/*******************************************************************************
+Copyright (C) 2020  Niels Bohr Institute
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*******************************************************************************/
+
 #include <iostream>
 #include <complex>
 #include "Input.h"
@@ -43,6 +60,7 @@ class Nanodisc : public Input {
     double cvwater;                 /** correction factor for the water volume */
     double vertical_axis_endcaps;   /** vertical axis of the nanodisc endcaps */
     double scale_endcaps;           /** scale factor of the nanodisc endcaps */
+    double scale_int;
     double vertical_axis_ellipsoid; /** vertical axis of the ellipsoid */
     double rho_h2o;                 /** scatterling length of water */
     double rho_d2o;                 /** scattering length of D2O */
@@ -65,16 +83,20 @@ class Nanodisc : public Input {
     const int nphi   = (harmonics_order + 1) * 2; /** Number of points in phi for the angular integration */
 
     Array3D<double, 0, NTHETA, NPHI> F;                    /** temporarily stores the values of the form factor during calculation */
+    Array3D<std::complex<double>, 0, NTHETA, NPHI> FC;                   /** temporarily stores the values of the coil form factor during calculation */
     Array3D<std::complex<double>, 0, NH+1, NH+1> alpha;    /** form factor of the nanodisc expanded on the basis of spherical harmonics */
+    Array3D<std::complex<double>, 0, NH+1, NH+1> gamma;    /** form factor of the nanodisc expanded on the basis of spherical harmonics */
 
     /* PRIVATE FUNCTIONS */
     void flat_disc_form_factor( double, double, double, double, double, int );      /** computes the form factor of a flat disc */
     void flat_disc_form_factor2( double, double, double, double, double, int );
     void disc_w_endcaps_form_factor( double, double, double, double, double, int ); /** computes the form factor of a disc with elliptic endcaps */
+    void zshifted_gaussian_coil( double, double, double, double, int );
 
     double PsiEllipticCylinderWithEndcaps( double, double, double, double, double, double, double, double ); /** will get rid of this in flat version! */
     double expand_sh( int );                                                        /** expands the form factor in the basis of spherical harmonics */
     void expand_sh2( int );
+    void expand_sh_coil( int );
 
     int Discflat( double _Complex**, double, double, double, double, double, double, double, double);
 
@@ -86,6 +108,7 @@ class Nanodisc : public Input {
     void load_input( const std::string& );            /** reads the output of WillItFit to obtain info on the nanodisc */
     void load_input_flat( const std::string& );       /** reads the output of WillItFit to obtain info on the nanodisc */
     void nanodisc_form_factor( std::vector<double> ); /** computes the form factor of the nanodisc */
+    void gaussian_coil_form_factor( std::vector<double>, double );
     void test_nanodisc_flat( std::vector<double> );
 
     /* GET FUNCTIONS */
@@ -101,13 +124,14 @@ class Nanodisc : public Input {
     double get_rho_methyl();                          /** returns the scattering length of methyl groups */
     double get_rho_alkyl();                           /** returns the scattering length of the alkyl chains */
     double get_rho_head();                            /** returns the scattering length of the lipid heads */
+    double get_hbelt();
+    double get_wbelt();
     double get_cvprotein();                           /** returns the correction factor for the membrane protein volume */
     double get_xrough();                              /** returns the roughness coefficient */
     double get_e_scatt_len();                         /** returns electron scattering length in cm */
-    double get_hbelt();
-    double get_wbelt();
 
     std::complex<double> get_alpha( int, int, int );  /** returns the value of the expanded form factor at position i,l,m */
+    std::complex<double> get_gamma( int, int, int );  /** returns the value of the expanded form factor at position i,l,m */
     std::vector<std::complex<double> > get_alpha_buffer();
 
     int get_harmonics_order();                        /** returns the number of spherical harmonics used in the calculation */

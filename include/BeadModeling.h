@@ -1,3 +1,20 @@
+/*******************************************************************************
+Copyright (C) 2020  Niels Bohr Institute
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*******************************************************************************/
+
 #include <iostream>
 //#include "Nanodisc.h"
 #include "Bead.h"
@@ -58,6 +75,7 @@ class BeadModeling : public Input {
       unsigned int nq;             /** Length of the rad file, i.e. number of experimental q points */
       unsigned int nnnum;          /** Length of the nnum files */
       unsigned int qs_to_fit;      /** number of high q points to use to determine the background */
+      int ni0;                     /** number of low-q points to use for I(0) determination */
 
       double lambda;               /** TO BE CLEARED */
       double connect;              /** TO BE CLEARED */
@@ -75,11 +93,12 @@ class BeadModeling : public Input {
       double C;                    /** value of the connect penalty */
       double P;                    /** value of the total penalty */
       double S;                    /** surface penalty */
-      double M;                    /** MDist penalty */
+      double M;                    /** COM penalty */
       double P_old;
       double B;
       double T0;
       double D;
+      double Rg;
       double T_strength;           /** strength of the type penalty */
       double scale_factor;
       double ref_mat_sum;
@@ -94,6 +113,7 @@ class BeadModeling : public Input {
       std::vector<double> exp_q;
       std::vector<std::vector<double> > cmap; //helix cmap
       std::vector<std::vector<double> > ref_cmap; //reference helix cmap
+      std::vector<double> com;
 
       std::vector<double> ndist;
       std::vector<std::vector<double> > ndist_ref;
@@ -129,6 +149,7 @@ class BeadModeling : public Input {
       void logfile();
       void expand_sh( double, int, int, int, int );
       void calc_intensity( std::vector<double> );
+      void calc_intensity_wcoil( std::vector<double> );
       void distance_matrix();
       void update_statistics();
       void recursive_connect( int, int, int* );
@@ -140,12 +161,15 @@ class BeadModeling : public Input {
       void set_T0();
       void helix_ref_cmap();
       void helix_cmap();
+      void compute_com();
 
       //penalty functions
       void chi_squared();
       void type_penalty();
       void histogram_penalty();
       void connect_penalty();
+      void com_penalty();
+      void compact_penalty();
 
       double distance( unsigned const int, unsigned const int ); /** measures the distance between beads **/
       double bead_distance( Bead, Bead );
@@ -156,15 +180,14 @@ class BeadModeling : public Input {
 
       void setup();
       void simulated_annealing( bool );
-
       void only_prot_intensity();
 
     public:
       BeadModeling( const std::string& );
       BeadModeling( const std::string&, const std::string&, const std::string&, int, int,
-                    double, double, double, double, double, double, double, double );
+                    double, double, double, double, double, double, double, double, int );
       BeadModeling( const std::string&, const std::string&, const std::string&, const std::string&,
-                    int, int, double, double, double, double, int, double, double, double, double, double );
+                    int, int, double, double, double, double, int, double, double, double, double, double, int );
       ~BeadModeling();
 
       /* PUBLIC UTILITIES */

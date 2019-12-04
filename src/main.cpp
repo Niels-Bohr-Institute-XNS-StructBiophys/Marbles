@@ -1,3 +1,20 @@
+/*******************************************************************************
+Copyright (C) 2020  Niels Bohr Institute
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*******************************************************************************/
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -37,10 +54,11 @@ using namespace std;
      double conn = stod( argv[8] );
      double neig = stod( argv[9] );
      double sche = stod( argv[10] );
-     int tm_fact = stoi( argv[11] );
+     double tm_fact = stod( argv[11] );
      double clas = stod( argv[12] );
      double maxd = stod( argv[13] );
      double cond = stod( argv[14] );
+     int qs_I0   = stoi( argv[18] );
 
      if( str_nano == "True" ) {
 
@@ -67,12 +85,12 @@ using namespace std;
        // exit(-1);
 
        BeadModeling BD = BeadModeling( sequence, data, fit, out, npasses, nloops, dmax,
-                                     conn, neig, t_str, ins_res, sche, clas, maxd, cond, tm_fact );
+                                     conn, neig, t_str, ins_res, sche, clas, maxd, cond, tm_fact, qs_I0 );
        BD.SA_nanodisc();
 
      } else {
        BeadModeling BD = BeadModeling( sequence, data, out, npasses, nloops, dmax,
-                                     conn, neig, sche, clas, maxd, cond, tm_fact );
+                                     conn, neig, sche, clas, maxd, cond, tm_fact, qs_I0 );
        BD.SA_protein();
      }
 
