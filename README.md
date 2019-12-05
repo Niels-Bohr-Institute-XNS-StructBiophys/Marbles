@@ -6,6 +6,47 @@ C++ code for ab-initio shape prediction of a protein given its SAXS intensity an
 2. Python >= 2.7
 3. NLOpt
 
+## Installation of Dependencies
+### GSL
+From your console, you can download GSL 1.9 by running the following command on your console
+```
+wget https://ftp.gnu.org/gnu/gsl/gsl-1.9.tar.gz
+```
+Place the GSL folder in your home directory and unpack it by running
+```
+tar xzf gsl-1.9.tar.gz
+```
+Change to this directory
+```
+cd gsl-1.9
+```
+and create and installation directory in the location you consider more appropriate (your /home/, for example)
+```
+mkdir /home/myuser/gsl-installed/
+```
+Mind that the name of the gsl installation directory can be whatever you prefer. Now you can configure the installation, selecting the installation directory as prefexi:
+```
+./configure --prefix=/home/myuser/gsl-installed/
+```
+At this point you can compile the library by running
+```
+make
+```
+and check that the installation went fine with
+```
+make check
+```
+You are now ready for installation
+```
+make install
+```
+Beware that if you didn't specify any prefix during configuration, you will need super user privileges to install the library. If so, just run
+```
+sudo make install
+```
+instead. 
+
+
 ## Installation
 You can download the code by cloning the repository
 ```
