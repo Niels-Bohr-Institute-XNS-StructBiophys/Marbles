@@ -93,12 +93,12 @@ git clone https://github.com/Niels-Bohr-Institute-XNS-StructBiophys/BeadModeling
 ```
 Once downloaded, open `makefile` and update the variables `GSL_LIB_PATH`, `GSL_INCLUDE_PATH`, `NLOPT_LIB_PATH` and `NLOPT_INCLUDE_PATH` by specifying the paths to GSL and NLOpt. If the two libraries are not installed on your system, refer to the previous section for a quick guide on how to install them. At this point, run `make` to compile the code. The code will not be installed, and it needs to be called from the `marbles` directory. 
 
-## Run
-To run the code, type in your console
+## Running Marbles
+To know all the possible options of the code, type in your console
 ```
-python beads.py --help
+python marbles.py --help
 ```
-This command will show all the possible options and mandatory inputs:
+This command will prompt a list will all options and mandatory inputs:
 ```
   -h, --help            show this help message and exit
   --sequence_file SEQUENCE_FILE, -s SEQUENCE_FILE
@@ -148,6 +148,14 @@ This command will show all the possible options and mandatory inputs:
   --qs_for_I0 QS_FOR_I0, -qi QS_FOR_I0
                         Number of low-q points to use to determine the value
                         of I(0) (default: 5)
+```
+The user has the complete freedom to tweak all the free parameters in the code just by adjusting the inputs in the parser. However, inexperienced users can ignore most of the flags, as the default values will work well for most of the systems. A minimal running command for a protein in solution composed by 300 amino acids and with a Dmax of 50A would look like this:
+```
+python marbles.py -s /my/input/prot.fasta.txt -i /my/input/saxs.dat -d 50 -l 300 -o /my/output/marbles_run/
+```
+The `/my/output/` should exist already and will not be created. Instead, a minimal running command for a protein in a nanodisc composed by 300 amino acids and with a Dmax of 50A, with 15 amino acids inserted in the bilayer, would look like this:
+```
+python marbles.py -w -s /my/input/prot.fasta.txt -i /my/input/saxs.dat -d 50 -l 300 -aa 15 --fit /my/input/Results.wif -o /my/output/marbles_run/
 ```
 
 ## Contacts
