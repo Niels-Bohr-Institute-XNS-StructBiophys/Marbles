@@ -1,11 +1,14 @@
-# Bead Modelling
+# Marbles
 C++ code for ab-initio shape prediction of a protein given its SAXS intensity and sequence. It can be used either for solvated proteins or for proteins inserted into membrane nanodiscs. The code allows the introduction of custom penalty functions and form factors consistent with simple coarse grained models.
 
 ## Table of Contents
 1. [Dependencies](#dependencies)
 2. [Dependencies Installation](#dep-installation)
-3. [Third Example](#third-example)
-4. [Fourth Example](#fourth-examplehttpwwwfourthexamplecom)
+3. [Download and Compilation](#m-installation)
+4. [Input Preparation](#input)
+5. [Running Marbles](#running)
+6. [Contact](#contact)
+7. [Acknowledgments](#aknw)
 
 ## Dependencies <a name="dependencies"></a>
 1. GSL <= 1.9
@@ -102,14 +105,14 @@ and its only dependency is the GSL library. The use of WillItFit will not be cov
 https://github.com/Niels-Bohr-Institute-XNS-StructBiophys/Will_It_Fit/blob/master/WIFbashReadMe.txt
 ```
 
-## Marbles Download and Compilation
+## Download and Compilation <a name="m-installation"></a>
 You can download the code by cloning the repository
 ```
 git clone https://github.com/Niels-Bohr-Institute-XNS-StructBiophys/BeadModeling.git
 ```
 Once downloaded, open `makefile` and update the variables `GSL_LIB_PATH`, `GSL_INCLUDE_PATH`, `NLOPT_LIB_PATH` and `NLOPT_INCLUDE_PATH` by specifying the paths to GSL and NLOpt. If the two libraries are not installed on your system, refer to the previous section for a quick guide on how to install them. At this point, run `make` to compile the code. The code will not be installed, and it needs to be called from the `marbles` directory. 
 
-## Input Preparation
+## Input Preparation <a name="input"></a>
 To predict the shape of a membrane protein in a nanodisc with Marbles, you need the following information:
 1. the SAXS intensity, in `cm^-1`, as a function of the scattering vector, in `A^-1`, of a solution of empty nanodiscs;
 2. the SAXS intensity, in `cm^-1`, as a function of the scattering vector, in `A^-1`, of a solution of loaded nanodiscs;
@@ -133,7 +136,7 @@ MQIFVKTLTGKTITLEVEPSDTIENVKAKIQDKEGIPPDQQRLIFAGKQLEDGRTLSDYNIQKESTLHLVLRLRGG
 ```
 If some portion, or domain, of the protein is expected to be disordered and to protrude from the bottom leaflet of the nanodisc, we suggest the user to remove this part of the sequence from the FASTA file, as Marbles will treat it on a separate footing.  
 
-## Running Marbles
+## Running Marbles <a name="running"></a>
 To know all the possible options of the code, type in your console
 ```
 python marbles.py --help
@@ -208,8 +211,8 @@ Finally, a minimal running command for a protein in a nanodisc composed by 300 a
 python marbles.py -w -s /my/input/prot.fasta.txt -i /my/input/saxs.dat -d 50 -l 300 -aa 15 -dt 30 --fit /my/input/Results.wif -o /my/output/marbles_run/
 ```
 
-## Contacts
+## Contacts <a name="contacts"></a>
 For bug reports, issues and whatnot contact simone.orioli[at]nbi.ku.dk.
 
-## Aknowledgments
+## Aknowledgments <a name="acknow"></a>
 Thanks to N. Skar-Gislinge and S. A. R. Kynde for writing part of the routines in the code, M. N. Pedersen for useful comments and suggestions and Nordforsk Fund for funding.  
