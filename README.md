@@ -6,10 +6,11 @@ C++ code for ab-initio shape prediction of a protein given its SAXS intensity an
 2. Python >= 2.7
 3. Cmake
 4. NLOpt
+5. WillItFit
 
 ## Installation of Dependencies
 ### GSL
-From your console, you can download GSL 1.9 by running the following command:
+Marbles uses the GSL library to compute legendre polynomials and random numbers. From your console, you can download GSL 1.9 by running the following command:
 ```
 wget https://ftp.gnu.org/gnu/gsl/gsl-1.9.tar.gz
 ```
@@ -48,7 +49,7 @@ sudo make install
 instead. This is the list of the minimal steps required to make Marbles work, but we refer the user to the official GSL page, `https://www.gnu.org/software/gsl/` for further information about the library. 
 
 ### NLOpt
-From your console, you can download NLOpt running the following command:
+Marbles employes NLOpt library to run some simple fits. From your console, you can download NLOpt running the following command:
 ```
 wget https://github.com/stevengj/nlopt/archive/v2.6.1.tar.gz
 ```
@@ -85,6 +86,15 @@ If no prefix has been specified at configuration level, a default directory will
 sudo make install
 ```
 instead. This is the list of the minimal steps required to make Marbles work, but we refer the user to the official NLOpt page, `https://nlopt.readthedocs.io/en/latest/` for further information about the library. 
+### WillItFit
+Marbles doesn't employ WillItFit at run time, but rather WillItFit is used to fit the SAXS signal of the bare nanodisc. WillItFit can be downloaded at
+```
+https://github.com/Niels-Bohr-Institute-XNS-StructBiophys/Will_It_Fit.git
+```
+and its only dependency is the GSL library. The use of WillItFit will not be covered here, and we refer the user to the original documentation, which can be found at
+```
+https://github.com/Niels-Bohr-Institute-XNS-StructBiophys/Will_It_Fit/blob/master/WIFbashReadMe.txt
+```
 
 ## Marbles Download and Compilation
 You can download the code by cloning the repository
@@ -92,6 +102,24 @@ You can download the code by cloning the repository
 git clone https://github.com/Niels-Bohr-Institute-XNS-StructBiophys/BeadModeling.git
 ```
 Once downloaded, open `makefile` and update the variables `GSL_LIB_PATH`, `GSL_INCLUDE_PATH`, `NLOPT_LIB_PATH` and `NLOPT_INCLUDE_PATH` by specifying the paths to GSL and NLOpt. If the two libraries are not installed on your system, refer to the previous section for a quick guide on how to install them. At this point, run `make` to compile the code. The code will not be installed, and it needs to be called from the `marbles` directory. 
+
+## Input Preparation
+To predict the shape of a membrane protein in a nanodisc with Marbles, you need the following information:
+1. the SAXS intensity, in cm^-1, as a function of the scattering vector, in A^-1, of a solution of empty nanodiscs;
+2. the SAXS intensity, in cm^-1, as a function of the scattering vector, in A^-1, of a solution of loaded nanodiscs;
+3. the protein sequence;
+4. the Dmax of the loaded nanodisc system;
+5. an estimate of the number of residues inserted in the nanodisc;
+6. a Results.wif file, obtained from WillItFit, containing the parameters of the empty nanodisc fit.
+The SAXS intensity of the empty nanodisc is used only for the determination of the nanodisc parameters through WillItFit, and will not be employed by Marbles directly. Therefore, refer to the original documentation in WillItFit for the file formatting. Instead, the SAXS intensity of the loaded nanodisc has to be provided in a file, using .dat or .txt extensions, following the format
+```
+q1  I1  e1
+q2  I2  e2
+..  ..  ..
+..  ..  ..
+qN  IN  eN   
+```
+where qi represents the scattering vector, Ii the SAXS intensity measured at qi and ei the error on Ii. All comments should be removed from the file, while no particular spacing is required between columns. The protein sequence is expected to be provided in FASTA format. If some portion, or domain, of the protein is expected to be disordered and to protrude from the bottom leaflet of the nanodisc, we suggest the user to remove this part of the sequence from the FASTA file, as Marbles will treat it on a separate footing.  
 
 ## Running Marbles
 To know all the possible options of the code, type in your console
