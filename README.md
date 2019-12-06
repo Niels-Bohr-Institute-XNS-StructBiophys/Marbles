@@ -1,14 +1,20 @@
 # Bead Modelling
 C++ code for ab-initio shape prediction of a protein given its SAXS intensity and sequence. It can be used either for solvated proteins or for proteins inserted into membrane nanodiscs. The code allows the introduction of custom penalty functions and form factors consistent with simple coarse grained models.
 
-## Dependencies
+## Table of Contents
+1. [Dependencies](#dependencies)
+2. [Dependencies Installation](#dep-installation)
+3. [Third Example](#third-example)
+4. [Fourth Example](#fourth-examplehttpwwwfourthexamplecom)
+
+## Dependencies <a name="dependencies"></a>
 1. GSL <= 1.9
 2. Python >= 2.7
 3. Cmake
 4. NLOpt
 5. WillItFit
 
-## Installation of Dependencies
+## Dependencies Installation <a name="dep-installation"></a>
 ### GSL
 Marbles uses the GSL library to compute legendre polynomials and random numbers. From your console, you can download GSL 1.9 by running the following command:
 ```
@@ -111,6 +117,7 @@ To predict the shape of a membrane protein in a nanodisc with Marbles, you need 
 4. the Dmax of the loaded nanodisc system, in `A`;
 5. an estimate of the number of residues inserted in the nanodisc;
 6. a Results.wif file, obtained from WillItFit, containing the parameters of the empty nanodisc fit.
+
 The SAXS intensity of the empty nanodisc is used only for the determination of the nanodisc parameters through WillItFit, and will not be employed by Marbles directly. Therefore, refer to the original documentation in WillItFit for the file formatting. Instead, the SAXS intensity of the loaded nanodisc has to be provided in a file, using .dat or .txt extensions, following the format
 ```
 q1  I1  e1
@@ -195,6 +202,10 @@ python marbles.py -s /my/input/prot.fasta.txt -i /my/input/saxs.dat -d 50 -l 300
 The `/my/output/` should exist already and will not be created. Instead, a minimal running command for a protein in a nanodisc composed by 300 amino acids and with a Dmax of 50A, with 15 amino acids inserted in the bilayer, would look like this:
 ```
 python marbles.py -w -s /my/input/prot.fasta.txt -i /my/input/saxs.dat -d 50 -l 300 -aa 15 --fit /my/input/Results.wif -o /my/output/marbles_run/
+```
+Finally, a minimal running command for a protein in a nanodisc composed by 300 amino acids and with a Dmax of 50A, with 15 amino acids inserted in the bilayer and 30 amino acids protruding from the bottom leaflet, would look like this:
+```
+python marbles.py -w -s /my/input/prot.fasta.txt -i /my/input/saxs.dat -d 50 -l 300 -aa 15 -dt 30 --fit /my/input/Results.wif -o /my/output/marbles_run/
 ```
 
 ## Contacts
