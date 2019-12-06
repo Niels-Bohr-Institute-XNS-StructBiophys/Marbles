@@ -362,9 +362,9 @@ void BeadModeling::initial_configuration( double x0, double y0 ) {
 
           do {
 
-            x = rng.in_range2( -r, r );
-            y = rng.in_range2( -r, r );
-            z = rng.in_range2( -r, r );
+            x = rng.in_range( -r, r );
+            y = rng.in_range( -r, r );
+            z = rng.in_range( -r, r );
             beads[i].assign_position( x + x0, y + y0, z + shift );
 
           } while( x*x +  y*y + z*z > r2 ); // condition that defines a sphere
@@ -1152,12 +1152,12 @@ void BeadModeling::move_only_protein() {
     if( s == 1 || s == 1001 ) { /*Try the same set of beads 1000 times*/
       do {
         s = 1;
-        i = (int)( rng.in_range2(0, nresidues) ); /*Pick a bead to be moved*/
-        j = (int)( rng.in_range2(0, nresidues) ); /*Pick another bead. n is to be placed in contact with m*/
+        i = (int)( rng.in_range(0, nresidues) ); /*Pick a bead to be moved*/
+        j = (int)( rng.in_range(0, nresidues) ); /*Pick another bead. n is to be placed in contact with m*/
       } while( i == j );
     }
 
-    vec = rng.vector3( d2 );
+    vec = rng.vector( d2 );
     beads[i].assign_position( beads[j].x + vec[0], beads[j].y + vec[1], beads[j].z + vec[2] );
 
     // if( distance(i,-1) > dmax/2. ) {
@@ -1192,7 +1192,7 @@ void BeadModeling::move( int l ) {
 
   double rmax, rmin, d2, z_ref;
   vector<double> vec(3);
-  d2 = rng.in_range2( clash_distance, max_distance );
+  d2 = rng.in_range( clash_distance, max_distance );
 
   rmax = nd.get_radius_major() - 3.; //45.;//42.6;
   rmin = nd.get_radius_minor() - 3.; //32.;//29.0;
@@ -1205,12 +1205,12 @@ void BeadModeling::move( int l ) {
     if( s == 1 || s == 1001 ) { /*Try the same set of beads 1000 times*/
       do {
         s = 1;
-        i = (int)( rng.in_range2(0, nresidues) ); /*Pick a bead to be moved*/
-        j = (int)( rng.in_range2(0, nresidues) ); /*Pick another bead. n is to be placed in contact with m*/
+        i = (int)( rng.in_range(0, nresidues) ); /*Pick a bead to be moved*/
+        j = (int)( rng.in_range(0, nresidues) ); /*Pick another bead. n is to be placed in contact with m*/
       } while( i == j );
     }
 
-    vec = rng.vector3( d2 );
+    vec = rng.vector( d2 );
     beads[i].assign_position( beads[j].x + vec[0], beads[j].y + vec[1], beads[j].z + vec[2] );
 
     //compute_com();
@@ -1313,7 +1313,7 @@ void BeadModeling::SA_protein() {
         move_only_protein();
 
         decreasing_p = ( P < P_old );
-        double tmp = rng.in_range2(0.,1.);
+        double tmp = rng.in_range(0.,1.);
 
         metropolis   = ( exp( - (P - P_old)/B ) > tmp );
         accept = ( decreasing_p || metropolis );
@@ -1353,10 +1353,10 @@ void BeadModeling::SA_protein() {
     string calc_intensity = outdir + "intensities/" + to_string(p) + ".dat";
     write_pdb( pdb );
     write_intensity( calc_intensity );
-    write_statistics( ndist, outdir + "ndist.dat" );
-    write_statistics( nnum1, outdir + "nnum1.dat" );
-    write_statistics( nnum2, outdir + "nnum2.dat" );
-    write_statistics( nnum3, outdir + "nnum3.dat" );
+    // write_statistics( ndist, outdir + "ndist.dat" );
+    // write_statistics( nnum1, outdir + "nnum1.dat" );
+    // write_statistics( nnum2, outdir + "nnum2.dat" );
+    // write_statistics( nnum3, outdir + "nnum3.dat" );
 
     B *= schedule;
 
@@ -1465,7 +1465,7 @@ void BeadModeling::SA_nanodisc() {
         move( l );
 
         decreasing_p = ( P < P_old );
-        double tmp = rng.in_range2(0.,1.);
+        double tmp = rng.in_range(0.,1.);
         metropolis   = ( exp( - (P - P_old)/B ) > tmp );
         accept = ( decreasing_p || metropolis );
 

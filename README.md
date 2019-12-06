@@ -105,10 +105,10 @@ Once downloaded, open `makefile` and update the variables `GSL_LIB_PATH`, `GSL_I
 
 ## Input Preparation
 To predict the shape of a membrane protein in a nanodisc with Marbles, you need the following information:
-1. the SAXS intensity, in cm^-1, as a function of the scattering vector, in A^-1, of a solution of empty nanodiscs;
-2. the SAXS intensity, in cm^-1, as a function of the scattering vector, in A^-1, of a solution of loaded nanodiscs;
+1. the SAXS intensity, in `cm^-1`, as a function of the scattering vector, in `A^-1`, of a solution of empty nanodiscs;
+2. the SAXS intensity, in `cm^-1`, as a function of the scattering vector, in `A^-1`, of a solution of loaded nanodiscs;
 3. the protein sequence;
-4. the Dmax of the loaded nanodisc system;
+4. the Dmax of the loaded nanodisc system, in `A`;
 5. an estimate of the number of residues inserted in the nanodisc;
 6. a Results.wif file, obtained from WillItFit, containing the parameters of the empty nanodisc fit.
 The SAXS intensity of the empty nanodisc is used only for the determination of the nanodisc parameters through WillItFit, and will not be employed by Marbles directly. Therefore, refer to the original documentation in WillItFit for the file formatting. Instead, the SAXS intensity of the loaded nanodisc has to be provided in a file, using .dat or .txt extensions, following the format
@@ -119,7 +119,12 @@ q2  I2  e2
 ..  ..  ..
 qN  IN  eN   
 ```
-where qi represents the scattering vector, Ii the SAXS intensity measured at qi and ei the error on Ii. All comments should be removed from the file, while no particular spacing is required between columns. The protein sequence is expected to be provided in FASTA format. If some portion, or domain, of the protein is expected to be disordered and to protrude from the bottom leaflet of the nanodisc, we suggest the user to remove this part of the sequence from the FASTA file, as Marbles will treat it on a separate footing.  
+where `qi` represent the scattering vectors, `Ii` the SAXS intensity measured at `qi` and `ei` the error on `Ii`. All comments should be removed from the file, while no particular spacing is required between columns. The protein sequence is expected to be provided in FASTA format. For example, in the case of ubiquitin the provided input file should look like this
+```
+>|Ubiquitin(UBQ)
+MQIFVKTLTGKTITLEVEPSDTIENVKAKIQDKEGIPPDQQRLIFAGKQLEDGRTLSDYNIQKESTLHLVLRLRGG
+```
+If some portion, or domain, of the protein is expected to be disordered and to protrude from the bottom leaflet of the nanodisc, we suggest the user to remove this part of the sequence from the FASTA file, as Marbles will treat it on a separate footing.  
 
 ## Running Marbles
 To know all the possible options of the code, type in your console
@@ -146,6 +151,7 @@ This command will prompt a list will all options and mandatory inputs:
   --output OUTPUT, -o OUTPUT
                         Path to directory where to store simulation results
   --fit FIT, -f FIT     Path to WillItFit output file for nanodisc best fit
+                        (ignored if -w is not set)
   --passes PASSES, -p PASSES
                         Number of Monte Carlo iterations (default: 100)
   --connect_strength CONNECT_STRENGTH, -c CONNECT_STRENGTH
@@ -156,9 +162,14 @@ This command will prompt a list will all options and mandatory inputs:
                         function (default: 1)
   --inserted_residues INSERTED_RESIDUES, -aa INSERTED_RESIDUES
                         Number of residues to accomodate in the nanodisc
+                        (ignored if -w is not specified)
   --insertion_strength INSERTION_STRENGTH, -ii INSERTION_STRENGTH
                         Strength of the neighbours distribution penalty
-                        function (default: 5)
+                        function (default: 5, ignored if -w is not set)
+  --disordered_tail DISORDERED_TAIL, -dt DISORDERED_TAIL
+                        Number of residues composing a disordered tail
+                        protruding from the bottom leaflet of the bilayer
+                        (default: 0, ignored if -w is not set)
   --schedule SCHEDULE, -ss SCHEDULE
                         Simulated annealing schedule (default: 0.9)
   --temperature_factor TEMPERATURE_FACTOR, -t TEMPERATURE_FACTOR

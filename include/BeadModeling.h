@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "Bead.h"
 #include "Random.h"
 #include "Fit.h"
+#include <vector>
 
 #define NH 17 //Order of harmonics
 #define NTHETA ((NH+1)*2)

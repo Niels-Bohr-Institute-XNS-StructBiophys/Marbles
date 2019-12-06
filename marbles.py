@@ -37,7 +37,7 @@ parser.add_argument( '--output', '-o', type = str, required = True,
                     help = 'Path to directory where to store simulation results' )
 
 parser.add_argument( '--fit', '-f', type = str, required = False,
-                    help = 'Path to WillItFit output file for nanodisc best fit' )
+                    help = 'Path to WillItFit output file for nanodisc best fit (ignored if -w is not set)' )
 
 parser.add_argument( '--passes', '-p', type = int, required = False, default = 100,
                     help = 'Number of Monte Carlo iterations (default: 100)' )
@@ -47,9 +47,11 @@ parser.add_argument( '--neighbours_strength', '-n', type = float, required = Fal
                     help = 'Strength of the neighbours distribution penalty function (default: 1)' )
 
 parser.add_argument( '--inserted_residues', '-aa', type = int, required = False,
-                    help = 'Number of residues to accomodate in the nanodisc' )
+                    help = 'Number of residues to accomodate in the nanodisc (ignored if -w is not specified)' )
 parser.add_argument( '--insertion_strength', '-ii', type = float, required = False, default = 5,
-                    help = 'Strength of the neighbours distribution penalty function (default: 5)' )
+                    help = 'Strength of the neighbours distribution penalty function (default: 5, ignored if -w is not set)' )
+parser.add_argument( '--disordered_tail', '-dt', type = int, required = False, default = 0,
+                    help = 'Number of residues composing a disordered tail protruding from the bottom leaflet of the bilayer (default: 0, ignored if -w is not set)' )
 
 parser.add_argument( '--schedule', '-ss', type = float, required = False, default = 0.9,
                     help = 'Simulated annealing schedule (default: 0.9)' )
@@ -86,13 +88,14 @@ print( "Connect dist    ", args.connected )
 print( "Fit             ", args.fit )
 print( "AA              ", args.inserted_residues )
 print( "Insertion       ", args.insertion_strength )
+print( "Tail length     ", args.disordered_tail )
 print( "qs I0           ", args.qs_for_I0 )
 
 cmd  = './runner ' + str(args.sequence_file) + ' ' + str(args.with_nanodisc) + ' ' + str(args.input) + ' ' + str(args.output) + ' ' + \
          str(args.dmax) + ' ' + str(args.passes) + ' ' + str(args.loops) + ' ' + str(args.connect_strength) + ' ' + str(args.neighbours_strength) + \
          ' ' + str(args.schedule) + ' ' + str(args.temperature_factor) + ' ' + str(args.clash_distance) + \
          ' ' + str(args.maximum_distance) + ' ' + str(args.connected) + ' ' + str(args.fit) + ' ' + str(args.inserted_residues) + \
-         ' ' + str(args.insertion_strength) + ' ' + str(args.qs_for_I0)
+         ' ' + str(args.insertion_strength) + ' ' + str(args.qs_for_I0) + ' ' + str(args.disordered_tail)
 
 #print(cmd)
 os.system( cmd )
