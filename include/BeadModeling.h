@@ -89,6 +89,7 @@ class BeadModeling : public Input {
       double t_ratio;
       double schedule;
       double convergence_temp;
+      double convergence_accr;
       double X;                    /** chi squared of SAXS intensity */
       double T;                    /** value of the type penalty */
       double H;                    /** value of the histogram penalty */
@@ -189,7 +190,8 @@ class BeadModeling : public Input {
       BeadModeling( const std::string&, const std::string&, const std::string&, int, int,
                     double, double, double, double, double, double, double, double, int );
       BeadModeling( const std::string&, const std::string&, const std::string&, const std::string&,
-                    int, int, double, double, double, double, int, double, double, double, double, double, int, int, double );
+                    int, int, double, double, double, double, int, double, double, double, double,
+                    double, int, int, double, int, double, double );
       ~BeadModeling();
 
       /* PUBLIC UTILITIES */

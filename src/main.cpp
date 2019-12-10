@@ -21,78 +21,80 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "RigidBody.h"
 using namespace std;
 
- int main( int argc, char *argv[] ) {
+int main( int argc, char *argv[] ) {
 
-   cout << endl;
-   cout << "###########" << endl;
-   cout << "# MARBLES #" << endl;
-   cout << "###########" << endl;
-   cout << endl;
+  cout << endl;
+  cout << "##################################" << endl;
+  cout << "#          MARBLES v.0.1         #" << endl;
+  cout << "#                                #" << endl;
+  cout << "# A software for the estimation  #" << endl;
+  cout << "# of shapes of membrane proteins #" << endl;
+  cout << "# inserted in membrane nanodiscs #" << endl;
+  cout << "##################################" << endl;
+  cout << endl;
 
-   if( argc < 2 ) {
+  if( argc < 2 ) {
 
-     cout << endl;
-     cout << "Usage: python marbles.py --help" << endl;
-     cout << endl;
-     exit(-1);
+    cout << endl;
+    cout << "Usage: python marbles.py --help" << endl;
+    cout << endl;
+    exit(-1);
 
-   } else {
+  } else {
 
-     string sequence( argv[1] );
-     string str_nano( argv[2] );
+    string sequence( argv[1] );
+    string data( argv[2] );
+    string out( argv[3] );
+    string fit( argv[14] );
 
-     string data( argv[3] );
-     string out( argv[4] );
+    double dmax    = stod( argv[4]  );
+    int npasses    = stoi( argv[5]  );
+    int nloops     = stoi( argv[6]  );
+    double conn    = stod( argv[7]  );
+    double neig    = stod( argv[8]  );
+    double sche    = stod( argv[9]  );
+    double tm_fact = stod( argv[10] );
+    double clas    = stod( argv[11] );
+    double maxd    = stod( argv[12] );
+    double cond    = stod( argv[13] );
+    int ins_res    = stoi( argv[15] );
+    double t_str   = stod( argv[16] );
+    int qs_I0      = stoi( argv[17] );
+    int n_dtail    = stoi( argv[18] );
+    double zs      = stoi( argv[19] );
+    int qs_b       = stoi( argv[20] );
+    double convt   = stod( argv[21] );
+    double convar  = stod( argv[22] );
 
-     double dmax = stod( argv[5] );
-     int npasses = stoi( argv[6] );
-     int nloops  = stoi( argv[7] );
-     double conn = stod( argv[8] );
-     double neig = stod( argv[9] );
-     double sche = stod( argv[10] );
-     double tm_fact = stod( argv[11] );
-     double clas = stod( argv[12] );
-     double maxd = stod( argv[13] );
-     double cond = stod( argv[14] );
-     int qs_I0   = stoi( argv[18] );
+    // cout << "Sequence: " << sequence << endl;
+    // cout << "Data:     " << data << endl;
+    // cout << "Output    " << out << endl;
+    // cout << "Dmax      " << dmax << endl;
+    // cout << "Npasses   " << npasses << endl;
+    // cout << "Nloops    " << nloops << endl;
+    // cout << "Connect   " << conn << endl;
+    // cout << "Neig      " << neig << endl;
+    // cout << "Schedule  " << sche << endl;
+    // cout << "Temp fact " << tm_fact << endl;
+    // cout << "Clash     " << clas << endl;
+    // cout << "Max dist  " << maxd << endl;
+    // cout << "Conn dist " << cond << endl;
+    // cout << "Insertion " << ins_res << endl;
+    // cout << "Ins stren " << t_str << endl;
+    // cout << "qs I0     " << qs_I0 << endl;
+    // cout << "Tail      " << n_dtail << endl;
+    // cout << "Shift     " << zs << endl;
+    // cout << "qs B      " << qs_b << endl;
+    // cout << "Conv temp " << convt << endl;
+    // cout << "Conv acr  " << convar << endl;
+    // exit(-1);
 
-     if( str_nano == "True" ) {
+    BeadModeling BD = BeadModeling( sequence, data, fit, out, npasses, nloops, dmax,
+                                    conn, neig, t_str, ins_res, sche, clas, maxd, cond,
+                                    tm_fact, qs_I0, n_dtail, zs, qs_b, convt, convar );
+    BD.SA_nanodisc();
 
-       string fit( argv[15] );
-       int ins_res  = stoi( argv[16] );
-       double t_str = stod( argv[17] );
-       int n_dtail  = stoi( argv[19] );
-       dhouble zs   = stoi( argv[20] );
-
-       // cout << "Sequence  " << sequence << endl;
-       // cout << "Data      " << data << endl;
-       // cout << "Out dir   " << out << endl;
-       // cout << "npasses   " << npasses << endl;
-       // cout << "nloops    " << nloops << endl;
-       // cout << "dmax      " << dmax << endl;
-       // cout << "C         " << conn << endl;
-       // cout << "H         " << neig << endl;
-       // cout << "schedule  " << sche << endl;
-       // cout << "clash     " << clas << endl;
-       // cout << "max dist  " << maxd << endl;
-       // cout << "conn dist " << cond << endl;
-       // cout << "temp fact " << tm_fact << endl;
-       // cout << "fit       " << fit << endl;
-       // cout << "residues  " << ins_res << endl;
-       // cout << "insertion " << t_str << endl;
-       // exit(-1);
-
-       BeadModeling BD = BeadModeling( sequence, data, fit, out, npasses, nloops, dmax,
-                                     conn, neig, t_str, ins_res, sche, clas, maxd, cond, tm_fact, qs_I0, n_dtail, zs );
-       BD.SA_nanodisc();
-
-     } else {
-       BeadModeling BD = BeadModeling( sequence, data, out, npasses, nloops, dmax,
-                                     conn, neig, sche, clas, maxd, cond, tm_fact, qs_I0 );
-       BD.SA_protein();
-     }
-
-   }
+  }
 
   return 0;
 }

@@ -107,7 +107,8 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
 //------------------------------------------------------------------------------
 
 BeadModeling::BeadModeling( const string& seq, const string& data, const string& ft, const string& out, int passes, int loops, double dm, double conn,
-                            double lm, double tm, int ins, double sched, double clash, double maxd, double connd, double tr, int n0, int ndt, double zs ) {
+                            double lm, double tm, int ins, double sched, double clash, double maxd, double connd, double tr, int n0, int ndt, double zs,
+                            int qs_B, double convt, double convar ) {
 
   rad_file          = data;           //path to the experimental .rad file
   sequence_file     = seq;           //path to the file with the protein sequence
@@ -128,9 +129,9 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
   ni0               = n0;
   n_dtail           = ndt;
   shift             = zs;
-  convergence_temp  = 0.1.;
-  convergence_accr  = 0.05.;
-  qs_to_fit         = 4;
+  convergence_temp  = convt;
+  convergence_accr  = convar;
+  qs_to_fit         = qs_B;
 
   sequence          = "";
   sphere_generated  = false;
@@ -143,36 +144,36 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
     Rg = 1.93 * pow( n_dtail, 0.588 ); //R0 * N^nu, where nu is the Flory constant and R0 is obtained by fitting the behavior of many IDPs
   }
 
-  string mkdir = "mkdir " + outdir;
+  string mkdir = "mkdir " + outdir + " >/dev/null 2>&1";
   system( mkdir.c_str() );
 
-  mkdir = "mkdir " + outdir + "configurations/";
+  mkdir = "mkdir " + outdir + "configurations/ >/dev/null 2>&1";
   system( mkdir.c_str() );
 
-  mkdir = "mkdir " + outdir + "intensities/";
+  mkdir = "mkdir " + outdir + "intensities/ >/dev/null 2>&1";
   system( mkdir.c_str() );
 
   load_FASTA(); //load sequence file
-  cout << "# File '" << sequence_file << "' loaded" << endl;
+  //cout << "# File '" << sequence_file << "' loaded" << endl;
   nresidues = sequence.length();
 
   nd.load_input_flat( best_fit );
-  cout << "# File '" << best_fit << "' loaded" << endl;
+  //cout << "# File '" << best_fit << "' loaded" << endl;
 
   load_rad(); //experimental file with SAXS or SANS data
-  cout << "# File '" << rad_file << "' loaded " << endl;
+  //cout << "# File '" << rad_file << "' loaded " << endl;
 
   load_statistics(); //statistics needed for penalty function
 
-  cout << endl;
-  cout << "# SUMMARY OF PARAMETERS" << endl;
-  cout << "# ---------------------" << endl;
-  cout << "# Number of beads:          " << nresidues << endl;
-  cout << "# Radius of initial sphere: " << dmax / 2. << endl;
-  cout << "# Tail Rg:                  " << Rg << endl;
-  cout << "# Max number of passes:     " << npasses << endl;
-  cout << "# q points I(0) estimation  " << ni0 << endl;
-  cout << "# Loops per pass:           " << loops_per_pass << endl;
+  // cout << endl;
+  // cout << "# SUMMARY OF PARAMETERS" << endl;
+  // cout << "# ---------------------" << endl;
+  // cout << "# Number of beads:          " << nresidues << endl;
+  // cout << "# Radius of initial sphere: " << dmax / 2. << endl;
+  // cout << "# Tail Rg:                  " << Rg << endl;
+  // cout << "# Max number of passes:     " << npasses << endl;
+  // cout << "# q points I(0) estimation  " << ni0 << endl;
+  // cout << "# Loops per pass:           " << loops_per_pass << endl;
 
   nq = rad.size();
   nnnum = nnum1_ref.size();
@@ -199,8 +200,11 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
   fit.fit_background( rad, qs_to_fit ); //ask the user for the number of points!
   fit.set_default_roughness( nd.get_xrough() ); //read it from file!!
 
-  cout << "# Background:               " << fit.get_background() << endl;
-  cout << "# Storing results in:      '" << outdir << "'" << endl;
+  cout << "# PRELIMINARIES" << endl;
+  cout << "# -------------" << endl;
+  //cout << "# Background:               " << fit.get_background() << endl;
+  cout << "# Results folder:          " << outdir << endl;
+  cout << "# Parameters summary:      " << outdir << "/parameters.log" << endl;
 
   logfile();
 }
@@ -1118,9 +1122,12 @@ void BeadModeling::set_T0() {
 
 void BeadModeling::optimize_initial_position() {
 
-  int rmj      = (int)(nd.get_radius_major() - dmax/4.);
-  int rmi      = (int)(nd.get_radius_minor() - dmax/4.);
+  //i and j are maJor and mInor, not the indices!
+  int rmj      = (int)(nd.get_radius_major());// - dmax/4.);
+  int rmi      = (int)(nd.get_radius_minor());// - dmax/4.);
   double min_X = 1e20;
+
+  int k = 1;
 
   for( int i = 0; i < rmj; i += 5 ) {
     for( int j = 0; j < rmi; j += 5 ) {
@@ -1141,15 +1148,16 @@ void BeadModeling::optimize_initial_position() {
       calc_intensity( exp_q );
       chi_squared();
 
-      //cout << i << " " << j << " " << X << endl;
-
       if( X < min_X ) {
         min_X = X;
         opt_shift_x = (double)(i);
         opt_shift_y = (double)(j);
       }
+
+      cout << "# Initial optimization:    X^2 = " << min_X << "\r" << std::flush;
     }
   }
+  cout << endl;
 }
 //------------------------------------------------------------------------------
 
@@ -1391,23 +1399,14 @@ void BeadModeling::SA_nanodisc() {
   int iterations = 1, rough_counter;
   double mean, sq_sum, stdev, scale_tmp;
 
-  cout << endl;
-  cout << "# PRELIMINARIES" << endl;
-  cout << "# -------------" << endl;
-
   nd.nanodisc_form_factor( exp_q );
-  nd.gaussian_coil_form_factor( exp_q, Rg );
-  cout << "# Optimizing initial sphere ..." << endl;
+  if( n_dtail > 0 ) nd.gaussian_coil_form_factor( exp_q, Rg );
 
   optimize_initial_position();
   cout << "# Optimal sphere center:   [" << opt_shift_x << ", " << opt_shift_y << ", " << shift << "]" << endl;
-  //exit(-1);
 
   initial_configuration( opt_shift_x, opt_shift_y );
-  //initial_configuration( 0., 0. );
-  cout << "# Initial configuration set." << endl;
   write_pdb( outdir + "configurations/initial.pdb" );
-  //exit(-1);
 
   nmethyl = 0;
   nalkyl = 0;
@@ -1419,7 +1418,6 @@ void BeadModeling::SA_nanodisc() {
   for( unsigned int i = 0; i < nresidues; i++ ) {
     update_rho( i );
   }
-  cout << "# Update scattering lengths: done!" << endl;
 
   for( unsigned int j = 0; j < nq; j++ ) {
     for( unsigned int i = 0; i < nresidues; i++ ) {
@@ -1427,40 +1425,26 @@ void BeadModeling::SA_nanodisc() {
     }
   }
 
-  cout << "# Compute form factor: done!" << endl;
-
   if( n_dtail > 0 ) {
     calc_intensity_wcoil( exp_q );
   } else {
     calc_intensity( exp_q );
   }
 
-  // //calc_intensity( exp_q );
-  // calc_intensity_wcoil( exp_q );
-  cout << "# Compute intensity: done!" << endl;
-
-  //uncomment this for only nanodisc benchmark
-  // string intens = outdir + "only_nano.dat";
-  // write_intensity( intens );
-  // exit(-1);
-
   distance_matrix();
   update_statistics();
-  //helix_ref_cmap();
 
-  cout << "# Update statistics: done!" << endl;
-  cout << "# Background: " << std::setprecision(2) << fit.get_background() << " (X^2_R = " << fit.get_bck_chi2() << ")" << endl;
-  cout << "# Starting roughness: " << fit.get_rough() << endl;
-  cout << "# Scale factor (/1e15): " << scale_factor/1.e15 << endl;
+  cout << "# Background:              " << std::setprecision(2) << fit.get_background() << " (X^2 = " << fit.get_bck_chi2() << ")" << endl;
+  cout << "# Scale factor (/1e15):    " << scale_factor/1.e15 << endl;
 
   cout << endl;
-  cout << "# SIMULATED ANNEALING" << endl;
-  cout << "# -------------------" << endl;
-  cout << endl;
+  cout << "# OPTIMIZATION" << endl;
+  // cout << "# ------------" << endl;
+  // cout << endl;
 
-  bool fit_rough = true;
-  int skip_passes = 10;
-  //fit.set_default_roughness( 6.335 );
+  cout << "# _______________________________________________________________________________________________" << endl;
+  cout << "# Pass | Ac. R. |   Temp.   |     X     |     T     |     H     |     C     |     P     | Beads |" << endl;
+  cout << "# -----------------------------------------------------------------------------------------------" << endl;
 
   penalty();
 
@@ -1476,7 +1460,7 @@ void BeadModeling::SA_nanodisc() {
     int c = 0;
     int attempts = 0;
 
-    cout << "# PASS " << p << endl;
+    //cout << "# PASS " << p << endl;
     for( unsigned int l = 0; l < loops_per_pass; l++ ) {
 
       do {
@@ -1502,37 +1486,71 @@ void BeadModeling::SA_nanodisc() {
     }
 
     double mean = 0;
-    for( int i = 0; i < 1; i++ ) {
-      mean += rad[i][1]/1.;
+    for( int i = 0; i < ni0; i++ ) {
+      mean += rad[i][1]/ni0;
     }
     scale_tmp = mean/intensity[0];
     scale_factor *= scale_tmp;
 
-    cout << fixed << setprecision(3) << setfill('0');
-    cout << setw(5) << "# Acceptance ratio:  " << (1.*loops_per_pass)/attempts << endl;
-    cout << setw(5) << "# Temperature:       " << B << endl;
-    cout << setw(5) << "# Chi squared:       " << X << endl;
-    cout << setw(5) << "# Type penalty:      " << T << endl;
-    cout << setw(5) << "# Histogram penalty: " << H << endl;
-    cout << setw(5) << "# Connect penalty:   " << C << endl;
-    cout << setw(5) << "# Total penalty:     " << P << endl;
-    cout << setw(5) << "# Inserted beads:    " << nhead << " " << nalkyl << " " << nmethyl << endl;
-    cout << setw(5) << "# I_exp[0]/I[0]:     " << setprecision(3) << scale_tmp << endl;
-    cout << setw(5) << scientific << "# Scale factor:      " << scale_factor << endl;
-    cout << endl;
+    // cout << fixed << setprecision(3) << setfill('0');
+    // cout << setw(5) << "# Acceptance ratio:  " << (1.*loops_per_pass)/attempts << endl;
+    // cout << setw(5) << "# Temperature:       " << B << endl;
+    // cout << setw(5) << "# Chi squared:       " << X << endl;
+    // cout << setw(5) << "# Type penalty:      " << T << endl;
+    // cout << setw(5) << "# Histogram penalty: " << H << endl;
+    // cout << setw(5) << "# Connect penalty:   " << C << endl;
+    // cout << setw(5) << "# Total penalty:     " << P << endl;
+    // cout << setw(5) << "# Inserted beads:    " << nhead << " " << nalkyl << " " << nmethyl << endl;
+    // cout << setw(5) << "# I_exp(0)/I(0):     " << setprecision(3) << scale_tmp << endl;
+    //cout << setw(5) << scientific << "# Scale factor:      " << scale_factor << endl;
+    //cout << endl;
 
-    string xyz = outdir + "configurations/" + to_string(p) + ".xyz";
+    cout << std::setw(5)  << p << "  |";
+    cout << std::setw(6)  << std::fixed << std::setprecision(2) << (1.*loops_per_pass)/attempts << "  |";
+    cout << std::setw(10)  << std::fixed << std::setprecision(3) << B << " |";
+    cout << std::setw(10) << std::fixed << std::setprecision(1) << X << " |";
+    cout << std::setw(10) << std::fixed << std::setprecision(1) << T << " |";
+    cout << std::setw(10) << std::fixed << std::setprecision(1) << H << " |";
+    cout << std::setw(10) << std::fixed << std::setprecision(1) << C << " |";
+    cout << std::setw(10) << std::fixed << std::setprecision(1) << P << " |";
+    cout << std::setw(5)  << nhead + nalkyl + nmethyl << "  |" << endl;
+
+
+    if( p == (int)( 0.2 * npasses ) && C > 10 ) {
+      cout << "# WARNING: troubles with keeping the protein connected." << endl;
+    }
+    if( p == (int)( 0.3 * npasses ) && C > 5 ) {
+      cout << "# WARNING: the protein is likely disconnected from the nanodisc." << endl;
+    }
+    if( p > (int)( 0.5 * npasses ) && C > 5 ) {
+      cout << "# WARNING: the protein is disconnected and at this stage it is likely irreversible. Consider restaring the simulation" << endl;
+    }
+
     string pdb = outdir + "configurations/" + to_string(p) + ".pdb";
     string calc_intensity = outdir + "intensities/" + to_string(p) + ".dat";
     write_pdb( pdb );
     write_intensity( calc_intensity );
 
-    if( B > convergence_temp ) {
-      B *= schedule;
+    if( B < convergence_temp && convergence_accr == 0 ) {
+      cout << "# ----------------------------------------------------------------------------------------------" << endl;
+      cout << endl;
+      cout << "# Convergence temperature " << convergence_temp << " has been reached." << endl;
+      exit(0);
+    } else if( convergence_accr > 0 && (1.*loops_per_pass)/attempts < convergence_accr ) {
+      cout << "# ----------------------------------------------------------------------------------------------" << endl;
+      cout << endl;
+      cout << "# Convergence acceptance ratio " << convergence_accr << " has been reached." << endl;
+      exit(0);
     }
+
+    B *= schedule;
   }
 
   penalty_file.close();
+
+  cout << "# ----------------------------------------------------------------------------------------------" << endl;
+  cout << endl;
+  cout << "# Maximum number of passes has been reached." << endl;
 
 }
 //------------------------------------------------------------------------------
