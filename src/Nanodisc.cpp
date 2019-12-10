@@ -104,8 +104,8 @@ void Nanodisc::load_input_flat( const string& best_fit ) {
     rho_head              = 4.62e-11 / e_scatt_len; //stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
     rho_alkyl             = 6.71e-11 / e_scatt_len; //stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
     rho_methyl            = 5.08e-12 / e_scatt_len; //stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
-    //rho_belt              = 3.31e-9  / e_scatt_len; //p450 //stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
-    rho_belt              = 4.52e-9  / e_scatt_len; //Tissue Factor
+    rho_belt              = 3.31e-9  / e_scatt_len; //p450 //stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
+    //rho_belt              = 4.52e-9  / e_scatt_len; //Tissue Factor
 
     // cout << rho_h2o << endl;
     // cout << rho_head << endl;
@@ -118,8 +118,8 @@ void Nanodisc::load_input_flat( const string& best_fit ) {
     vhead                 = 319.; //stod( parse_double_delimiter( file, d_, d__ ) );
     valkyl                = 818.8; //stod( parse_double_delimiter( file, d_, d__ ) );
     vmethyl               = 108.6; //stod( parse_double_delimiter( file, d_, d__ ) );
-    //vbelt                 = 27587.8; //p450 //27653.3; //stod( parse_double_delimiter( file, d_, d__ ) );
-    vbelt                 = 36276.0; //Tissue Factor
+    vbelt                 = 27587.8; //p450 //27653.3; //stod( parse_double_delimiter( file, d_, d__ ) );
+    //vbelt                 = 36276.0; //Tissue Factor
 
     // cout << vh2o << endl;
     // cout << vhead << endl;

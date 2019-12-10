@@ -45,6 +45,8 @@ parser.add_argument( '--connect_strength', '-c', type = float, required = False,
                     help = 'Strength of the connectivity penalty function (default: 300)' )
 parser.add_argument( '--neighbours_strength', '-n', type = float, required = False, default = 1,
                     help = 'Strength of the neighbours distribution penalty function (default: 1)' )
+parser.add_argument( '--zshift', '-z', type = float, required = False, default = 40,
+                    help = 'Intial shift, in A, of the protein with respect to nanodisc center along the direction normal to the nanodisc plane (default: 40A)' )
 
 parser.add_argument( '--inserted_residues', '-aa', type = int, required = False,
                     help = 'Number of residues to accomodate in the nanodisc (ignored if -w is not specified)' )
@@ -64,6 +66,13 @@ parser.add_argument( '--maximum_distance', '-md', type = float, required = False
 parser.add_argument( '--connected', '-cc', type = float, required = False, default = 5.81,
                     help = 'Maximum distance within which two beads are considered connected (default: 5.81A)' )
 parser.add_argument( '--qs_for_I0', '-qi', type = int, required = False, default = 5,
+                    help = 'Number of low-q points to use to determine the value of I(0) (default: 5)' )
+
+parser.add_argument( '--convergence_temp', '-ct', type = int, required = False, default = 5,
+                    help = 'Number of low-q points to use to determine the value of I(0) (default: 5)' )
+parser.add_argument( '--convergence_acceptance', '-ca', type = int, required = False, default = 5,
+                    help = 'Number of low-q points to use to determine the value of I(0) (default: 5)' )
+parser.add_argument( '--qs_for_b', '-qb', type = int, required = False, default = 5,
                     help = 'Number of low-q points to use to determine the value of I(0) (default: 5)' )
 
 args = parser.parse_args()
@@ -95,7 +104,7 @@ cmd  = './runner ' + str(args.sequence_file) + ' ' + str(args.with_nanodisc) + '
          str(args.dmax) + ' ' + str(args.passes) + ' ' + str(args.loops) + ' ' + str(args.connect_strength) + ' ' + str(args.neighbours_strength) + \
          ' ' + str(args.schedule) + ' ' + str(args.temperature_factor) + ' ' + str(args.clash_distance) + \
          ' ' + str(args.maximum_distance) + ' ' + str(args.connected) + ' ' + str(args.fit) + ' ' + str(args.inserted_residues) + \
-         ' ' + str(args.insertion_strength) + ' ' + str(args.qs_for_I0) + ' ' + str(args.disordered_tail)
+         ' ' + str(args.insertion_strength) + ' ' + str(args.qs_for_I0) + ' ' + str(args.disordered_tail) + ' ' + str(args.zshift)
 
 #print(cmd)
 os.system( cmd )

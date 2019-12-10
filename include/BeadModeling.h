@@ -189,7 +189,7 @@ class BeadModeling : public Input {
       BeadModeling( const std::string&, const std::string&, const std::string&, int, int,
                     double, double, double, double, double, double, double, double, int );
       BeadModeling( const std::string&, const std::string&, const std::string&, const std::string&,
-                    int, int, double, double, double, double, int, double, double, double, double, double, int, int );
+                    int, int, double, double, double, double, int, double, double, double, double, double, int, int, double );
       ~BeadModeling();
 
       /* PUBLIC UTILITIES */

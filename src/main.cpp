@@ -62,6 +62,7 @@ using namespace std;
        int ins_res  = stoi( argv[16] );
        double t_str = stod( argv[17] );
        int n_dtail  = stoi( argv[19] );
+       dhouble zs   = stoi( argv[20] );
 
        // cout << "Sequence  " << sequence << endl;
        // cout << "Data      " << data << endl;
@@ -82,7 +83,7 @@ using namespace std;
        // exit(-1);
 
        BeadModeling BD = BeadModeling( sequence, data, fit, out, npasses, nloops, dmax,
-                                     conn, neig, t_str, ins_res, sche, clas, maxd, cond, tm_fact, qs_I0, n_dtail );
+                                     conn, neig, t_str, ins_res, sche, clas, maxd, cond, tm_fact, qs_I0, n_dtail, zs );
        BD.SA_nanodisc();
 
      } else {

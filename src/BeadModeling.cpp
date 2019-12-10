@@ -107,7 +107,7 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
 //------------------------------------------------------------------------------
 
 BeadModeling::BeadModeling( const string& seq, const string& data, const string& ft, const string& out, int passes, int loops, double dm, double conn,
-                            double lm, double tm, int ins, double sched, double clash, double maxd, double connd, double tr, int n0, int ndt ) {
+                            double lm, double tm, int ins, double sched, double clash, double maxd, double connd, double tr, int n0, int ndt, double zs ) {
 
   rad_file          = data;           //path to the experimental .rad file
   sequence_file     = seq;           //path to the file with the protein sequence
@@ -127,10 +127,12 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
   schedule          = sched;
   ni0               = n0;
   n_dtail           = ndt;
-  convergence_temp  = 0.1;
-  sequence          = "";
-  shift             = 40.;
+  shift             = zs;
+  convergence_temp  = 0.1.;
+  convergence_accr  = 0.05.;
   qs_to_fit         = 4;
+
+  sequence          = "";
   sphere_generated  = false;
   compute_scale     = true;
   init              = true;
@@ -217,7 +219,7 @@ void BeadModeling::logfile() {
   log << "##########################" << endl;
   log << "# MARBLES RUN PARAMETERS #" << endl;
   log << "##########################" << endl;
-  log << endl; 
+  log << endl;
 
   log << "# INPUT/OUTPUT" << endl;
   log << "#-------------" << endl;
@@ -1525,9 +1527,9 @@ void BeadModeling::SA_nanodisc() {
     write_pdb( pdb );
     write_intensity( calc_intensity );
 
-    //if( B > convergence_temp ) {
-    B *= schedule;
-    //}
+    if( B > convergence_temp ) {
+      B *= schedule;
+    }
   }
 
   penalty_file.close();
