@@ -7,8 +7,8 @@ C++ code for ab-initio shape prediction of a protein given its SAXS intensity an
 3. [Download and Compilation](#m-installation)
 4. [Input Preparation](#input)
 5. [Running Marbles](#running)
-6. [Contact](#contact)
-7. [Acknowledgments](#aknw)
+6. [Contact](#contacts)
+7. [Acknowledgments](#acknow)
 
 ## Dependencies <a name="dependencies"></a>
 1. GSL <= 1.9
@@ -212,7 +212,9 @@ python marbles.py -w -s /my/input/prot.fasta.txt -i /my/input/saxs.dat -d 50 -l 
 ```
 
 ## Contacts <a name="contacts"></a>
-For bug reports, issues and whatnot contact simone.orioli[at]nbi.ku.dk.
+For bug reports, issues and whatnot contact Simone Orioli at simone.orioli[at]nbi.ku.dk. If you want to engage in scientific collaborations using marbles, contact Lise Arleth at arleth[at]nbi.ku.dk. 
+
+## License
 
 ## Aknowledgments <a name="acknow"></a>
 Thanks to N. Skar-Gislinge and S. A. R. Kynde for writing part of the routines in the code, M. N. Pedersen for useful comments and suggestions and Nordforsk Fund for funding.  

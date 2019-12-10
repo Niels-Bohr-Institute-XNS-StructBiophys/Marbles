@@ -24,19 +24,15 @@ using namespace std;
  int main( int argc, char *argv[] ) {
 
    cout << endl;
-   cout << "#########################" << endl;
-   cout << "# BEAD MODELING ROUTINE #" << endl;
-   cout << "#########################" << endl;
+   cout << "###########" << endl;
+   cout << "# MARBLES #" << endl;
+   cout << "###########" << endl;
    cout << endl;
-
-   // RigidBody RB = RigidBody( "../rigid_body/kinase.dat", "../rigid_body/kin.pdb", "../rigid_body/tmp/", 100, 0.9, 1.8, 5.1, 10 );
-   //
-   // exit(-1);
 
    if( argc < 2 ) {
 
      cout << endl;
-     cout << "Usage: python beads.py --help" << endl;
+     cout << "Usage: python marbles.py --help" << endl;
      cout << endl;
      exit(-1);
 
@@ -65,6 +61,7 @@ using namespace std;
        string fit( argv[15] );
        int ins_res  = stoi( argv[16] );
        double t_str = stod( argv[17] );
+       int n_dtail  = stoi( argv[19] );
 
        // cout << "Sequence  " << sequence << endl;
        // cout << "Data      " << data << endl;
@@ -85,7 +82,7 @@ using namespace std;
        // exit(-1);
 
        BeadModeling BD = BeadModeling( sequence, data, fit, out, npasses, nloops, dmax,
-                                     conn, neig, t_str, ins_res, sche, clas, maxd, cond, tm_fact, qs_I0 );
+                                     conn, neig, t_str, ins_res, sche, clas, maxd, cond, tm_fact, qs_I0, n_dtail );
        BD.SA_nanodisc();
 
      } else {
