@@ -114,8 +114,8 @@ Once downloaded, open `makefile` and update the variables `GSL_LIB_PATH`, `GSL_I
 
 ## Input Preparation <a name="input"></a>
 To predict the shape of a membrane protein in a nanodisc with Marbles, you need the following information:
-1. the SAXS intensity, in `cm^-1`, as a function of the scattering vector, in `A^-1`, of a solution of empty nanodiscs;
-2. the SAXS intensity, in `cm^-1`, as a function of the scattering vector, in `A^-1`, of a solution of loaded nanodiscs;
+1. the SAXS intensity, in `cm^-1`, as a function of the scattering vector, in `A^-1`, of a solution of *empty* nanodiscs;
+2. the SAXS intensity, in `cm^-1`, as a function of the scattering vector, in `A^-1`, of a solution of *loaded* nanodiscs;
 3. the protein sequence;
 4. the Dmax of the loaded nanodisc system, in `A`;
 5. an estimate of the number of residues inserted in the nanodisc;
@@ -135,6 +135,47 @@ where `qi` represent the scattering vectors, `Ii` the SAXS intensity measured at
 MQIFVKTLTGKTITLEVEPSDTIENVKAKIQDKEGIPPDQQRLIFAGKQLEDGRTLSDYNIQKESTLHLVLRLRGG
 ```
 If some portion, or domain, of the protein is expected to be disordered and to protrude from the bottom leaflet of the nanodisc, we suggest the user to remove this part of the sequence from the FASTA file, as Marbles will treat it on a separate footing.  
+
+## Output
+The program outputs:
+1. A parameters.log file with a summary of the parameters employed in the run;
+2. A penalty.dat file saving the values of all the penalty functions at every accepted step during the run;
+3. An intensity folder, containing intensity*.dat files that correspond to the computed SAXS intensities at the end of every pass;
+4. A configurations folded, containing *.pdb files that correspond to the computed protein configurations at the end of every pass.
+
+During execution, Marbles will print on screen something similar to the following table:
+
+```
+##################################
+#          MARBLES v.0.1         #
+#                                #
+# A software for the estimation  #
+# of shapes of membrane proteins #
+# inserted in membrane nanodiscs #
+##################################
+
+# PRELIMINARIES
+# -------------
+# Results folder:          mydir/run_1/
+# Parameters summary:      mydir/run_1/parameters.log
+# Initial optimization:    X^2 = 11.3738
+# Optimal sphere center:   [35, 15, 40]
+# Background:              7.6e-05 (X^2 = 0.046)
+# Scale factor (/1e15):    2.5
+
+# OPTIMIZATION
+# _______________________________________________________________________________________________
+# Pass | Ac. R. |   Temp.   |     X     |     T     |     H     |     C     |     P     | Beads |
+# -----------------------------------------------------------------------------------------------
+    0  |  0.59  |     2.588 |      35.8 |     175.0 |    1194.7 |     409.2 |    1814.7 |   12  |
+    1  |  0.49  |     2.329 |      13.4 |      15.0 |      44.6 |     162.0 |     235.0 |   14  |
+    2  |  0.45  |     2.096 |       9.5 |      15.0 |      39.3 |      87.7 |     151.5 |   15  |
+    3  |  0.42  |     1.887 |      11.3 |      15.0 |      38.3 |      71.7 |     136.3 |   14  |
+...
+...
+# -----------------------------------------------------------------------------------------------
+```
+What is reported on screen is a live diagnostic on the running Marbles process. It shows all the relevant quantities that are drivin the run. In the first column it reports the number of passes; in the second column, it reports the acceptance ratio at the end of the pass; in the third colum, it shows the effective temperature employed throughout the ended pass; in the fourth column it shows the value of the chi squared at the end of the pass; in the fifth to eigth columns it reports the values of the penalty functions at the end of the pass, on the ninth the total penalty and on the tenth the number of beads currently inserted in the nanodisc. 
 
 ## Running Marbles <a name="running"></a>
 To know all the possible options of the code, type in your console
