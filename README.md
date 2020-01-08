@@ -1,4 +1,7 @@
 # Marbles
+Author: Simone Orioli | email: simone.orioli@nbi.ku.dk    
+  
+
 C++ code for ab-initio shape prediction of a protein given its SAXS intensity and sequence. It can be used either for solvated proteins or for proteins inserted into membrane nanodiscs. The code allows the introduction of custom penalty functions and form factors consistent with simple coarse grained models.
 
 ## Table of Contents
@@ -6,9 +9,11 @@ C++ code for ab-initio shape prediction of a protein given its SAXS intensity an
 2. [Dependencies Installation](#dep-installation)
 3. [Download and Compilation](#m-installation)
 4. [Input Preparation](#input)
-5. [Running Marbles](#running)
-6. [Contact](#contacts)
-7. [Acknowledgments](#acknow)
+5. [Output](#output)
+6. [Running Marbles](#running)
+7. [Example Application](#example)
+8. [Contact](#contacts)
+9. [Acknowledgments](#acknow)
 
 ## Dependencies <a name="dependencies"></a>
 1. GSL <= 1.9
@@ -136,7 +141,7 @@ MQIFVKTLTGKTITLEVEPSDTIENVKAKIQDKEGIPPDQQRLIFAGKQLEDGRTLSDYNIQKESTLHLVLRLRGG
 ```
 If some portion, or domain, of the protein is expected to be disordered and to protrude from the bottom leaflet of the nanodisc, we suggest the user to remove this part of the sequence from the FASTA file, as Marbles will treat it on a separate footing.  
 
-## Output
+## Output<a name="output"></a>
 The program outputs:
 1. A parameters.log file with a summary of the parameters employed in the run;
 2. A penalty.dat file saving the values of all the penalty functions at every accepted step during the run;
@@ -229,27 +234,24 @@ This command will prompt a list will all options and mandatory inputs:
   --clash_distance CLASH_DISTANCE, -cd CLASH_DISTANCE
                         Smaller possible distance between beads before move is
                         rejected (default: 1.8A)
-  --maximum_distance MAXIMUM_DISTANCE, -md MAXIMUM_DISTANCE
-                        Maximum distance between chosen beads allowed by Monte
-                        Carlo move (default: 5.1A)
   --connected CONNECTED, -cc CONNECTED
                         Maximum distance within which two beads are considered
-                        connected (default: 5.81A)
+                        connected (default: 4.5A)
   --qs_for_I0 QS_FOR_I0, -qi QS_FOR_I0
                         Number of low-q points to use to determine the value
                         of I(0) (default: 5)
 ```
-The user has the complete freedom to tweak all the free parameters in the code just by adjusting the inputs in the parser. However, inexperienced users can ignore most of the flags, as the default values will work well for most of the systems. A minimal running command for a protein in solution composed by 300 amino acids and with a Dmax of 50A would look like this:
+The user has the complete freedom to tweak all the free parameters in the code just by adjusting the inputs in the parser. However, inexperienced users can ignore most of the flags, as the default values will work well for most of the systems. 
+
+
+## Example Application <a name="example"></a>
+The `example/` folder contains 3 files:
+1. `p450.dat`: the SAXS signal of a solution of Cytochrome P450 inserted in a nanodisc;
+2. `p450.fasta.txt`: the protein sequence;
+3. `Results.wif`: the best fit file obtained with WillItFit using the SAXS signal of a solution of empty nanodiscs.
+It is known in the literature that the transmembrane domain of P450 is composed by 15 amino acids. As a protein Dmax, we can use approximately the half of the system's Dmax, so 60A. Given this information on the system, Marbles can be ran using the following command:
 ```
-python marbles.py -s /my/input/prot.fasta.txt -i /my/input/saxs.dat -d 50 -l 300 -o /my/output/marbles_run/
-```
-The `/my/output/` should exist already and will not be created. Instead, a minimal running command for a protein in a nanodisc composed by 300 amino acids and with a Dmax of 50A, with 15 amino acids inserted in the bilayer, would look like this:
-```
-python marbles.py -w -s /my/input/prot.fasta.txt -i /my/input/saxs.dat -d 50 -l 300 -aa 15 --fit /my/input/Results.wif -o /my/output/marbles_run/
-```
-Finally, a minimal running command for a protein in a nanodisc composed by 300 amino acids and with a Dmax of 50A, with 15 amino acids inserted in the bilayer and 30 amino acids protruding from the bottom leaflet, would look like this:
-```
-python marbles.py -w -s /my/input/prot.fasta.txt -i /my/input/saxs.dat -d 50 -l 300 -aa 15 -dt 30 --fit /my/input/Results.wif -o /my/output/marbles_run/
+python marbles.py -s example/p450.fasta.txt -i example/p450.dat -d 60 -aa 15 --fit example/Results.wif -o test_run/
 ```
 
 ## Contacts <a name="contacts"></a>
