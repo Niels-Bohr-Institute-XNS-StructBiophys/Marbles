@@ -1532,14 +1532,14 @@ void BeadModeling::SA_nanodisc() {
     write_intensity( calc_intensity );
 
     if( B < convergence_temp && convergence_accr == 0 ) {
-      cout << "# ----------------------------------------------------------------------------------------------" << endl;
+      cout << "# -----------------------------------------------------------------------------------------------" << endl;
       cout << endl;
-      cout << "# Convergence temperature " << convergence_temp << " has been reached." << endl;
+      cout << std::fixed << std::setprecision(3) << "# Convergence temperature " << convergence_temp << " has been reached." << endl;
       exit(0);
     } else if( convergence_accr > 0 && (1.*loops_per_pass)/attempts < convergence_accr ) {
-      cout << "# ----------------------------------------------------------------------------------------------" << endl;
+      cout << "# -----------------------------------------------------------------------------------------------" << endl;
       cout << endl;
-      cout << "# Convergence acceptance ratio " << convergence_accr << " has been reached." << endl;
+      cout << std::fixed << std::setprecision(3) << "# Convergence acceptance ratio " << convergence_accr << " has been reached." << endl;
       exit(0);
     }
 
@@ -1548,7 +1548,7 @@ void BeadModeling::SA_nanodisc() {
 
   penalty_file.close();
 
-  cout << "# ----------------------------------------------------------------------------------------------" << endl;
+  cout << "# -----------------------------------------------------------------------------------------------" << endl;
   cout << endl;
   cout << "# Maximum number of passes has been reached." << endl;
 

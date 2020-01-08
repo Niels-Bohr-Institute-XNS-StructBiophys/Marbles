@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import argparse
 import os
 
-parser = argparse.ArgumentParser( description = 'Parse bead modeling parameters' )
+parser = argparse.ArgumentParser( description = 'Marbles v. 0.1. A software for the estimation of shapes of membrane proteins inserted in membrane nanodiscs' )
 
 # Mandatory Inputs
 parser.add_argument( '--sequence_file', '-s', type = str, required = True,
@@ -70,7 +70,7 @@ parser.add_argument( '--clash_distance', '-cd', type = float, required = False, 
                     help = 'Smaller possible distance between beads before move is rejected (default: 1.8A)' )
 parser.add_argument( '--maximum_distance', '-md', type = float, required = False, default = 5.1,
                     help = 'Maximum distance between chosen beads allowed by Monte Carlo move (default: 5.1A)' )
-parser.add_argument( '--connected', '-cc', type = float, required = False, default = 5.81,
+parser.add_argument( '--connected', '-cc', type = float, required = False, default = 4.5,
                     help = 'Maximum distance within which two beads are considered connected (default: 5.81A)' )
 parser.add_argument( '--qs_for_I0', '-qi', type = int, required = False, default = 5,
                     help = 'Number of low-q points to use to determine the value of I(0) (default: 5)' )
