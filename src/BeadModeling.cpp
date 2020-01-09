@@ -285,8 +285,8 @@ void BeadModeling::logfile() {
 
 void BeadModeling::load_statistics() {
 
-  //string ndist_file = "include/statistics/ndist.dat";
-  string ndist_file = "include/statistics/neigh.dat";
+  string ndist_file = "include/statistics/ndist.dat";
+  //string ndist_file = "include/statistics/neigh.dat";
   string nnum1_file = "include/statistics/nnum_5.3.dat";
   string nnum2_file = "include/statistics/nnum_6.8.dat";
   string nnum3_file = "include/statistics/nnum_8.3.dat";
@@ -748,16 +748,16 @@ void BeadModeling::update_statistics() {
       d = distances.at(i,j);
 
       //if( d < 10. ) ndist[ int(d) ] += 1. / nresidues;
-      if( d <= 10. ) ndist[ ceil(d) ] += 1. / nresidues;
-      //if( d < 12. ) ndist[ int(d) ] += 1. / nresidues;
-      //if( d < 5.3 ) count1++;
-      //if( d < 6.8 ) count2++;
-      //if( d < 8.3 ) count3++;
+      //if( d <= 10. ) ndist[ ceil(d) ] += 1. / nresidues;
+      if( d < 12. ) ndist[ int(d) ] += 1. / nresidues;
+      if( d < 5.3 ) count1++;
+      if( d < 6.8 ) count2++;
+      if( d < 8.3 ) count3++;
     }
 
-    //if( count1 < nnnum ) nnum1[count1-1] += 1. / nresidues;
-    //if( count2 < nnnum ) nnum2[count2-1] += 1. / nresidues;
-    //if( count3 < nnnum ) nnum3[count3-1] += 1. / nresidues;
+    if( count1 < nnnum ) nnum1[count1-1] += 1. / nresidues;
+    if( count2 < nnnum ) nnum2[count2-1] += 1. / nresidues;
+    if( count3 < nnnum ) nnum3[count3-1] += 1. / nresidues;
   }
 
 }
@@ -901,9 +901,9 @@ void BeadModeling::histogram_penalty() {
 
   for( unsigned int i = 0; i < nnum_len; i++ ) {
 
-    // tmp1 = (nnum1_ref[i][1] - nnum1[i]) / nnum1_ref[i][2];
-    // tmp2 = (nnum2_ref[i][1] - nnum2[i]) / nnum2_ref[i][2];
-    // tmp3 = (nnum3_ref[i][1] - nnum3[i]) / nnum2_ref[i][2];
+    tmp1 = (nnum1_ref[i][1] - nnum1[i]) / nnum1_ref[i][2];
+    tmp2 = (nnum2_ref[i][1] - nnum2[i]) / nnum2_ref[i][2];
+    tmp3 = (nnum3_ref[i][1] - nnum3[i]) / nnum2_ref[i][2];
 
     if( i < ndist_len ) {
       tmp4 = (ndist_ref[i][1] - ndist[i]) / ndist_ref[i][2];
@@ -911,8 +911,8 @@ void BeadModeling::histogram_penalty() {
       tmp4 = 0.;
     }
 
-    //H += ( 1. * ( tmp1 * tmp1 + tmp2 * tmp2 + tmp3 * tmp3 ) + tmp4 * tmp4 );
-    H += tmp4 * tmp4;
+    H += ( 1. * ( tmp1 * tmp1 + tmp2 * tmp2 + tmp3 * tmp3 ) + tmp4 * tmp4 );
+    //H += tmp4 * tmp4;
   }
 
   H *= lambda;
@@ -1179,8 +1179,6 @@ void BeadModeling::optimize_initial_position() {
 
       beta.initialize(0);
 
-      //cout << i << " " << iold << " " << j << " " << jold << endl;
-
       for( unsigned int k = 0; k < nresidues; k++ ) {
         beads[k].x += i - iold;
         beads[k].y += j - jold;
@@ -1278,7 +1276,8 @@ void BeadModeling::move( int l ) {
 
   double rmax, rmin, d2, z_ref;
   vector<double> vec(3);
-  d2 = 3.8; //rng.in_range( clash_distance, max_distance );
+  //d2 = 3.8; //rng.in_range( clash_distance, max_distance );
+  d2 = rng.in_range( clash_distance, max_distance );
 
   rmax = nd.get_radius_major() - 3.; //45.;//42.6;
   rmin = nd.get_radius_minor() - 3.; //32.;//29.0;
@@ -1604,7 +1603,7 @@ void BeadModeling::SA_nanodisc() {
       write_pdb( pdb );
       write_intensity( calc_intensity );
       exit(0);
-      
+
     } else if( convergence_accr > 0 && (1.*loops_per_pass)/attempts < convergence_accr ) {
       cout << "# -----------------------------------------------------------------------------------------------" << endl;
       cout << endl;
