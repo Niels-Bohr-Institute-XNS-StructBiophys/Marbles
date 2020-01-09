@@ -37,6 +37,12 @@ parser.add_argument( '--fit', '-f', type = str, required = True,
 parser.add_argument( '--inserted_residues', '-aa', type = int, required = False,
                     help = 'Number of residues to accomodate in the nanodisc' )
 
+#IO options
+parser.add_argument( '--intensity-stride', '-is', type = int, required = False,
+                    help = 'Stride used to print on file the calculated intensities (default: 1, at the end of every pass)' )
+parser.add_argument( '--configuration-stride', '-cs', type = int, required = False,
+                    help = 'Stride used to print on file the calculated protein configurations (default: 1, once at each pass)' )
+
 # Monte Carlo options
 parser.add_argument( '--passes', '-p', type = int, required = False, default = 100,
                     help = 'Maximum number of Monte Carlo iterations (default: 100)' )

@@ -154,26 +154,13 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
   system( mkdir.c_str() );
 
   load_FASTA(); //load sequence file
-  //cout << "# File '" << sequence_file << "' loaded" << endl;
+
   nresidues = sequence.length();
 
   nd.load_input_flat( best_fit );
-  //cout << "# File '" << best_fit << "' loaded" << endl;
-
   load_rad(); //experimental file with SAXS or SANS data
-  //cout << "# File '" << rad_file << "' loaded " << endl;
 
   load_statistics(); //statistics needed for penalty function
-
-  // cout << endl;
-  // cout << "# SUMMARY OF PARAMETERS" << endl;
-  // cout << "# ---------------------" << endl;
-  // cout << "# Number of beads:          " << nresidues << endl;
-  // cout << "# Radius of initial sphere: " << dmax / 2. << endl;
-  // cout << "# Tail Rg:                  " << Rg << endl;
-  // cout << "# Max number of passes:     " << npasses << endl;
-  // cout << "# q points I(0) estimation  " << ni0 << endl;
-  // cout << "# Loops per pass:           " << loops_per_pass << endl;
 
   nq = rad.size();
   nnnum = nnum1_ref.size();
@@ -202,9 +189,7 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
 
   cout << "# PRELIMINARIES" << endl;
   cout << "# -------------" << endl;
-  //cout << "# Background:               " << fit.get_background() << endl;
   cout << "# Results folder:          " << outdir << endl;
-  //cout << "# Parameters summary:      " << outdir << "/parameters.log" << endl;
 
   logfile();
 }
@@ -229,55 +214,39 @@ void BeadModeling::logfile() {
   log << "#-------------" << endl;
   log << "# Protein sequence:            " << sequence_file << endl;
   log << "# Experimental SAXS intensity: " << rad_file << endl;
-
-  if( with_nanodisc ) {
-    log << "# Nanodisc best fit file:      " << best_fit << endl;
-  }
-
+  log << "# Nanodisc best fit file:      " << best_fit << endl;
   log << "# Storing results in:          " << outdir << endl;
-
   log << endl;
+
   log << "# PROTEIN OPTIONS" << endl;
   log << "#----------------" << endl;
   log << "# Number of beads:             " << nresidues << endl;
   log << "# Radius of initial sphere:    " << dmax / 2. << endl;
   log << "# Bead clash distance:         " << clash_distance << endl;
-  if( with_nanodisc ) {
-    log << "# z-Shift:                     " << shift << endl;
-    log << "# Initial optimization:        " << endl;
-  }
-
-
+  log << "# z-shift:                     " << shift << endl;
   log << endl;
-  if( with_nanodisc ) {
-    log << "# NANODISC OPTIONS" << endl;
-    log << "#----------------" << endl;
-    log << "# Nanodisc model:              " << nano_model << endl;
-    log << "# Inserted residues:           " << insertion << endl;
-    log << "# Background estimated with:   " << qs_to_fit << " high-q points" << endl;
-  }
 
-  log << endl;
   log << "# PENALTY FUNCTION" << endl;
   log << "#-----------------" << endl;
   log << "# Connect distance:            " << conn_distance << endl;
   log << "# Connectivity strength:       " << connect << endl;
   log << "# Neighbour strength:          " << lambda << endl;
-
-  if( with_nanodisc ) {
-    log << "# Insertion strength:          " << T_strength << endl;
-  }
-
+  log << "# Inserted residues:           " << insertion << endl;
+  log << "# Insertion strength:          " << T_strength << endl;
+  log << "# Lenght of disordered tail:   " << n_dtail << endl;
   log << endl;
+
   log << "# MONTE CARLO OPTIONS" << endl;
   log << "#--------------------" << endl;
   log << "# Number of passes:            " << npasses << endl;
   log << "# Loops per pass:              " << loops_per_pass << endl;
   log << "# Maximum move length:         " << max_distance << endl;
-  log << "# Initial temperature:         " << "X2/" << t_ratio << endl;
+  log << "# Initial temperature:         " << "X^2(0)/" << t_ratio << endl;
   log << "# Scheduling:                  " << schedule << endl;
   log << "# Convergence temperature:     " << convergence_temp << endl;
-  log << "# q points for I(0) estimation " << ni0 << endl;
+  log << "# Convergence acc. ratio:      " << convergence_accr << endl;
+  log << "# Points for I(0) estimation:  " << ni0 << endl;
+  log << "# Points for b estimation:     " << qs_to_fit << endl;
 
   log.close();
 }
@@ -285,8 +254,8 @@ void BeadModeling::logfile() {
 
 void BeadModeling::load_statistics() {
 
-  string ndist_file = "include/statistics/ndist.dat";
-  //string ndist_file = "include/statistics/neigh.dat";
+  //string ndist_file = "include/statistics/ndist.dat";
+  string ndist_file = "include/statistics/neigh.dat";
   string nnum1_file = "include/statistics/nnum_5.3.dat";
   string nnum2_file = "include/statistics/nnum_6.8.dat";
   string nnum3_file = "include/statistics/nnum_8.3.dat";
@@ -748,16 +717,16 @@ void BeadModeling::update_statistics() {
       d = distances.at(i,j);
 
       //if( d < 10. ) ndist[ int(d) ] += 1. / nresidues;
-      //if( d <= 10. ) ndist[ ceil(d) ] += 1. / nresidues;
-      if( d < 12. ) ndist[ int(d) ] += 1. / nresidues;
-      if( d < 5.3 ) count1++;
-      if( d < 6.8 ) count2++;
-      if( d < 8.3 ) count3++;
+      if( d <= 10. ) ndist[ ceil(d) ] += 1. / nresidues;
+      //if( d < 12. ) ndist[ int(d) ] += 1. / nresidues;
+      //if( d < 5.3 ) count1++;
+      //if( d < 6.8 ) count2++;
+      //if( d < 8.3 ) count3++;
     }
 
-    if( count1 < nnnum ) nnum1[count1-1] += 1. / nresidues;
-    if( count2 < nnnum ) nnum2[count2-1] += 1. / nresidues;
-    if( count3 < nnnum ) nnum3[count3-1] += 1. / nresidues;
+    //if( count1 < nnnum ) nnum1[count1-1] += 1. / nresidues;
+    //if( count2 < nnnum ) nnum2[count2-1] += 1. / nresidues;
+    //if( count3 < nnnum ) nnum3[count3-1] += 1. / nresidues;
   }
 
 }
@@ -901,9 +870,9 @@ void BeadModeling::histogram_penalty() {
 
   for( unsigned int i = 0; i < nnum_len; i++ ) {
 
-    tmp1 = (nnum1_ref[i][1] - nnum1[i]) / nnum1_ref[i][2];
-    tmp2 = (nnum2_ref[i][1] - nnum2[i]) / nnum2_ref[i][2];
-    tmp3 = (nnum3_ref[i][1] - nnum3[i]) / nnum2_ref[i][2];
+    // tmp1 = (nnum1_ref[i][1] - nnum1[i]) / nnum1_ref[i][2];
+    // tmp2 = (nnum2_ref[i][1] - nnum2[i]) / nnum2_ref[i][2];
+    // tmp3 = (nnum3_ref[i][1] - nnum3[i]) / nnum2_ref[i][2];
 
     if( i < ndist_len ) {
       tmp4 = (ndist_ref[i][1] - ndist[i]) / ndist_ref[i][2];
@@ -911,8 +880,8 @@ void BeadModeling::histogram_penalty() {
       tmp4 = 0.;
     }
 
-    H += ( 1. * ( tmp1 * tmp1 + tmp2 * tmp2 + tmp3 * tmp3 ) + tmp4 * tmp4 );
-    //H += tmp4 * tmp4;
+    //H += ( 1. * ( tmp1 * tmp1 + tmp2 * tmp2 + tmp3 * tmp3 ) + tmp4 * tmp4 );
+    H += tmp4 * tmp4;
   }
 
   H *= lambda;
@@ -1179,6 +1148,8 @@ void BeadModeling::optimize_initial_position() {
 
       beta.initialize(0);
 
+      //cout << i << " " << iold << " " << j << " " << jold << endl;
+
       for( unsigned int k = 0; k < nresidues; k++ ) {
         beads[k].x += i - iold;
         beads[k].y += j - jold;
@@ -1276,8 +1247,7 @@ void BeadModeling::move( int l ) {
 
   double rmax, rmin, d2, z_ref;
   vector<double> vec(3);
-  //d2 = 3.8; //rng.in_range( clash_distance, max_distance );
-  d2 = rng.in_range( clash_distance, max_distance );
+  d2 = 3.8; //rng.in_range( clash_distance, max_distance );
 
   rmax = nd.get_radius_major() - 3.; //45.;//42.6;
   rmin = nd.get_radius_minor() - 3.; //32.;//29.0;
@@ -1511,7 +1481,7 @@ void BeadModeling::SA_nanodisc() {
 
   cout << std::setw(5)  << -1 << "  |";
   cout << std::setw(6)  << std::fixed << std::setprecision(2) << "  ****  |";
-  cout << std::setw(10)  << std::fixed << std::setprecision(3) << " ***** |";
+  cout << std::setw(10)  << std::fixed << std::setprecision(3) << "     ***** |";
   cout << std::setw(10) << std::fixed << std::setprecision(1) << X << " |";
   cout << std::setw(10) << std::fixed << std::setprecision(1) << T << " |";
   cout << std::setw(10) << std::fixed << std::setprecision(1) << H << " |";
@@ -1608,6 +1578,11 @@ void BeadModeling::SA_nanodisc() {
       cout << "# -----------------------------------------------------------------------------------------------" << endl;
       cout << endl;
       cout << std::fixed << std::setprecision(3) << "# Convergence acceptance ratio " << convergence_accr << " has been reached." << endl;
+
+      pdb = outdir + "/model.pdb";
+      calc_intensity = outdir + "/best_fit.dat";
+      write_pdb( pdb );
+      write_intensity( calc_intensity );
       exit(0);
     }
 
@@ -1619,6 +1594,11 @@ void BeadModeling::SA_nanodisc() {
   cout << "# -----------------------------------------------------------------------------------------------" << endl;
   cout << endl;
   cout << "# Maximum number of passes has been reached." << endl;
+
+  string pdb = outdir + "/model.pdb";
+  string calc_intensity = outdir + "/best_fit.dat";
+  write_pdb( pdb );
+  write_intensity( calc_intensity );
 
 }
 //------------------------------------------------------------------------------
