@@ -117,7 +117,10 @@ Marbles doesn't employ PyMOL at run time, but rather it uses it to visualize the
 ```
 https://pymol.org/2/
 ```
-The use and installation of PyMOL will not be covered here, and we refer the user to the original documentation, which can be found at the aforementioned URL.
+The use and installation of PyMOL will not be covered here, and we refer the user to the original documentation, which can be found at:
+```
+https://pymolwiki.org/index.php/Main_Page
+```
 
 ## Download and Compilation <a name="m-installation"></a>
 You can download the code by cloning the repository
