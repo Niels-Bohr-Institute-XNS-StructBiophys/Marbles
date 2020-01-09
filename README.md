@@ -258,6 +258,7 @@ python marbles.py -s example/p450.fasta.txt -i example/p450.dat -d 60 -aa 15 --f
 For bug reports, issues and whatnot contact Simone Orioli at simone.orioli[at]nbi.ku.dk. If you want to engage in scientific collaborations using marbles, contact Lise Arleth at arleth[at]nbi.ku.dk. 
 
 ## License
+The code is distributed under the GPL 3.0 licence, so it is free to be modified and redistributed within the conditions of the aforementioned license.
 
 ## Aknowledgments <a name="acknow"></a>
-Thanks to N. Skar-Gislinge and S. A. R. Kynde for writing part of the routines in the code, M. N. Pedersen for useful comments and suggestions and Nordforsk Fund for funding.  
+Thanks to N. Skar-Gislinge and S. A. R. Kynde for writing part of the routines in the code, M. N. Pedersen for useful comments, C. G. Henning Hansen for testing and suggestions and Nordforsk Fund for funding.  
