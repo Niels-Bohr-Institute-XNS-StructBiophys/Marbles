@@ -108,7 +108,7 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
 
 BeadModeling::BeadModeling( const string& seq, const string& data, const string& ft, const string& out, int passes, int loops, double dm, double conn,
                             double lm, double tm, int ins, double sched, double clash, double maxd, double connd, double tr, int n0, int ndt, double zs,
-                            int qs_B, double convt, double convar ) {
+                            int qs_B, double convt, double convar, int istride, int cstride ) {
 
   rad_file          = data;           //path to the experimental .rad file
   sequence_file     = seq;           //path to the file with the protein sequence
@@ -132,6 +132,8 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
   convergence_temp  = convt;
   convergence_accr  = convar;
   qs_to_fit         = qs_B;
+  int_stride        = istride;
+  conf_stride       = cstride;
 
   sequence          = "";
   sphere_generated  = false;
@@ -147,11 +149,15 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
   string mkdir = "mkdir " + outdir + " >/dev/null 2>&1";
   system( mkdir.c_str() );
 
-  mkdir = "mkdir " + outdir + "configurations/ >/dev/null 2>&1";
-  system( mkdir.c_str() );
+  if( cstride < npasses ) {
+    mkdir = "mkdir " + outdir + "configurations/ >/dev/null 2>&1";
+    system( mkdir.c_str() );
+  }
 
-  mkdir = "mkdir " + outdir + "intensities/ >/dev/null 2>&1";
-  system( mkdir.c_str() );
+  if( istride < npasses ) {
+    mkdir = "mkdir " + outdir + "intensities/ >/dev/null 2>&1";
+    system( mkdir.c_str() );
+  }
 
   load_FASTA(); //load sequence file
 
@@ -1427,6 +1433,7 @@ void BeadModeling::SA_nanodisc() {
   bool decreasing_p, metropolis, accept;
   int iterations = 1, rough_counter;
   double mean, sq_sum, stdev, scale_tmp;
+  string cint, pdb;
 
   nd.nanodisc_form_factor( exp_q );
   if( n_dtail > 0 ) nd.gaussian_coil_form_factor( exp_q, Rg );
@@ -1558,10 +1565,15 @@ void BeadModeling::SA_nanodisc() {
       cout << "# -----------------------------------------------------------------------------------------------" << endl;
     }
 
-    string pdb = outdir + "configurations/" + to_string(p) + ".pdb";
-    string calc_intensity = outdir + "intensities/" + to_string(p) + ".dat";
-    write_pdb( pdb );
-    write_intensity( calc_intensity );
+    if( p%int_stride == 0 ) {
+        cint = outdir + "intensities/" + to_string(p) + ".dat";
+        write_intensity( cint );
+    }
+
+    if( p%conf_stride == 0 ) {
+      pdb = outdir + "configurations/" + to_string(p) + ".pdb";
+      write_pdb( pdb );
+    }
 
     if( B < convergence_temp && convergence_accr == 0 ) {
       cout << "# -----------------------------------------------------------------------------------------------" << endl;
@@ -1569,9 +1581,9 @@ void BeadModeling::SA_nanodisc() {
       cout << std::fixed << std::setprecision(3) << "# Convergence temperature " << convergence_temp << " has been reached." << endl;
 
       pdb = outdir + "/model.pdb";
-      calc_intensity = outdir + "/best_fit.dat";
+      cint = outdir + "/best_fit.dat";
       write_pdb( pdb );
-      write_intensity( calc_intensity );
+      write_intensity( cint );
       exit(0);
 
     } else if( convergence_accr > 0 && (1.*loops_per_pass)/attempts < convergence_accr ) {
@@ -1580,9 +1592,9 @@ void BeadModeling::SA_nanodisc() {
       cout << std::fixed << std::setprecision(3) << "# Convergence acceptance ratio " << convergence_accr << " has been reached." << endl;
 
       pdb = outdir + "/model.pdb";
-      calc_intensity = outdir + "/best_fit.dat";
+      cint = outdir + "/best_fit.dat";
       write_pdb( pdb );
-      write_intensity( calc_intensity );
+      write_intensity( cint );
       exit(0);
     }
 
@@ -1595,10 +1607,10 @@ void BeadModeling::SA_nanodisc() {
   cout << endl;
   cout << "# Maximum number of passes has been reached." << endl;
 
-  string pdb = outdir + "/model.pdb";
-  string calc_intensity = outdir + "/best_fit.dat";
+  pdb = outdir + "/model.pdb";
+  cint = outdir + "/best_fit.dat";
   write_pdb( pdb );
-  write_intensity( calc_intensity );
+  write_intensity( cint );
 
 }
 //------------------------------------------------------------------------------

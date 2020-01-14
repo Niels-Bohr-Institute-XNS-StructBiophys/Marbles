@@ -38,9 +38,9 @@ parser.add_argument( '--inserted_residues', '-aa', type = int, required = False,
                     help = 'Number of residues to accomodate in the nanodisc' )
 
 #IO options
-parser.add_argument( '--intensity-stride', '-is', type = int, required = False,
+parser.add_argument( '--intensity_stride', '-is', type = int, required = False, default = 1,
                     help = 'Stride used to print on file the calculated intensities (default: 1, at the end of every pass)' )
-parser.add_argument( '--configuration-stride', '-cs', type = int, required = False,
+parser.add_argument( '--configuration_stride', '-cs', type = int, required = False, default = 1,
                     help = 'Stride used to print on file the calculated protein configurations (default: 1, once at each pass)' )
 
 # Monte Carlo options
@@ -76,7 +76,7 @@ parser.add_argument( '--clash_distance', '-cd', type = float, required = False, 
                     help = 'Smaller possible distance between beads before move is rejected (default: 1.8A)' )
 parser.add_argument( '--maximum_distance', '-md', type = float, required = False, default = 5.1,
                     help = 'Maximum distance between chosen beads allowed by Monte Carlo move (default: 5.1A)' )
-parser.add_argument( '--connected', '-cc', type = float, required = False, default = 4.5,
+parser.add_argument( '--connected', '-cc', type = float, required = False, default = 5.8,
                     help = 'Maximum distance within which two beads are considered connected (default: 4.5A)' )
 parser.add_argument( '--qs_for_I0', '-qi', type = int, required = False, default = 5,
                     help = 'Number of low-q points to use to determine the value of I(0) (default: 5)' )
@@ -99,6 +99,7 @@ cmd  = './runner ' + str(args.sequence_file) + ' ' + str(args.input) + ' ' + str
          ' ' + str(args.schedule) + ' ' + str(args.temperature_factor) + ' ' + str(args.clash_distance) + \
          ' ' + str(args.maximum_distance) + ' ' + str(args.connected) + ' ' + str(args.fit) + ' ' + str(args.inserted_residues) + \
          ' ' + str(args.insertion_strength) + ' ' + str(args.qs_for_I0) + ' ' + str(args.disordered_tail) + ' ' + str(args.zshift) + \
-         ' ' + str(args.qs_for_b) + ' ' +  str(args.convergence_temp) + ' ' + str(args.convergence_acceptance)
+         ' ' + str(args.qs_for_b) + ' ' +  str(args.convergence_temp) + ' ' + str(args.convergence_acceptance) + \
+         ' ' + str(args.intensity_stride) + ' ' + str(args.configuration_stride)
 
 os.system( cmd )

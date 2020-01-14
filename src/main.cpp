@@ -65,6 +65,8 @@ int main( int argc, char *argv[] ) {
     int qs_b       = stoi( argv[20] );
     double convt   = stod( argv[21] );
     double convar  = stod( argv[22] );
+    int istride    = stoi( argv[23] );
+    int cstride    = stoi( argv[24] );
 
     // cout << "Sequence: " << sequence << endl;
     // cout << "Data:     " << data << endl;
@@ -87,11 +89,13 @@ int main( int argc, char *argv[] ) {
     // cout << "qs B      " << qs_b << endl;
     // cout << "Conv temp " << convt << endl;
     // cout << "Conv acr  " << convar << endl;
+    // cout << "Istride   " << istride << endl;
+    // cout << "Cstride   " << cstride << endl;
     // exit(-1);
 
     BeadModeling BD = BeadModeling( sequence, data, fit, out, npasses, nloops, dmax,
                                     conn, neig, t_str, ins_res, sche, clas, maxd, cond,
-                                    tm_fact, qs_I0, n_dtail, zs, qs_b, convt, convar );
+                                    tm_fact, qs_I0, n_dtail, zs, qs_b, convt, convar, istride, cstride );
     BD.SA_nanodisc();
 
   }

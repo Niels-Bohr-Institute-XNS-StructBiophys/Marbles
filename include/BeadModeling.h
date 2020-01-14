@@ -78,6 +78,8 @@ class BeadModeling : public Input {
       unsigned int qs_to_fit;      /** number of high q points to use to determine the background */
       int ni0;                     /** number of low-q points to use for I(0) determination */
       int n_dtail;                 /** number of residues composing the disordered tail */
+      int int_stride;              /** stride with which intensities are outputted */
+      int conf_stride;             /** stride with which protein conformations are outputted */
 
       double lambda;               /** TO BE CLEARED */
       double connect;              /** TO BE CLEARED */
@@ -191,7 +193,7 @@ class BeadModeling : public Input {
                     double, double, double, double, double, double, double, double, int );
       BeadModeling( const std::string&, const std::string&, const std::string&, const std::string&,
                     int, int, double, double, double, double, int, double, double, double, double,
-                    double, int, int, double, int, double, double );
+                    double, int, int, double, int, double, double, int, int );
       ~BeadModeling();
 
       /* PUBLIC UTILITIES */
