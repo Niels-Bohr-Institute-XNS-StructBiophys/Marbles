@@ -68,6 +68,9 @@ parser.add_argument( '--convergence_acceptance', '-ca', type = float, required =
                     help = 'Final acceptance ratio at which convergence is decleared (suggested: < 0.1). Overrides the --convergence_temp and --passes option.' )
 
 # Advanced options
+parser.add_argument('--sample_info', '-si', type = str, required = False, default = None,
+                    help = 'Sample information file employed in WillItFit to set the chemical properties of the nanodisc. Necessary only if the nanodisc is composed by non POPC-lipids \
+                           and a belt protein different from MSP1D1')
 parser.add_argument( '--schedule', '-ss', type = float, required = False, default = 0.9,
                     help = 'Simulated annealing schedule (default: 0.9)' )
 parser.add_argument( '--temperature_factor', '-t', type = float, required = False, default = 10,
@@ -94,12 +97,15 @@ if( args.loops == 0 ):
 if( args.convergence_acceptance == None ):
     args.convergence_acceptance = 0
 
+if( args.sample_info == None ):
+    args.sample_info = 'None'
+
 cmd  = './runner ' + str(args.sequence_file) + ' ' + str(args.input) + ' ' + str(args.output) + ' ' + str(args.dmax) + \
          ' ' + str(args.passes) + ' ' + str(args.loops) + ' ' + str(args.connect_strength) + ' ' + str(args.neighbours_strength) + \
          ' ' + str(args.schedule) + ' ' + str(args.temperature_factor) + ' ' + str(args.clash_distance) + \
          ' ' + str(args.maximum_distance) + ' ' + str(args.connected) + ' ' + str(args.fit) + ' ' + str(args.inserted_residues) + \
          ' ' + str(args.insertion_strength) + ' ' + str(args.qs_for_I0) + ' ' + str(args.disordered_tail) + ' ' + str(args.zshift) + \
          ' ' + str(args.qs_for_b) + ' ' +  str(args.convergence_temp) + ' ' + str(args.convergence_acceptance) + \
-         ' ' + str(args.intensity_stride) + ' ' + str(args.configuration_stride)
+         ' ' + str(args.intensity_stride) + ' ' + str(args.configuration_stride) + ' ' + str(args.sample_info)
 
 os.system( cmd )

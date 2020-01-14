@@ -55,6 +55,7 @@ class BeadModeling : public Input {
       std::string rad_file;        /** Experimental .rad file with SAXS data */
       std::string outdir;          /** Directory where to store results */
       std::string best_fit;        /** Report file from WillItFit */
+      std::string sampleinfo;      /** sample info file used in WillItFit for non default nanodiscs */
       std::string sequence_file;   /** FASTA sequence file of the protein */
       std::string nano_model;      /** type of nanodisc model employed (with endcaps or flat) */
 
@@ -191,7 +192,7 @@ class BeadModeling : public Input {
       BeadModeling( const std::string& );
       BeadModeling( const std::string&, const std::string&, const std::string&, int, int,
                     double, double, double, double, double, double, double, double, int );
-      BeadModeling( const std::string&, const std::string&, const std::string&, const std::string&,
+      BeadModeling( const std::string&, const std::string&, const std::string&, const std::string&, const std::string&,
                     int, int, double, double, double, double, int, double, double, double, double,
                     double, int, int, double, int, double, double, int, int );
       ~BeadModeling();

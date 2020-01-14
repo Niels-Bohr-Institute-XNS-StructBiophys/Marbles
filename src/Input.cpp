@@ -82,12 +82,16 @@ string Input::parse_double_delimiter( ifstream& file, string delimiter1, string 
 
   //first substring
   string token = str.substr(0, str.find(delimiter1)); //get the first substring before the delimeter
+  //cout << "Token: " << token << endl;
   str.erase(0, str.find(delimiter1) + delimiter1.length()); //delete it
+  //cout << "String after removal: " << str << endl;
 
   //second substring
-  token = str.substr(0, str.find(delimiter2));
+  //token = str.substr(0, str.find(delimiter2));
+  str.erase(0, str.find(delimiter2) + delimiter2.length());
+  //cout << "Returns: " << str << endl;
 
-  return token; //return substring, without delimeter and without parameter name
+  return str; //return substring, without delimeter and without parameter name
 
 
 }

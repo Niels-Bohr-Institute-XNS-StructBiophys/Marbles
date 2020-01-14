@@ -106,13 +106,14 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
 }
 //------------------------------------------------------------------------------
 
-BeadModeling::BeadModeling( const string& seq, const string& data, const string& ft, const string& out, int passes, int loops, double dm, double conn,
+BeadModeling::BeadModeling( const string& seq, const string& data, const string& ft, const string& sinf, const string& out, int passes, int loops, double dm, double conn,
                             double lm, double tm, int ins, double sched, double clash, double maxd, double connd, double tr, int n0, int ndt, double zs,
                             int qs_B, double convt, double convar, int istride, int cstride ) {
 
   rad_file          = data;           //path to the experimental .rad file
   sequence_file     = seq;           //path to the file with the protein sequence
   best_fit          = ft;
+  sampleinfo        = sinf;
   dmax              = dm;   //dmax from fit
   npasses           = passes;   //total number of passes
   loops_per_pass    = loops;   //number of performed loops per pass
@@ -160,10 +161,14 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
   }
 
   load_FASTA(); //load sequence file
-
   nresidues = sequence.length();
 
   nd.load_input_flat( best_fit );
+
+  // a SampleInfo file has been provided, which means the default parameters of the nanodisc don't hold
+  // we load new ones from the sample information
+  if( sampleinfo != "None" ) nd.non_default_nanodisc( sampleinfo );
+
   load_rad(); //experimental file with SAXS or SANS data
 
   load_statistics(); //statistics needed for penalty function
@@ -196,6 +201,7 @@ BeadModeling::BeadModeling( const string& seq, const string& data, const string&
   cout << "# PRELIMINARIES" << endl;
   cout << "# -------------" << endl;
   cout << "# Results folder:          " << outdir << endl;
+  if( sampleinfo != "None" ) cout << "# Non default sample info: " << sampleinfo << endl;
 
   logfile();
 }
@@ -221,6 +227,11 @@ void BeadModeling::logfile() {
   log << "# Protein sequence:            " << sequence_file << endl;
   log << "# Experimental SAXS intensity: " << rad_file << endl;
   log << "# Nanodisc best fit file:      " << best_fit << endl;
+  if( sampleinfo == "None" ) {
+    log << "# Nanodisc chemical info:      default" << endl;
+  } else {
+    log << "# Nanodisc chemical info:      " << sampleinfo << endl;
+  }
   log << "# Storing results in:          " << outdir << endl;
   log << endl;
 

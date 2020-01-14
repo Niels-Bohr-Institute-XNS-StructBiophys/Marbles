@@ -17,8 +17,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "Nanodisc.h"
 #include <cmath>
-//#include <boost/math/special_functions/sinc.hpp>
-//#include <boost/math/special_functions/bessel.hpp>
 #include <gsl/gsl_sf_legendre.h>
 #include <stdio.h>
 #define pi 3.141593
@@ -51,30 +49,58 @@ void Nanodisc::load_input_flat( const string& best_fit ) {
 
   ifstream file( best_fit );
   string line;
-  string d = "=", d_ = " ", d__ = ","; //possible delimiters
+  string d = "=", d_ = " "; //possible delimiters
 
   if( file.is_open() ) {
 
     skip_lines( file, 18 );
-    hbelt                 = stod( parse_line( file, d_ ) );
-    nlipids               = stod( parse_line( file, d_ ) );
+    hbelt        = stod( parse_line( file, d_ ) );
+    nlipids      = stod( parse_line( file, d_ ) );
 
     skip_lines( file, 1 );
-    wathead               = stod( parse_line( file, d_ ) );
+    wathead      = stod( parse_line( file, d_ ) );
 
     skip_lines( file, 2 );
-    xrough                = stod( parse_line( file, d_ ) );
-    cvbelt                = stod( parse_line( file, d_ ) );
-    cvlipid               = stod( parse_line( file, d_ ) );
+    xrough       = stod( parse_line( file, d_ ) );
+    cvbelt       = stod( parse_line( file, d_ ) );
+    cvlipid      = stod( parse_line( file, d_ ) );
 
     skip_lines( file, 8 );
-    cvwater               = stod( parse_line( file, d_ ) );
-    scale_int             = stod( parse_line( file, d_ ) );
+    cvwater      = stod( parse_line( file, d_ ) );
+    scale_int    = stod( parse_line( file, d_ ) );
 
     skip_lines( file, 8 );
-    hlipid                = stod( parse_line( file, d ) );
-    hcore                 = stod( parse_line( file, d ) );
-    hmethyl               = stod( parse_line( file, d ) );
+    hlipid       = stod( parse_line( file, d ) );
+    hcore        = stod( parse_line( file, d ) );
+    hmethyl      = stod( parse_line( file, d ) );
+
+    skip_lines( file, 7 );
+    radius_major = stod( parse_line( file, d ) );
+    radius_minor = stod( parse_line( file, d ) );
+
+    skip_lines( file, 2 );
+    width_belt   = stod( parse_line( file, d ) );
+
+    //parameters for a default nanodisc: override this using non_default_nanodisc()
+    rho_h2o      = 2.82e-12 / e_scatt_len;
+    rho_head     = 4.62e-11 / e_scatt_len;
+    rho_alkyl    = 6.71e-11 / e_scatt_len;
+    rho_methyl   = 5.08e-12 / e_scatt_len;
+    rho_belt     = 3.31e-9  / e_scatt_len; //p450 //4.52e-9  / e_scatt_len; //Tissue Factor
+    vh2o         = 30.;
+    vhead        = 319.;
+    valkyl       = 818.8;
+    vmethyl      = 108.6;
+    vbelt        = 27587.8; //p450 //36276.0; //Tissue Factor
+
+    //compute excess scattering length densities from the fit-corrected volumes
+    rho_head     += wathead * rho_h2o;
+    rho_head     /= ( vhead * cvlipid + wathead * vh2o );
+    rho_alkyl    /= ( valkyl * cvlipid );
+    rho_methyl   /= ( vmethyl * cvlipid );
+    rho_belt     /= ( vbelt * cvbelt );
+    rho_h2o      /= ( vh2o * cvwater );
+    cvprotein    = 1.;
 
     // cout << hbelt << endl;
     // cout << nlipids << endl;
@@ -87,55 +113,19 @@ void Nanodisc::load_input_flat( const string& best_fit ) {
     // cout << hcore << endl;
     // cout << hmethyl << endl;
     // cout << scale_int << endl;
-
-    skip_lines( file, 7 );
-    radius_major          = stod( parse_line( file, d ) );
-    radius_minor          = stod( parse_line( file, d ) );
-
-    skip_lines( file, 2 );
-    width_belt            = stod( parse_line( file, d ) );
-
-    // cout << radius_major << endl;
-    // cout << radius_minor << endl;
-    // cout << width_belt << endl;
-
-    //For SAXS these values are constants and don't need to be parsed!
-    rho_h2o               = 2.82e-12 / e_scatt_len; //stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
-    rho_head              = 4.62e-11 / e_scatt_len; //stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
-    rho_alkyl             = 6.71e-11 / e_scatt_len; //stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
-    rho_methyl            = 5.08e-12 / e_scatt_len; //stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
-    rho_belt              = 3.31e-9  / e_scatt_len; //p450 //stod( parse_double_delimiter( file, d_, d__ ) ) / e_scatt_len;
-    //rho_belt              = 4.52e-9  / e_scatt_len; //Tissue Factor
-
-    // cout << rho_h2o << endl;
-    // cout << rho_head << endl;
-    // cout << rho_alkyl << endl;
-    // cout << rho_methyl << endl;
-    // cout << rho_belt << endl;
-
-    skip_lines( file, 2 );
-    vh2o                  = 30.; //stod( parse_double_delimiter( file, d_, d__ ) );
-    vhead                 = 319.; //stod( parse_double_delimiter( file, d_, d__ ) );
-    valkyl                = 818.8; //stod( parse_double_delimiter( file, d_, d__ ) );
-    vmethyl               = 108.6; //stod( parse_double_delimiter( file, d_, d__ ) );
-    vbelt                 = 27587.8; //p450 //27653.3; //stod( parse_double_delimiter( file, d_, d__ ) );
-    //vbelt                 = 36276.0; //Tissue Factor
-
     // cout << vh2o << endl;
     // cout << vhead << endl;
     // cout << valkyl << endl;
     // cout << vmethyl << endl;
     // cout << vbelt << endl;
-
-    //compute excess scattering length densities from the fit-corrected volumes
-    rho_head    += wathead * rho_h2o;
-    rho_head    /= ( vhead * cvlipid + wathead * vh2o );
-    rho_alkyl   /= ( valkyl * cvlipid );
-    rho_methyl  /= ( vmethyl * cvlipid );
-    rho_belt    /= ( vbelt * cvbelt );
-    //rho_protein /= ( vprotein * cvprotein );
-    rho_h2o     /= ( vh2o * cvwater );
-    cvprotein   = 1.;
+    // cout << rho_h2o << endl;
+    // cout << rho_head << endl;
+    // cout << rho_alkyl << endl;
+    // cout << rho_methyl << endl;
+    // cout << rho_belt << endl;
+    // cout << radius_major << endl;
+    // cout << radius_minor << endl;
+    // cout << width_belt << endl;
 
     /** Three checks on volumes are ran to verify the consistency of the quantities loaded from the WillItFit output. */
     if( volume_tests ) {
@@ -178,6 +168,71 @@ void Nanodisc::load_input_flat( const string& best_fit ) {
   }
 
   file.close();
+
+}
+
+void Nanodisc::non_default_nanodisc( const string& sample_info ) {
+
+  ifstream file( sample_info );
+  string tmp;
+
+  if( file.is_open() ) {
+
+    skip_lines( file, 3 );
+
+    getline( file, tmp ); //read line
+    vh2o    = stod( tmp.substr(0, tmp.find(" ")) );
+
+    getline( file, tmp ); //read line
+    vhead   = stod( tmp.substr(0, tmp.find(" ")) );
+
+    getline( file, tmp ); //read line
+    valkyl  = stod( tmp.substr(0, tmp.find(" ")) );
+
+    getline( file, tmp ); //read line
+    vmethyl = stod( tmp.substr(0, tmp.find(" ")) );
+
+    getline( file, tmp ); //read line
+    vbelt = stod( tmp.substr(0, tmp.find(" ")) );
+
+    skip_lines( file, 16 );
+
+    getline( file, tmp ); //read line
+    rho_h2o    = stod( tmp.substr(0, tmp.find(" ")) ) / e_scatt_len;
+
+    getline( file, tmp ); //read line
+    rho_head   = stod( tmp.substr(0, tmp.find(" ")) ) / e_scatt_len;
+
+    getline( file, tmp ); //read line
+    rho_alkyl  = stod( tmp.substr(0, tmp.find(" ")) ) / e_scatt_len;
+
+    getline( file, tmp ); //read line
+    rho_methyl = stod( tmp.substr(0, tmp.find(" ")) ) / e_scatt_len;
+
+    getline( file, tmp ); //read line
+    rho_belt   = stod( tmp.substr(0, tmp.find(" ")) ) / e_scatt_len;
+
+    // //compute excess scattering length densities from the fit-corrected volumes
+    rho_head     += wathead * rho_h2o;
+    rho_head     /= ( vhead * cvlipid + wathead * vh2o );
+    rho_alkyl    /= ( valkyl * cvlipid );
+    rho_methyl   /= ( vmethyl * cvlipid );
+    rho_belt     /= ( vbelt * cvbelt );
+    rho_h2o      /= ( vh2o * cvwater );
+
+
+    // cout << vh2o << endl;
+    // cout << vhead << endl;
+    // cout << valkyl << endl;
+    // cout << vmethyl << endl;
+    // cout << vbelt << endl;
+    // cout << rho_h2o << endl;
+    // cout << rho_head << endl;
+    // cout << rho_alkyl << endl;
+    // cout << rho_methyl << endl;
+    // cout << rho_belt << endl;
+
+  }
 
 }
 

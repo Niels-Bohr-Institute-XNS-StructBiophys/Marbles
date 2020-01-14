@@ -107,6 +107,7 @@ class Nanodisc : public Input {
     /* PUBLIC UTILITIES */
     void load_input( const std::string& );            /** reads the output of WillItFit to obtain info on the nanodisc */
     void load_input_flat( const std::string& );       /** reads the output of WillItFit to obtain info on the nanodisc */
+    void non_default_nanodisc( const std::string& );
     void nanodisc_form_factor( std::vector<double> ); /** computes the form factor of the nanodisc */
     void gaussian_coil_form_factor( std::vector<double>, double );
     void test_nanodisc_flat( std::vector<double> );

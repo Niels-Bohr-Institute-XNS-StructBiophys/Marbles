@@ -46,6 +46,7 @@ int main( int argc, char *argv[] ) {
     string data( argv[2] );
     string out( argv[3] );
     string fit( argv[14] );
+    string sinfo( argv[25] );
 
     double dmax    = stod( argv[4]  );
     int npasses    = stoi( argv[5]  );
@@ -93,7 +94,7 @@ int main( int argc, char *argv[] ) {
     // cout << "Cstride   " << cstride << endl;
     // exit(-1);
 
-    BeadModeling BD = BeadModeling( sequence, data, fit, out, npasses, nloops, dmax,
+    BeadModeling BD = BeadModeling( sequence, data, fit, sinfo, out, npasses, nloops, dmax,
                                     conn, neig, t_str, ins_res, sche, clas, maxd, cond,
                                     tm_fact, qs_I0, n_dtail, zs, qs_b, convt, convar, istride, cstride );
     BD.SA_nanodisc();
