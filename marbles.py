@@ -34,7 +34,7 @@ parser.add_argument( '--output', '-o', type = str, required = True,
                     help = 'Path to directory where to store simulation results' )
 parser.add_argument( '--fit', '-f', type = str, required = True,
                     help = 'Path to WillItFit output file for nanodisc best fit' )
-parser.add_argument( '--inserted_residues', '-aa', type = int, required = False,
+parser.add_argument( '--inserted_residues', '-aa', type = int, required = True,
                     help = 'Number of residues to accomodate in the nanodisc' )
 
 #IO options
