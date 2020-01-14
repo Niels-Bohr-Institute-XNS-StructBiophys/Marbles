@@ -12,7 +12,7 @@ C++/Python code for ab-initio shape prediction of a protein embedded in a nanodi
 5. [Output](#output)
 6. [Running Marbles](#running)
 7. [Example Application](#example)
-8. [Non-Default Nanodiscs](#non-default)
+8. [Non-Default Samples](#non-default)
 9. [Contact](#contacts)
 10. [Acknowledgments](#acknow)
 
@@ -303,6 +303,7 @@ pymol plotdisc.py -- example/Results.wit example/test_run/model.pdb
 The script will open PyMOL and show the protein model inserted in the nanodisc as predicted by Marbles. 
 
 ## Non-Default Samples<a name="non-default"></a>
+### Presence of a Disordered Domain
 As anticipated before, some samples might be composed by a disordered intracellular domain protruding from the bottom leaflet of the nanodisc. Marbles deals with these complex samples by modelling the disordered region as a random coil. To give a practical example of how the input should be provided in this case, let us assume the full sequence file of the protein of interest looks like the following:
 ```
 >|InterestingProtein
@@ -317,9 +318,11 @@ At this point, to run Marbles is necessary to specify, among the other parameter
 ```
 python marbles.py -s prot/prot.fasta.txt -i prot/saxs.dat -d 50 -aa 20 --fit prot/Results.wif -dt 14 -o test_run/
 ```  
-  
+
+### Non-Default Nanodiscs
 Marbles is programmed to interpret the input of WillItFit as coming from the fit of a POPC nanodisc with MSP1D1 belt protein. If this is not true, and the nanodisc fit has been carried out using non default parameters, it is possible to tell Marbles to override the defaults by loading the sample information file employed in WillItFit. This can be done using the `--sample_info` flag.  
-  
+
+### Not Saving Intermediate Configurations and Intensities
 If you are planning to run multiple Marbles jobs and want to decrease the disk memory usage by not saving the intensities and structures at every pass, you can set the `-cs` and `-is` flags to increase the output stride. In particular, if you do not want any intensity and configurations printed during the execution, besides the final results, you can set the configurations and intensities stride to a number which is much bigger than the total number of passes, e.g. `-cs 1000` and `-is 1000`.
 ## Contacts <a name="contacts"></a>
 For bug reports, issues and whatnot contact Simone Orioli at simone.orioli[at]nbi.ku.dk. If you want to engage in scientific collaborations using Marbles, contact Lise Arleth at arleth[at]nbi.ku.dk. 
