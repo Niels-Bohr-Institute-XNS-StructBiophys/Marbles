@@ -3,6 +3,7 @@ build
 others/
 lib/*
 doc/
+bin/
 python/
 
 # Ignore any executables
@@ -11,22 +12,10 @@ runner
 # Ignore Mac specific files
 .DS_Store
 
-# Ignore temps and generated files
-*.xyz 
-out* 
-dictionary* 
+# Ignore files
 *.txt 
 *.dat 
 *.pdb 
-*.rad 
-*test*  
-*.sh
-p450*/* 
-*.pdf 
-*.pdb 
-*.log 
-penalty* 
-*out* 
+*.rad  
+*.log  
 *.wif 
-*.fir 
-*.fit
