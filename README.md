@@ -2,7 +2,9 @@
 Author: Simone Orioli | email: simone.orioli@nbi.ku.dk    
   
 
-C++/Python code for ab-initio shape prediction of a protein embedded in a nanodisc, given its SAXS intensity and sequence.
+C++/Python code for ab-initio shape prediction of a protein embedded in a nanodisc, given its SAXS intensity and sequence. If you use this software please cite
+1. Orioli, S., Henning Hansen, C. G., & Arleth, L. (2021). Ab initio determination of the shape of membrane proteins in a nanodisc. Acta Crystallographica Section D: Structural Biology, 77(2).  
+2. Skar-Gislinge, N., Kynde, S. A., Denisov, I. G., Ye, X., Lenov, I., Sligar, S. G., & Arleth, L. (2015). Small-angle scattering determination of the shape and localization of human cytochrome P450 embedded in a phospholipid nanodisc environment. Acta Crystallographica Section D: Biological Crystallography, 71(12), 2412-2421.
 
 ## Table of Contents
 1. [Dependencies](#dependencies)
