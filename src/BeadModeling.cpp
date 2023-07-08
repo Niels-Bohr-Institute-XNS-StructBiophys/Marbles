@@ -271,8 +271,8 @@ void BeadModeling::logfile() {
 
 void BeadModeling::load_statistics() {
 
-  //string ndist_file = "include/statistics/ndist.dat";
-  string ndist_file = "include/statistics/neigh.dat";
+  string ndist_file = "include/statistics/ndist.dat";
+  //string ndist_file = "include/statistics/neigh.dat";
   string nnum1_file = "include/statistics/nnum_5.3.dat";
   string nnum2_file = "include/statistics/nnum_6.8.dat";
   string nnum3_file = "include/statistics/nnum_8.3.dat";
